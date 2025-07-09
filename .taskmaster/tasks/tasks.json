@@ -156,8 +156,8 @@
       {
         "id": 5,
         "title": "Integrate Authentication and Role-Based Access",
-        "description": "Set up secure authentication with NextAuth and implement role-based access control for users.",
-        "details": "Configure NextAuth with Supabase as provider. Implement user roles (admin, creator, student). Create protected routes and profile management.",
+        "description": "Set up secure authentication with Supabase Auth and implement role-based access control for users.",
+        "details": "Configure Supabase Auth for authentication. Implement user roles (admin, creator, student) using Supabase's built-in role management. Create protected routes and middleware for auth checks. Set up profile management with Supabase user profiles.",
         "testStrategy": "Test login/logout flows. Verify role-based access and protected routes.",
         "priority": "high",
         "dependencies": [

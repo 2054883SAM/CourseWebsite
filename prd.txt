@@ -161,7 +161,7 @@ Phase 1: Core UI & Course Viewing
 - Add subtitle toggle functionality
 
 Phase 2: Authentication & User Management
-- Integrate NextAuth
+- Integrate Supabase Auth
 - Set up role-based access control
 - Create protected routes
 - Implement user profile management
