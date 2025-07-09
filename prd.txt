@@ -1,0 +1,249 @@
+# Overview
+The Course-Selling Platform MVP is designed to provide a professional, secure, and scalable solution for a single course creator to sell online video-based courses. The platform will focus on delivering a polished user experience with video content, multi-language subtitle support, and secure payment processing.
+
+Target Audience:
+- Primary: Students seeking to purchase and access online courses
+- Secondary: Course administrators and content creators
+
+Value Proposition:
+- Students get access to high-quality video courses with multi-language support
+- Creators can manage and sell their content securely
+- Administrators have full control over content and user management
+
+# Core Features
+
+1. Course Catalog & Browsing
+- Interactive course listing with thumbnails and preview information
+- Detailed course pages with section breakdowns
+- Responsive design for all device sizes
+- Search and filter capabilities
+
+2. Video Player Experience
+- Professional-grade video player with DRM protection
+- Multi-language subtitle support with language switching
+- Playback controls and progress tracking
+- Adaptive streaming for different network conditions
+
+3. Course Management Interface
+- Course creation and editing dashboard
+- Section ordering and management
+- Video upload and processing system
+- Subtitle management and translation workflow
+
+4. Authentication & Authorization
+- Role-based access control (Admin, Creator, Student)
+- Secure login via email/password or OAuth
+- Protected routes and content access
+
+5. Payment Processing
+- Secure course purchase flow
+- Payment status tracking
+- Enrollment management
+- Access control for purchased content
+
+# User Experience
+
+User Personas:
+
+1. Student
+- Goals: Find, purchase, and learn from courses
+- Needs: Easy navigation, clear pricing, smooth video playback
+- Pain points: Language barriers, payment concerns
+
+2. Creator
+- Goals: Manage course content and structure
+- Needs: Simple content management interface
+- Pain points: Complex video upload process
+
+3. Admin
+- Goals: Overall platform management
+- Needs: Complete control over content and users
+- Pain points: User management complexity
+
+Key User Flows:
+
+1. Course Discovery Flow
+- Browse course catalog
+- View course details
+- Preview course content
+- Purchase decision
+
+2. Learning Experience Flow
+- Access purchased courses
+- Navigate course sections
+- Watch videos with subtitle control
+- Track progress
+
+3. Content Management Flow
+- Create/edit courses
+- Manage sections
+- Upload and process videos
+- Handle translations
+
+UI/UX Considerations:
+- Clean, professional design using Tailwind CSS
+- Responsive layouts for all devices
+- Intuitive navigation structure
+- Clear visual hierarchy
+- Accessible design patterns
+
+# Technical Architecture
+
+System Components:
+1. Frontend Layer
+- Next.js + TypeScript for core application
+- Tailwind CSS + React-Bits for UI
+- Mux Player for video playback
+- Responsive component library
+
+2. Backend Services
+- Supabase for database and authentication
+- Mux for video processing and delivery
+- DeepL for translation services
+- Whisper for transcription
+- Paddle for payment processing
+
+Data Models:
+
+```typescript
+// Core Models
+User {
+  id: strings
+  role: 'admin' | 'creator' | 'student'
+  name: string
+  email: string
+  created_at: timestamp
+}
+
+Course {
+  id: string
+  title: string
+  description: string
+  thumbnail_url: string
+  price: number
+  creator_id: string
+  created_at: timestamp
+}
+
+Section {
+  id: string
+  course_id: string
+  title: string
+  order: number
+  playback_id: string
+  duration: number
+}
+
+Subtitle {
+  id: string
+  section_id: string
+  language_code: string
+  subtitle_url: string
+}
+
+Enrollment {
+  id: string
+  user_id: string
+  course_id: string
+  enrolled_at: timestamp
+  payment_status: string
+}
+```
+
+# Development Roadmap
+
+Phase 1: Core UI & Course Viewing
+- Set up Next.js project with Tailwind
+- Implement responsive layout system
+- Create course catalog page
+- Build course detail page
+- Develop basic video player component
+- Add subtitle toggle functionality
+
+Phase 2: Authentication & User Management
+- Integrate NextAuth
+- Set up role-based access control
+- Create protected routes
+- Implement user profile management
+
+Phase 3: Course Management
+- Build course creation interface
+- Implement section management
+- Add video upload functionality
+- Create subtitle management system
+
+Phase 4: Video Processing & Security
+- Integrate Mux for video hosting
+- Implement DRM protection
+- Set up video processing pipeline
+- Add subtitle processing workflow
+
+Phase 5: Payment & Access Control
+- Integrate Paddle payment system
+- Implement purchase flow
+- Set up enrollment system
+- Add access control for paid content
+
+# Logical Dependency Chain
+
+Foundation First:
+1. Basic Next.js setup with Tailwind
+2. Core layout and navigation
+3. Course catalog and detail pages
+4. Basic video player implementation
+
+Building Up:
+1. User authentication and roles
+2. Course management interface
+3. Video upload and processing
+4. Payment integration
+5. Access control and security
+
+Feature Dependencies:
+- Video player must work before adding subtitle support
+- Authentication must be in place before payment processing
+- Course management requires authentication
+- Payment system requires course catalog and user accounts
+
+# Risks and Mitigations
+
+Technical Challenges:
+1. Video Processing
+   - Risk: Complex video processing pipeline
+   - Mitigation: Use Mux's robust API and documentation
+
+2. Payment Integration
+   - Risk: Secure payment handling
+   - Mitigation: Leverage Paddle's security features
+
+3. Performance
+   - Risk: Slow video loading or playback
+   - Mitigation: Implement proper caching and CDN usage
+
+Resource Constraints:
+1. Development Time
+   - Risk: Complex features taking too long
+   - Mitigation: Focus on MVP features first
+
+2. Cost Management
+   - Risk: API service costs
+   - Mitigation: Implement usage monitoring and limits
+
+# Appendix
+
+Technical Specifications:
+- Node.js version: Latest LTS
+- Next.js version: 14+
+- TypeScript: Strict mode enabled
+- Tailwind CSS: Latest version
+- Database: Supabase Postgres
+- Video Hosting: Mux
+- Payment Processing: Paddle
+- Translation: DeepL API
+- Transcription: Whisper API
+
+Security Requirements:
+- DRM protection for videos
+- Row-level security in Supabase
+- Secure authentication flow
+- Protected API routes 

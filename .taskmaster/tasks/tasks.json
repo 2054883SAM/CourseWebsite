@@ -1,0 +1,212 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Setup Project Repository and Core Stack",
+        "description": "Initialize the Next.js project with TypeScript, Tailwind CSS, and React-Bits. Configure the development environment and basic project structure.",
+        "details": "Use `npx create-next-app@latest` with TypeScript template. Install Tailwind CSS and React-Bits. Set up linting, formatting, and basic CI/CD pipeline. Initialize Supabase project for database and authentication.",
+        "testStrategy": "Verify project builds and runs locally. Check Tailwind and React-Bits integration. Confirm Supabase connection.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Initialize Next.js project with TypeScript",
+            "description": "Create a new Next.js project with TypeScript support as the foundation for the application",
+            "dependencies": [],
+            "details": "Use create-next-app to initialize the project with TypeScript template. Configure tsconfig.json with appropriate settings for the project. Set up the basic folder structure following Next.js conventions. Initialize git repository and create initial commit.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Integrate Tailwind CSS and React-Bits",
+            "description": "Set up Tailwind CSS for styling and integrate React-Bits component library",
+            "dependencies": [
+              1
+            ],
+            "details": "Install and configure Tailwind CSS with PostCSS. Set up the tailwind.config.js with appropriate theme customizations. Install React-Bits library and configure it to work with Next.js and Tailwind. Create a basic theme provider component to ensure consistent styling.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Configure linting and code formatting",
+            "description": "Set up ESLint, Prettier, and other code quality tools to ensure consistent code style",
+            "dependencies": [
+              1
+            ],
+            "details": "Install and configure ESLint with TypeScript support. Set up Prettier for code formatting. Configure husky and lint-staged for pre-commit hooks. Create .eslintrc.js, .prettierrc, and other necessary configuration files. Add npm scripts for linting and formatting.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Set up CI/CD pipeline",
+            "description": "Configure continuous integration and deployment pipeline for automated testing and deployment",
+            "dependencies": [
+              1,
+              3
+            ],
+            "details": "Set up GitHub Actions or similar CI/CD service. Create workflow files for running tests, linting, and building the application. Configure deployment to the chosen hosting platform. Set up environment variables and secrets in the CI/CD environment. Add status badges to README.md.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Initialize Supabase project",
+            "description": "Set up Supabase project and configure it for use with the Next.js application",
+            "dependencies": [
+              1
+            ],
+            "details": "Create a new Supabase project. Set up database schema and initial tables. Configure authentication settings. Generate and securely store API keys. Install Supabase client library in the Next.js project. Create utility functions for database operations. Set up environment variables for Supabase connection.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Implement Core Layout and Navigation",
+        "description": "Develop the main layout and navigation structure for the platform, ensuring responsiveness and accessibility.",
+        "details": "Create a responsive layout using Tailwind CSS. Implement navigation bar, footer, and main content area. Use React-Bits for reusable UI components. Ensure accessibility and visual hierarchy.",
+        "testStrategy": "Test layout on multiple devices and screen sizes. Check keyboard navigation and screen reader compatibility.",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 3,
+        "title": "Build Course Catalog and Detail Pages",
+        "description": "Develop the course catalog listing and detailed course pages with thumbnails, previews, and responsive design.",
+        "details": "Create a course catalog page with interactive listings and thumbnails. Build a detailed course page with section breakdowns. Implement search and filter functionality. Use Supabase for data fetching.",
+        "testStrategy": "Test catalog and detail page rendering. Verify search and filter features. Check responsiveness.",
+        "priority": "high",
+        "dependencies": [
+          1,
+          2
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 4,
+        "title": "Develop Basic Video Player Component",
+        "description": "Implement a basic video player for course content, supporting playback controls and progress tracking.",
+        "details": "Integrate Mux Player for video playback. Add basic controls (play, pause, seek, volume). Implement progress tracking. Ensure responsive design.",
+        "testStrategy": "Test video playback on different devices. Verify controls and progress tracking.",
+        "priority": "high",
+        "dependencies": [
+          1,
+          2,
+          3
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 5,
+        "title": "Integrate Authentication and Role-Based Access",
+        "description": "Set up secure authentication with NextAuth and implement role-based access control for users.",
+        "details": "Configure NextAuth with Supabase as provider. Implement user roles (admin, creator, student). Create protected routes and profile management.",
+        "testStrategy": "Test login/logout flows. Verify role-based access and protected routes.",
+        "priority": "high",
+        "dependencies": [
+          1,
+          2
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 6,
+        "title": "Build Course Management Interface",
+        "description": "Develop the course creation and editing dashboard, including section and video management.",
+        "details": "Create a dashboard for course creators. Implement course creation, editing, and section management. Add video upload and processing interface. Use Supabase for data storage.",
+        "testStrategy": "Test course creation and editing. Verify section and video management. Check data persistence.",
+        "priority": "medium",
+        "dependencies": [
+          1,
+          2,
+          5
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 7,
+        "title": "Implement Video Processing and Subtitle Support",
+        "description": "Integrate Mux for video hosting and processing. Add multi-language subtitle support with language switching.",
+        "details": "Set up Mux API for video upload and processing. Implement subtitle upload and management. Add language switching to video player. Use DeepL and Whisper for translation and transcription.",
+        "testStrategy": "Test video upload and processing. Verify subtitle upload and language switching. Check translation workflow.",
+        "priority": "medium",
+        "dependencies": [
+          4,
+          6
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 8,
+        "title": "Integrate Payment Processing and Enrollment",
+        "description": "Implement secure course purchase flow and enrollment management using Paddle.",
+        "details": "Integrate Paddle for payment processing. Implement purchase flow and payment status tracking. Set up enrollment management and access control for paid content.",
+        "testStrategy": "Test purchase flow and payment status. Verify enrollment and access control.",
+        "priority": "medium",
+        "dependencies": [
+          3,
+          5
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 9,
+        "title": "Implement DRM Protection and Security Features",
+        "description": "Add DRM protection for videos and secure authentication and data access.",
+        "details": "Configure Mux for DRM protection. Implement row-level security in Supabase. Secure API routes and authentication flow.",
+        "testStrategy": "Test DRM-protected video playback. Verify row-level security and protected routes.",
+        "priority": "medium",
+        "dependencies": [
+          4,
+          5,
+          7
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 10,
+        "title": "Optimize Performance and Accessibility",
+        "description": "Optimize platform performance and ensure accessibility standards are met.",
+        "details": "Implement caching and CDN usage for videos. Optimize frontend and backend performance. Ensure accessibility compliance (WCAG).",
+        "testStrategy": "Test platform performance under load. Verify accessibility using automated and manual tools.",
+        "priority": "low",
+        "dependencies": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "status": "pending",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-07-09T13:32:08.672Z",
+      "updated": "2025-07-09T13:32:08.672Z",
+      "description": "Tasks for master context"
+    }
+  }
+}
