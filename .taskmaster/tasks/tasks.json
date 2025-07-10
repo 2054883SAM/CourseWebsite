@@ -135,8 +135,52 @@
           1,
           2
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement Supabase Data Fetching Layer",
+            "description": "Create the data fetching layer to retrieve course data from Supabase",
+            "dependencies": [],
+            "details": "Develop API functions to fetch course listings, course details, and related metadata from Supabase. Implement proper error handling, loading states, and caching strategies. Create TypeScript interfaces for course data models. Set up pagination for efficient data loading.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Build Course Catalog Page with Grid/List Views",
+            "description": "Create the main catalog page with toggleable grid and list view layouts",
+            "dependencies": [
+              1
+            ],
+            "details": "Design and implement the course catalog UI with both grid and list view options. Include course cards with thumbnails, titles, brief descriptions, and key metadata. Implement view toggle functionality and ensure responsive design across device sizes. Add loading skeletons for improved UX during data fetching.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Develop Course Detail Page with Section Breakdowns",
+            "description": "Create the detailed course page showing comprehensive information and section structure",
+            "dependencies": [
+              1
+            ],
+            "details": "Build the course detail page layout with sections for overview, curriculum breakdown, instructor information, reviews, and related courses. Implement expandable/collapsible section components. Add breadcrumb navigation. Ensure proper routing between catalog and detail pages. Include media elements like videos or image galleries.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Implement Search Functionality",
+            "description": "Add search capabilities to the course catalog",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Create a search input component with auto-suggestions. Implement client-side filtering for quick results and server-side search for comprehensive results. Add search history and popular searches features. Ensure the search is performant even with large datasets. Highlight matching terms in search results.",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
       },
       {
         "id": 4,
@@ -249,7 +293,7 @@
     ],
     "metadata": {
       "created": "2025-07-09T13:32:08.672Z",
-      "updated": "2025-07-09T13:32:08.672Z",
+      "updated": "2025-07-10T20:12:28.678Z",
       "description": "Tasks for master context"
     }
   }
