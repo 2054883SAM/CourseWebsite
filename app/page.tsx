@@ -1,103 +1,138 @@
-import Image from "next/image";
+import { PageLayout, Section, Container, GridLayout, ContentBlock } from "../components/layout";
 
 export default function Home() {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <PageLayout>
+      {/* Hero Section */}
+      <Section className="text-center py-16 md:py-24">
+        <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl mb-6">
+          Welcome to Course Website
+        </h1>
+        <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto mb-8">
+          An online learning platform with interactive video courses and comprehensive learning materials.
+        </p>
+        <div className="flex flex-col sm:flex-row justify-center gap-4">
+          <a 
+            href="/courses" 
+            className="inline-flex items-center justify-center rounded-md text-base font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background bg-primary-600 hover:bg-primary-700 text-white h-11 px-6"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
+            Browse Courses
           </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+          <a 
+            href="/about" 
+            className="inline-flex items-center justify-center rounded-md text-base font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background border border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800 h-11 px-6"
           >
-            Read our docs
+            Learn More
           </a>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+      </Section>
+
+      {/* Featured Courses Section */}
+      <Section className="bg-gray-50 dark:bg-gray-800">
+        <h2 className="text-3xl font-bold text-center mb-12">Featured Courses</h2>
+        
+        <GridLayout 
+          columns={{ default: 1, sm: 2, lg: 3 }}
+          className="mb-12"
         >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+          {/* Course card placeholders */}
+          {[1, 2, 3].map((i) => (
+            <ContentBlock key={i} variant="card" className="p-6">
+              <div className="aspect-video bg-gray-200 dark:bg-gray-700 rounded-md mb-4"></div>
+              <h3 className="text-xl font-bold mb-2">Course Title {i}</h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">
+                Learn everything about this amazing subject with our comprehensive course.
+              </p>
+              <div className="flex justify-between items-center">
+                <span className="font-bold text-primary-600 dark:text-primary-400">$49.99</span>
+                <a 
+                  href={`/courses/${i}`}
+                  className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background bg-primary-600 hover:bg-primary-700 text-white h-9 px-4"
+                >
+                  View Course
+                </a>
+              </div>
+            </ContentBlock>
+          ))}
+        </GridLayout>
+        
+        <div className="text-center">
+          <a 
+            href="/courses" 
+            className="inline-flex items-center justify-center rounded-md text-base font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background border border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800 h-11 px-6"
+          >
+            View All Courses
+          </a>
+        </div>
+      </Section>
+
+      {/* Features Section */}
+      <Section>
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold mb-4">Why Choose Our Platform</h2>
+          <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
+            We provide the best learning experience with cutting-edge features.
+          </p>
+        </div>
+        
+        <GridLayout columns={{ default: 1, sm: 2, lg: 3 }} gap="gap-8">
+          {[
+            {
+              title: 'High-Quality Content',
+              description: 'All courses are created by industry experts and undergo rigorous quality checks.'
+            },
+            {
+              title: 'Interactive Learning',
+              description: 'Engage with interactive exercises, quizzes, and hands-on projects.'
+            },
+            {
+              title: 'Learn at Your Pace',
+              description: 'Access course materials anytime, anywhere, and learn at your own pace.'
+            },
+            {
+              title: 'Community Support',
+              description: 'Join our community of learners and get help when you need it.'
+            },
+            {
+              title: 'Certificates',
+              description: 'Earn certificates upon completion to showcase your new skills.'
+            },
+            {
+              title: '24/7 Support',
+              description: 'Our support team is always ready to help you with any questions.'
+            }
+          ].map((feature, i) => (
+            <ContentBlock key={i} variant="card" className="p-6">
+              <h3 className="text-xl font-bold mb-2">{feature.title}</h3>
+              <p className="text-gray-600 dark:text-gray-400">
+                {feature.description}
+              </p>
+            </ContentBlock>
+          ))}
+        </GridLayout>
+      </Section>
+
+      {/* Call to Action Section */}
+      <Section className="bg-primary-50 dark:bg-primary-900/20 text-center py-16">
+        <h2 className="text-3xl font-bold mb-4">Ready to Start Learning?</h2>
+        <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto mb-8">
+          Join thousands of students already learning on our platform.
+        </p>
+        <div className="flex flex-col sm:flex-row justify-center gap-4">
+          <a 
+            href="/signup" 
+            className="inline-flex items-center justify-center rounded-md text-base font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background bg-primary-600 hover:bg-primary-700 text-white h-11 px-6"
+          >
+            Sign Up Now
+          </a>
+          <a 
+            href="/courses" 
+            className="inline-flex items-center justify-center rounded-md text-base font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background border border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800 h-11 px-6"
+          >
+            Browse Courses
+          </a>
+        </div>
+      </Section>
+    </PageLayout>
   );
 }
