@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { Metadata } from 'next';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Section } from '@/components/layout/Section';
 import { Breadcrumbs } from '../components/Breadcrumbs';
@@ -10,19 +11,42 @@ import { CourseCurriculum } from './components/CourseCurriculum';
 import { InstructorInfo } from './components/InstructorInfo';
 import { RelatedCourses } from './components/RelatedCourses';
 import { CourseDetailSkeleton } from './components/CourseDetailSkeleton';
-import { getCourseById, getCourseSections, useMockData, mockData } from '@/lib/supabase';
+import { getCourseById, getCourseSections, shouldUseMockData, mockData } from '@/lib/supabase';
 
-interface CourseDetailPageProps {
-  params: {
-    id: string;
+type PageParams = {
+  id: string;
+};
+
+type PageProps = {
+  params: Promise<PageParams>;
+};
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { id } = await params;
+  const course = shouldUseMockData()
+    ? mockData.mockCourses.find(c => c.id === id)
+    : await getCourseById(id);
+
+  if (!course) {
+    return {
+      title: 'Course Not Found',
+      description: 'The requested course could not be found.',
+    };
+  }
+
+  return {
+    title: course.title,
+    description: course.description,
   };
 }
 
-export default async function CourseDetailPage({ params }: CourseDetailPageProps) {
+export default async function CourseDetailPage({ params }: PageProps) {
+  const { id } = await params;
+
   // Get course data from Supabase or mock data
-  const course = useMockData()
-    ? mockData.mockCourses.find(c => c.id === params.id)
-    : await getCourseById(params.id);
+  const course = shouldUseMockData()
+    ? mockData.mockCourses.find(c => c.id === id)
+    : await getCourseById(id);
 
   // Handle case where course is not found
   if (!course) {
@@ -30,9 +54,9 @@ export default async function CourseDetailPage({ params }: CourseDetailPageProps
   }
 
   // Get sections for this course
-  const sections = useMockData()
-    ? mockData.mockSections.filter(s => s.course_id === params.id)
-    : await getCourseSections(params.id);
+  const sections = shouldUseMockData()
+    ? mockData.mockSections.filter(s => s.course_id === id)
+    : await getCourseSections(id);
 
   // Sort sections by order
   const sortedSections = [...sections].sort((a, b) => a.order - b.order);

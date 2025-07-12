@@ -5,41 +5,51 @@ import { ViewToggle } from './components/ViewToggle';
 import { CourseListSkeleton } from './components/CourseListSkeleton';
 import { CourseGridSkeleton } from './components/CourseGridSkeleton';
 import { SearchBar } from './components/SearchBar';
-import { getCourses, useMockData, mockData } from '@/lib/supabase';
+import { getCourses, shouldUseMockData, mockData } from '@/lib/supabase';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Section } from '@/components/layout/Section';
 
-interface CoursesPageProps {
-  searchParams: {
-    view?: 'grid' | 'list';
-    query?: string;
-    creator?: string;
-    min_price?: string;
-    max_price?: string;
-    sort?: string;
-    order?: 'asc' | 'desc';
-    page?: string;
-  }
-}
+type SearchParams = {
+  view?: 'grid' | 'list';
+  query?: string;
+  creator?: string;
+  min_price?: string;
+  max_price?: string;
+  sort?: string;
+  order?: 'asc' | 'desc';
+  page?: string;
+};
 
-export default async function CoursesPage({ searchParams }: CoursesPageProps) {
-  const view = searchParams.view || 'grid';
-  const query = searchParams.query || '';
+type PageProps = {
+  searchParams: Promise<SearchParams>;
+};
+
+export default async function CoursesPage({ searchParams }: PageProps) {
+  const {
+    view = 'grid',
+    query = '',
+    creator,
+    min_price,
+    max_price,
+    sort,
+    order,
+    page,
+  } = await searchParams;
   
   // Get courses from Supabase or mock data
-  const courses = useMockData() 
+  const courses = shouldUseMockData() 
     ? mockData.mockCourses.filter(course => 
         !query || course.title.toLowerCase().includes(query.toLowerCase()) || 
         course.description.toLowerCase().includes(query.toLowerCase())
       )
     : await getCourses({
-        query: searchParams.query,
-        creator_id: searchParams.creator,
-        min_price: searchParams.min_price ? parseFloat(searchParams.min_price) : undefined,
-        max_price: searchParams.max_price ? parseFloat(searchParams.max_price) : undefined,
-        sort_by: searchParams.sort as any,
-        sort_order: searchParams.order,
-        page: searchParams.page ? parseInt(searchParams.page) : 1,
+        query,
+        creator_id: creator,
+        min_price: min_price ? parseFloat(min_price) : undefined,
+        max_price: max_price ? parseFloat(max_price) : undefined,
+        sort_by: sort as any,
+        sort_order: order,
+        page: page ? parseInt(page) : 1,
         limit: 12,
       });
 
@@ -66,7 +76,7 @@ export default async function CoursesPage({ searchParams }: CoursesPageProps) {
                   <>
                     Found <span className="font-medium">{courses.length}</span> 
                     {' '}course{courses.length !== 1 && 's'} for 
-                    {' '}<span className="font-medium">"{query}"</span>
+                    {' '}<span className="font-medium">&ldquo;{query}&rdquo;</span>
                   </>
                 ) : (
                   <>Showing {courses.length} courses</>

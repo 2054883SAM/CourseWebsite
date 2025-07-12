@@ -55,7 +55,7 @@ export function Newsletter({
           role="status"
           aria-live="polite"
         >
-          Thank you for subscribing! We've sent a confirmation email.
+          Thank you for subscribing! We&apos;ve sent a confirmation email.
         </div>
       ) : (
         <form 

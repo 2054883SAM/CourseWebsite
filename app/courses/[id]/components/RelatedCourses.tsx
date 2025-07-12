@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { getCourses, useMockData, mockData } from '@/lib/supabase';
+import { getCourses, shouldUseMockData, mockData } from '@/lib/supabase';
 import { Course } from '@/lib/supabase/types';
 
 interface RelatedCoursesProps {
@@ -10,7 +10,7 @@ interface RelatedCoursesProps {
 
 export async function RelatedCourses({ courseId, creatorId }: RelatedCoursesProps) {
   // Get courses from the same creator, excluding the current course
-  const relatedCourses = useMockData()
+  const relatedCourses = shouldUseMockData()
     ? mockData.mockCourses
         .filter(c => c.creator_id === creatorId && c.id !== courseId)
         .slice(0, 4)

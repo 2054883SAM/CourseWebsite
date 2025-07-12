@@ -22,7 +22,7 @@ export function CourseOverview({ course }: CourseOverviewProps) {
           </p>
           
           {/* Additional placeholder content to demonstrate formatting */}
-          <h3 className="text-lg font-medium mt-6 mb-2">What you'll learn</h3>
+          <h3 className="text-lg font-medium mt-6 mb-2">What you&apos;ll learn</h3>
           <ul className="list-disc pl-5 space-y-1 text-gray-700">
             <li>Comprehensive understanding of {course.title} fundamentals</li>
             <li>Hands-on experience with practical examples and exercises</li>

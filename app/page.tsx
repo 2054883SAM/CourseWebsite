@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { PageLayout, Section, Container, GridLayout, ContentBlock } from "../components/layout";
 
 export default function Home() {
@@ -12,18 +13,18 @@ export default function Home() {
           An online learning platform with interactive video courses and comprehensive learning materials.
         </p>
         <div className="flex flex-col sm:flex-row justify-center gap-4">
-          <a 
+          <Link 
             href="/courses" 
             className="inline-flex items-center justify-center rounded-md text-base font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background bg-primary-600 hover:bg-primary-700 text-white h-11 px-6"
           >
             Browse Courses
-          </a>
-          <a 
+          </Link>
+          <Link 
             href="/about" 
             className="inline-flex items-center justify-center rounded-md text-base font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background border border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800 h-11 px-6"
           >
             Learn More
-          </a>
+          </Link>
         </div>
       </Section>
 
@@ -45,24 +46,24 @@ export default function Home() {
               </p>
               <div className="flex justify-between items-center">
                 <span className="font-bold text-primary-600 dark:text-primary-400">$49.99</span>
-                <a 
+                <Link 
                   href={`/courses/${i}`}
                   className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background bg-primary-600 hover:bg-primary-700 text-white h-9 px-4"
                 >
                   View Course
-                </a>
+                </Link>
               </div>
             </ContentBlock>
           ))}
         </GridLayout>
         
         <div className="text-center">
-          <a 
+          <Link 
             href="/courses" 
             className="inline-flex items-center justify-center rounded-md text-base font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background border border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800 h-11 px-6"
           >
             View All Courses
-          </a>
+          </Link>
         </div>
       </Section>
 
@@ -119,18 +120,18 @@ export default function Home() {
           Join thousands of students already learning on our platform.
         </p>
         <div className="flex flex-col sm:flex-row justify-center gap-4">
-          <a 
+          <Link 
             href="/signup" 
             className="inline-flex items-center justify-center rounded-md text-base font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background bg-primary-600 hover:bg-primary-700 text-white h-11 px-6"
           >
             Sign Up Now
-          </a>
-          <a 
+          </Link>
+          <Link 
             href="/courses" 
             className="inline-flex items-center justify-center rounded-md text-base font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background border border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800 h-11 px-6"
           >
             Browse Courses
-          </a>
+          </Link>
         </div>
       </Section>
     </PageLayout>

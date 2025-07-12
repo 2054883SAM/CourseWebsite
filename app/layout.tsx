@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { ThemeProvider } from "../components/layout";
+import ErrorSuppressor from "@/components/ErrorSuppressor";
 import "./globals.css";
 
 const inter = Inter({
@@ -21,6 +22,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full scroll-smooth">
       <body className={`${inter.variable} h-full antialiased font-sans bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100`}>
+        <ErrorSuppressor />
         <ThemeProvider>
           {children}
         </ThemeProvider>

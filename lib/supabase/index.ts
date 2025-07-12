@@ -13,7 +13,7 @@ export * as mockData from './mockData';
 
 // Helper function to determine if we should use mock data
 // This allows us to switch between real and mock data easily
-export const useMockData = (): boolean => {
+export const shouldUseMockData = (): boolean => {
   // Use mock data in development when there's no Supabase data available
   // or when explicitly requested via env var
   if (process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true') {

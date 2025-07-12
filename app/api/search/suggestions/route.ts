@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { mockData } from '@/lib/supabase';
 import { supabase } from '@/lib/supabase/client';
-import { useMockData } from '@/lib/supabase';
+import { shouldUseMockData } from '@/lib/supabase';
 
 export async function GET(request: Request) {
   try {
@@ -16,7 +16,7 @@ export async function GET(request: Request) {
     
     let suggestions: string[] = [];
     
-    if (useMockData()) {
+    if (shouldUseMockData()) {
       // Use mock data for suggestions
       // Filter course titles from mock data that match the query
       suggestions = mockData.mockCourses

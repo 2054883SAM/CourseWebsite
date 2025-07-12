@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect, ReactNode } from 'react';
+import React, { useState, useRef, useEffect, ReactNode, useId } from 'react';
 
 interface DropdownMenuProps {
   trigger: ReactNode;
@@ -16,8 +16,9 @@ export function DropdownMenu({
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const menuId = `dropdown-menu-${Math.random().toString(36).substr(2, 9)}`;
-  const triggerId = `dropdown-trigger-${Math.random().toString(36).substr(2, 9)}`;
+  const id = useId();
+  const menuId = `dropdown-menu-${id}`;
+  const triggerId = `dropdown-trigger-${id}`;
 
   const toggleDropdown = () => {
     setIsOpen(!isOpen);
@@ -88,7 +89,7 @@ export function DropdownMenu({
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isOpen, activeIndex, children]);
+  }, [isOpen, activeIndex, children, triggerId]);
 
   // Add aria-selected to the active item
   const childrenWithProps = React.Children.map(children, (child, index) => {
