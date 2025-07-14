@@ -32,10 +32,35 @@ export function ThemeProvider({
   storageKey = 'theme',
   ...props
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(defaultTheme);
-  const [resolvedTheme, setResolvedTheme] = useState<'dark' | 'light'>('light');
+  const [mounted, setMounted] = useState(false);
+  const [theme, setTheme] = useState<Theme>(() => {
+    // Only try to get from localStorage if we're on the client side
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem(storageKey) as Theme | null;
+        if (stored) {
+          return stored;
+        }
+      } catch (e) {
+        console.warn('Failed to read theme from localStorage:', e);
+      }
+    }
+    return defaultTheme;
+  });
+
+  const [resolvedTheme, setResolvedTheme] = useState<'dark' | 'light'>(
+    typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches
+      ? 'dark'
+      : 'light'
+  );
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+
     const root = window.document.documentElement;
     root.classList.remove('light', 'dark');
 
@@ -45,27 +70,58 @@ export function ThemeProvider({
         : 'light';
       root.classList.add(systemTheme);
       setResolvedTheme(systemTheme);
-      return;
-    }
 
-    root.classList.add(theme);
-    setResolvedTheme(theme);
-  }, [theme]);
+      // Listen for system theme changes
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      const handler = (e: MediaQueryListEvent) => {
+        const newTheme = e.matches ? 'dark' : 'light';
+        root.classList.remove('light', 'dark');
+        root.classList.add(newTheme);
+        setResolvedTheme(newTheme);
+      };
+
+      mediaQuery.addEventListener('change', handler);
+      return () => mediaQuery.removeEventListener('change', handler);
+    } else {
+      root.classList.add(theme);
+      setResolvedTheme(theme);
+    }
+  }, [theme, mounted]);
 
   useEffect(() => {
-    const storedTheme = localStorage.getItem(storageKey) as Theme | null;
-    if (storedTheme) {
-      setTheme(storedTheme);
+    if (!mounted) return;
+    try {
+      localStorage.setItem(storageKey, theme);
+    } catch (e) {
+      console.warn('Failed to save theme to localStorage:', e);
     }
-  }, [storageKey]);
+  }, [theme, storageKey, mounted]);
 
-  useEffect(() => {
-    localStorage.setItem(storageKey, theme);
-  }, [theme, storageKey]);
+  const contextValue = {
+    theme,
+    setTheme,
+    resolvedTheme,
+  };
+
+  // During SSR and initial client render, return a static context to prevent hydration mismatch
+  if (!mounted) {
+    return (
+      <ThemeContext.Provider
+        value={{
+          theme: defaultTheme,
+          setTheme: () => {},
+          resolvedTheme: 'light',
+        }}
+        {...props}
+      >
+        {children}
+      </ThemeContext.Provider>
+    );
+  }
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, resolvedTheme }} {...props}>
+    <ThemeContext.Provider value={contextValue} {...props}>
       {children}
     </ThemeContext.Provider>
   );
-} 
+}

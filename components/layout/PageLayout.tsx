@@ -20,17 +20,13 @@ export function PageLayout({
   withFooter = true,
 }: PageLayoutProps) {
   return (
-    <div className={`min-h-screen flex flex-col ${className}`}>
+    <div className={`flex min-h-screen flex-col ${className}`}>
       <SkipToContent />
       <Header />
-      <MainContent 
-        maxWidth={maxWidth} 
-        withPadding={withPadding}
-        id="main-content"
-      >
+      <MainContent maxWidth={maxWidth} withPadding={withPadding} id="main-content">
         {children}
       </MainContent>
       {withFooter && <Footer />}
     </div>
   );
-} 
+}

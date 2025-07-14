@@ -1,16 +1,44 @@
 // Learn more: https://github.com/testing-library/jest-dom
 import '@testing-library/jest-dom';
 
+// Mock window.matchMedia
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: jest.fn().mockImplementation((query) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: jest.fn(), // deprecated
+    removeListener: jest.fn(), // deprecated
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
+    dispatchEvent: jest.fn(),
+  })),
+});
+
+// Mock window.location
+const mockLocation = new URL('http://localhost:3000');
+Object.defineProperty(window, 'location', {
+  writable: true,
+  value: mockLocation,
+});
+
+// Mock window.origin
+Object.defineProperty(window, 'origin', {
+  writable: true,
+  value: 'http://localhost:3000',
+});
+
 // Mock next/image
 jest.mock('next/image', () => ({
   __esModule: true,
   default: ({ src, alt, fill, sizes, width, height, className }) => {
     // Get props that were passed to the Image component
     const props = { src, alt, fill, sizes, width, height, className };
-    
+
     return (
-      <img 
-        src={src} 
+      <img
+        src={src}
         alt={alt}
         width={width}
         height={height}
@@ -20,7 +48,7 @@ jest.mock('next/image', () => ({
         data-mocked="true"
       />
     );
-  }
+  },
 }));
 
 // Mock next/link
@@ -30,7 +58,7 @@ jest.mock('next/link', () => ({
     <a href={href} {...rest}>
       {children}
     </a>
-  )
+  ),
 }));
 
 // Mock localStorage
@@ -44,4 +72,4 @@ if (typeof window !== 'undefined') {
     },
     writable: true,
   });
-} 
+}

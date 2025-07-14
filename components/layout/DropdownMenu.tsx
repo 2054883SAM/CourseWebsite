@@ -8,11 +8,7 @@ interface DropdownMenuProps {
   align?: 'left' | 'right';
 }
 
-export function DropdownMenu({ 
-  trigger, 
-  children, 
-  align = 'right' 
-}: DropdownMenuProps) {
+export function DropdownMenu({ trigger, children, align = 'right' }: DropdownMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -50,26 +46,24 @@ export function DropdownMenu({
 
     const handleKeyDown = (e: KeyboardEvent) => {
       const childrenArray = React.Children.toArray(children);
-      
+
       switch (e.key) {
         case 'ArrowDown':
           e.preventDefault();
-          setActiveIndex((prevIndex) => 
-            prevIndex < childrenArray.length - 1 ? prevIndex + 1 : 0
-          );
+          setActiveIndex((prevIndex) => (prevIndex < childrenArray.length - 1 ? prevIndex + 1 : 0));
           break;
         case 'ArrowUp':
           e.preventDefault();
-          setActiveIndex((prevIndex) => 
-            prevIndex > 0 ? prevIndex - 1 : childrenArray.length - 1
-          );
+          setActiveIndex((prevIndex) => (prevIndex > 0 ? prevIndex - 1 : childrenArray.length - 1));
           break;
         case 'Enter':
         case ' ':
           e.preventDefault();
           if (activeIndex >= 0) {
             // Simulate click on the active item
-            const activeChild = dropdownRef.current?.querySelectorAll('[role="menuitem"]')[activeIndex] as HTMLElement;
+            const activeChild = dropdownRef.current?.querySelectorAll('[role="menuitem"]')[
+              activeIndex
+            ] as HTMLElement;
             activeChild?.click();
           }
           break;
@@ -106,7 +100,7 @@ export function DropdownMenu({
 
   return (
     <div className="relative" ref={dropdownRef}>
-      <div 
+      <div
         onClick={toggleDropdown}
         id={triggerId}
         aria-haspopup="true"
@@ -123,11 +117,11 @@ export function DropdownMenu({
       >
         {trigger}
       </div>
-      
+
       {isOpen && (
         <div
           id={menuId}
-          className={`absolute z-10 mt-2 w-56 rounded-md bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none ${
+          className={`absolute z-10 mt-2 w-56 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none dark:bg-gray-800 ${
             align === 'right' ? 'right-0' : 'left-0'
           }`}
           role="menu"
@@ -141,4 +135,4 @@ export function DropdownMenu({
       )}
     </div>
   );
-} 
+}

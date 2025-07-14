@@ -8,6 +8,7 @@ import { ActiveLink } from './ActiveLink';
 import { Logo } from './Logo';
 import { DropdownMenu } from './DropdownMenu';
 import { DropdownMenuItem } from './DropdownMenuItem';
+import { useAuth } from '@/lib/auth/AuthContext';
 
 const navigation = [
   { name: 'Home', href: '/' },
@@ -17,6 +18,7 @@ const navigation = [
 ];
 
 export function Header() {
+  const { user, signOut } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
@@ -49,13 +51,13 @@ export function Header() {
     const focusableElements = mobileMenu.querySelectorAll(
       'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
     );
-    
+
     const firstElement = focusableElements[0] as HTMLElement;
     const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
-    
+
     function handleTabKey(e: KeyboardEvent) {
       if (e.key !== 'Tab') return;
-      
+
       if (e.shiftKey) {
         // If shift + tab and on first element, move to last element
         if (document.activeElement === firstElement) {
@@ -70,9 +72,9 @@ export function Header() {
         }
       }
     }
-    
+
     document.addEventListener('keydown', handleTabKey);
-    
+
     // Cleanup
     return () => {
       document.removeEventListener('keydown', handleTabKey);
@@ -95,7 +97,7 @@ export function Header() {
     <header
       className={`sticky top-0 z-40 transition-shadow duration-300 ${
         isScrolled
-          ? 'bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm shadow-sm'
+          ? 'bg-white/90 shadow-sm backdrop-blur-sm dark:bg-gray-900/90'
           : 'bg-white dark:bg-gray-900'
       }`}
       role="banner"
@@ -105,9 +107,9 @@ export function Header() {
           <div className="flex items-center">
             <Logo className="text-gray-900 dark:text-white" />
           </div>
-          
+
           {/* Desktop navigation */}
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden items-center space-x-8 md:flex">
             <div className="flex items-center space-x-6">
               {navigation.map((item) => (
                 <ActiveLink
@@ -120,58 +122,62 @@ export function Header() {
                 </ActiveLink>
               ))}
             </div>
-            
+
             <div className="flex items-center space-x-4">
               <ThemeToggle />
-              
-              <DropdownMenu 
-                trigger={
-                  <button
-                    type="button"
-                    className="flex items-center text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
-                    aria-label="User menu"
-                    aria-haspopup="true"
+
+              {user ? (
+                <DropdownMenu
+                  trigger={
+                    <button
+                      type="button"
+                      className="flex items-center text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+                      aria-label="User menu"
+                      aria-haspopup="true"
+                    >
+                      <span className="sr-only">Open user menu</span>
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 dark:bg-gray-700">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-5 w-5 text-gray-600 dark:text-gray-400"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                          />
+                        </svg>
+                      </div>
+                    </button>
+                  }
+                >
+                  <DropdownMenuItem href="/profile">Your Profile</DropdownMenuItem>
+                  <DropdownMenuItem href="/settings">Settings</DropdownMenuItem>
+                  <DropdownMenuItem onClick={signOut}>Sign out</DropdownMenuItem>
+                </DropdownMenu>
+              ) : (
+                <div className="flex items-center space-x-4">
+                  <Link
+                    href="/signin"
+                    className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
                   >
-                    <span className="sr-only">Open user menu</span>
-                    <div className="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5 text-gray-600 dark:text-gray-400"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                        />
-                      </svg>
-                    </div>
-                  </button>
-                }
-              >
-                <DropdownMenuItem href="/profile">
-                  Your Profile
-                </DropdownMenuItem>
-                <DropdownMenuItem href="/settings">
-                  Settings
-                </DropdownMenuItem>
-                <DropdownMenuItem href="/logout">
-                  Sign out
-                </DropdownMenuItem>
-              </DropdownMenu>
-              
-              <Link
-                href="/login"
-                className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background bg-primary-600 hover:bg-primary-700 text-white h-9 px-4"
-              >
-                Sign In
-              </Link>
+                    Sign in
+                  </Link>
+                  <Link
+                    href="/signup"
+                    className="ring-offset-background inline-flex h-9 items-center justify-center rounded-md bg-primary-600 px-4 text-sm font-medium text-white transition-colors hover:bg-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+                  >
+                    Sign up
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
-          
+
           {/* Mobile menu button */}
           <div className="flex md:hidden">
             <ThemeToggle />
@@ -181,7 +187,7 @@ export function Header() {
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-expanded={mobileMenuOpen}
               aria-controls="mobile-menu"
-              aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+              aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
             >
               <span className="sr-only">{mobileMenuOpen ? 'Close menu' : 'Open menu'}</span>
               {mobileMenuOpen ? (
@@ -221,12 +227,12 @@ export function Header() {
           </div>
         </nav>
       </Container>
-      
+
       {/* Mobile menu */}
       <div
         id="mobile-menu"
         ref={mobileMenuRef}
-        className={`fixed inset-0 z-50 md:hidden bg-white dark:bg-gray-900 transition-transform duration-300 ease-in-out transform ${
+        className={`fixed inset-0 z-50 transform bg-white transition-transform duration-300 ease-in-out dark:bg-gray-900 md:hidden ${
           mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
         aria-hidden={!mobileMenuOpen}
@@ -234,7 +240,7 @@ export function Header() {
         aria-modal="true"
         aria-labelledby="mobile-menu-title"
       >
-        <div className="p-4 flex justify-end">
+        <div className="flex justify-end p-4">
           <button
             type="button"
             className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
@@ -259,38 +265,43 @@ export function Header() {
             </svg>
           </button>
         </div>
-        <div className="px-4 pt-2 pb-6">
-          <h2 id="mobile-menu-title" className="sr-only">Mobile navigation menu</h2>
+
+        <div className="px-4 py-6">
+          <h2 id="mobile-menu-title" className="sr-only">
+            Mobile navigation menu
+          </h2>
           <div className="space-y-1">
             {navigation.map((item) => (
               <Link
                 key={item.name}
                 href={item.href}
-                className="block py-3 text-base font-medium text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-800"
+                className="block border-b border-gray-200 py-3 text-base font-medium text-gray-900 dark:border-gray-800 dark:text-gray-100"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 {item.name}
               </Link>
             ))}
           </div>
-          <div className="mt-8 space-y-4">
-            <Link
-              href="/login"
-              className="w-full flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background bg-primary-600 hover:bg-primary-700 text-white h-10 px-4"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Sign In
-            </Link>
-            <Link
-              href="/signup"
-              className="w-full flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background border border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800 h-10 px-4"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Sign Up
-            </Link>
-          </div>
+          {!user && (
+            <div className="mt-8 space-y-4">
+              <Link
+                href="/signin"
+                className="ring-offset-background flex h-10 w-full items-center justify-center rounded-md bg-primary-600 px-4 text-sm font-medium text-white transition-colors hover:bg-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Sign in
+              </Link>
+              <Link
+                href="/signup"
+                className="ring-offset-background flex h-10 w-full items-center justify-center rounded-md border border-gray-200 px-4 text-sm font-medium transition-colors hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 dark:border-gray-800 dark:hover:bg-gray-800"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Sign up
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </header>
   );
-} 
+}

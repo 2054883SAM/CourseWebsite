@@ -14,16 +14,14 @@ export async function getCourses(params?: CourseSearchParams): Promise<Course[]>
       sort_by = 'created_at',
       sort_order = 'desc',
       page = 1,
-      limit = 10
+      limit = 10,
     } = params || {};
 
     // Calculate the offset based on page and limit
     const offset = (page - 1) * limit;
 
     // Start building the query
-    let queryBuilder = supabase
-      .from('courses')
-      .select('*, users!creator_id(name, photo_url)');
+    let queryBuilder = supabase.from('courses').select('*, users!creator_id(name, photo_url)');
 
     // Apply filters if provided
     if (query) {
@@ -53,7 +51,7 @@ export async function getCourses(params?: CourseSearchParams): Promise<Course[]>
     if (error) throw error;
 
     // Transform the data to match our Course interface
-    const courses = data.map(course => ({
+    const courses = data.map((course) => ({
       ...course,
       creator: course.users,
     })) as Course[];
@@ -159,4 +157,4 @@ export async function isUserEnrolled(userId: string, courseId: string): Promise<
     console.error(`Error checking enrollment for user ${userId} in course ${courseId}:`, error);
     throw error;
   }
-} 
+}
