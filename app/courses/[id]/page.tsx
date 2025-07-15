@@ -14,7 +14,6 @@ import { RelatedCourses } from './components/RelatedCourses';
 import { CourseDetailSkeleton } from './components/CourseDetailSkeleton';
 import { CourseActions } from './components/CourseActions';
 import { getCourseById, getCourseSections, getCourses, shouldUseMockData, mockData } from '@/lib/supabase';
-import { ensureValidSession, supabase } from '@/lib/supabase/client';
 import { withAuth } from '@/components/auth/withAuth';
 import { Course, Section as CourseSection } from '@/lib/supabase/types';
 
@@ -34,22 +33,16 @@ function CourseDetailPage({ params }: PageProps) {
   const [course, setCourse] = useState<Course | null>(null);
   const [sections, setSections] = useState<CourseSection[]>([]);
   const [relatedCourses, setRelatedCourses] = useState<Course[]>([]);
-  const [retryCount, setRetryCount] = useState(0);
-  const [isVisible, setIsVisible] = useState(!document.hidden);
+  const [lastFetchTime, setLastFetchTime] = useState(0);
+
+  // Add requireAuth constant since we know this page doesn't require auth
+  const requireAuth = false;
 
   // Memoize the fetch function to prevent unnecessary recreations
   const fetchData = useCallback(async (mounted: boolean) => {
+    if (!mounted) return;
+
     try {
-      if (!mounted) return;
-
-      setLoading(true);
-      setError(null);
-
-      // Wait for session to be validated
-      await ensureValidSession();
-
-      if (!mounted) return;
-
       // Get course data
       const courseData = shouldUseMockData()
         ? mockData.mockCourses.find(c => c.id === id)
@@ -63,7 +56,6 @@ function CourseDetailPage({ params }: PageProps) {
       }
 
       if (!mounted) return;
-
       setCourse(courseData);
 
       // Get sections data
@@ -88,82 +80,51 @@ function CourseDetailPage({ params }: PageProps) {
           }).then(courses => courses.filter(c => c.id !== id).slice(0, 4));
 
       if (!mounted) return;
-
       setRelatedCourses(relatedCoursesData);
-      setLoading(false);
-    } catch (error) {
-      console.error('Error fetching course data:', error);
+      setError(null);
+      setLastFetchTime(Date.now());
+    } catch (err) {
+      console.error('Error fetching course data:', err);
       if (!mounted) return;
 
       setError('Failed to load course. Please try again.');
       setCourse(null);
       setSections([]);
       setRelatedCourses([]);
-      setLoading(false);
-
-      // Retry logic for transient errors
-      if (retryCount < 3) {
-        setTimeout(() => {
-          if (mounted) {
-            setRetryCount(prev => prev + 1);
-          }
-        }, 2000); // Wait 2 seconds before retrying
-      }
+    } finally {
+      if (mounted) setLoading(false);
     }
-  }, [id, router, retryCount]);
+  }, [id, router]);
 
-  // Handle visibility changes
-  useEffect(() => {
-    function handleVisibilityChange() {
-      const isNowVisible = !document.hidden;
-      setIsVisible(isNowVisible);
-      
-      // If becoming visible and we have an error or are loading, retry the fetch
-      if (isNowVisible && (error || loading)) {
-        setRetryCount(0); // Reset retry count
-        setError(null);
-      }
-    }
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [error, loading]);
-
-  // Handle auth state changes
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async () => {
-      if (isVisible) {
-        setRetryCount(0); // Reset retry count
-        setError(null);
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [isVisible]);
-
-  // Main data fetching effect
   useEffect(() => {
     let mounted = true;
 
-    if (isVisible) {
-      fetchData(mounted);
-    }
+    // Function to check if we should fetch based on time elapsed
+    const shouldRefetch = () => {
+      const timeSinceLastFetch = Date.now() - lastFetchTime;
+      // Only refetch if it's been more than 5 minutes or there was an error
+      return timeSinceLastFetch > 5 * 60 * 1000 || error !== null;
+    };
+
+    // Function to handle visibility change
+    const handleVisibilityChange = () => {
+      if (!document.hidden && shouldRefetch()) {
+        setLoading(true);
+        fetchData(true);
+      }
+    };
+
+    // Initial fetch
+    fetchData(mounted);
+
+    // Set up visibility change listener
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       mounted = false;
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [fetchData, isVisible]);
-
-  const handleRetry = () => {
-    setRetryCount(0); // Reset retry count
-    setError(null);
-    setLoading(true);
-  };
+  }, [fetchData, lastFetchTime, error]);
 
   if (loading) {
     return <CourseDetailSkeleton />;
@@ -177,7 +138,10 @@ function CourseDetailPage({ params }: PageProps) {
             <div className="text-center text-red-600">
               <p>{error}</p>
               <button 
-                onClick={handleRetry}
+                onClick={() => {
+                  setLoading(true);
+                  fetchData(true);
+                }}
                 className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
               >
                 Retry

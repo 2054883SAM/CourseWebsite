@@ -1,5 +1,15 @@
 import { supabase } from './client';
 import { Course, Section, Subtitle, CourseSearchParams } from './types';
+import { PostgrestResponse, PostgrestSingleResponse } from '@supabase/supabase-js';
+
+// Helper for handling timeout errors
+function handleTimeoutError(error: unknown, action: string): never {
+  console.error(`Error while trying to ${action}:`, error);
+  if (error instanceof Error && error.message === 'Request timed out') {
+    throw new Error(`Taking longer than expected to ${action}. Please check your connection and try again.`);
+  }
+  throw error;
+}
 
 /**
  * Fetch all courses with optional filtering
@@ -46,20 +56,21 @@ export async function getCourses(params?: CourseSearchParams): Promise<Course[]>
       .range(offset, offset + limit - 1);
 
     // Execute the query
-    const { data, error } = await queryBuilder;
+    const response = await queryBuilder;
+    const { data, error } = response;
 
     if (error) throw error;
+    if (!data) return [];
 
     // Transform the data to match our Course interface
-    const courses = data.map((course) => ({
+    const courses = data.map((course: any) => ({
       ...course,
       creator: course.users,
     })) as Course[];
 
     return courses;
   } catch (error) {
-    console.error('Error fetching courses:', error);
-    throw error;
+    handleTimeoutError(error, 'load courses');
   }
 }
 
@@ -69,21 +80,25 @@ export async function getCourses(params?: CourseSearchParams): Promise<Course[]>
 export async function getCourseById(id: string): Promise<Course | null> {
   try {
     // Fetch the course with creator info
-    const { data: courseData, error: courseError } = await supabase
+    const courseResponse = await supabase
       .from('courses')
       .select('*, users!creator_id(id, name, email, photo_url, role)')
       .eq('id', id)
       .single();
+    
+    const { data: courseData, error: courseError } = courseResponse;
 
     if (courseError) throw courseError;
     if (!courseData) return null;
 
     // Fetch the sections for this course
-    const { data: sectionsData, error: sectionsError } = await supabase
+    const sectionsResponse = await supabase
       .from('sections')
       .select('*')
       .eq('course_id', id)
       .order('order', { ascending: true });
+    
+    const { data: sectionsData, error: sectionsError } = sectionsResponse;
 
     if (sectionsError) throw sectionsError;
 
@@ -97,7 +112,7 @@ export async function getCourseById(id: string): Promise<Course | null> {
     return course;
   } catch (error) {
     console.error(`Error fetching course with ID ${id}:`, error);
-    throw error;
+    handleTimeoutError(error, 'load course');
   }
 }
 
@@ -106,17 +121,20 @@ export async function getCourseById(id: string): Promise<Course | null> {
  */
 export async function getCourseSections(courseId: string): Promise<Section[]> {
   try {
-    const { data, error } = await supabase
+    const response = await supabase
       .from('sections')
       .select('*')
       .eq('course_id', courseId)
       .order('order', { ascending: true });
+    
+    const { data, error } = response;
 
     if (error) throw error;
+    if (!data) return [];
     return data as Section[];
   } catch (error) {
     console.error(`Error fetching sections for course ${courseId}:`, error);
-    throw error;
+    handleTimeoutError(error, 'load sections');
   }
 }
 
@@ -125,16 +143,19 @@ export async function getCourseSections(courseId: string): Promise<Section[]> {
  */
 export async function getSectionSubtitles(sectionId: string): Promise<Subtitle[]> {
   try {
-    const { data, error } = await supabase
+    const response = await supabase
       .from('subtitles')
       .select('*')
       .eq('section_id', sectionId);
+    
+    const { data, error } = response;
 
     if (error) throw error;
+    if (!data) return [];
     return data as Subtitle[];
   } catch (error) {
     console.error(`Error fetching subtitles for section ${sectionId}:`, error);
-    throw error;
+    handleTimeoutError(error, 'load subtitles');
   }
 }
 
@@ -143,18 +164,20 @@ export async function getSectionSubtitles(sectionId: string): Promise<Subtitle[]
  */
 export async function isUserEnrolled(userId: string, courseId: string): Promise<boolean> {
   try {
-    const { data, error } = await supabase
+    const response = await supabase
       .from('enrollments')
       .select('id')
       .eq('user_id', userId)
       .eq('course_id', courseId)
       .eq('payment_status', 'paid')
       .maybeSingle();
+    
+    const { data, error } = response;
 
     if (error) throw error;
     return !!data;
   } catch (error) {
     console.error(`Error checking enrollment for user ${userId} in course ${courseId}:`, error);
-    throw error;
+    handleTimeoutError(error, 'check enrollment status');
   }
 }

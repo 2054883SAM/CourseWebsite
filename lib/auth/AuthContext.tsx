@@ -52,10 +52,7 @@ export const AuthProvider = ({
   const [user, setUser] = useState<UserWithRole | null>(null);
   const [dbUser, setDbUser] = useState<DbUser | null>(null);
   const [loading, setLoading] = useState(true);
-  const refreshingRef = useRef(false);
   const mountedRef = useRef(true);
-  const lastRefreshTime = useRef(0);
-  const REFRESH_INTERVAL = 30000; // 30 seconds
 
   // Get auth action functions from our custom hook
   const authActions = useAuthActions(supabaseClient);
@@ -95,115 +92,24 @@ export const AuthProvider = ({
         return;
       }
 
+      // Immediately set user and unblock UI
       const currentUser = { ...session.user } as UserWithRole;
       if (mountedRef.current) {
         setUser(currentUser);
-        await fetchUserRole(currentUser);
+        setLoading(false);
+        
+        // Fetch role in background
+        fetchUserRole(currentUser);
       }
     } catch (error) {
       console.error('Error handling auth state change:', error);
       if (mountedRef.current) {
         setUser(null);
         setDbUser(null);
-      }
-    } finally {
-      if (mountedRef.current) {
         setLoading(false);
       }
     }
   }, [fetchUserRole]);
-
-  /**
-   * Refreshes the session and updates state
-   * Also ensures Supabase client is ready for data fetching
-   */
-  const refreshSession = useCallback(async (force = false) => {
-    const now = Date.now();
-    if (!force && now - lastRefreshTime.current < REFRESH_INTERVAL) {
-      return;
-    }
-    
-    if (refreshingRef.current) return;
-    
-    try {
-      refreshingRef.current = true;
-      
-      // Force a new session refresh
-      const { data: { session }, error } = await supabaseClient.auth.getSession();
-      
-      if (error) {
-        console.error('Error refreshing session:', error);
-        if (mountedRef.current) {
-          setUser(null);
-          setDbUser(null);
-        }
-        return;
-      }
-
-      if (session?.user) {
-        // Ensure the client has the latest session
-        await supabaseClient.auth.setSession({
-          access_token: session.access_token,
-          refresh_token: session.refresh_token
-        });
-        
-        await handleAuthStateChange(session);
-        lastRefreshTime.current = now;
-      } else {
-        if (mountedRef.current) {
-          setUser(null);
-          setDbUser(null);
-        }
-      }
-    } catch (error) {
-      console.error('Error during session refresh:', error);
-      if (mountedRef.current) {
-        setUser(null);
-        setDbUser(null);
-      }
-    } finally {
-      refreshingRef.current = false;
-      if (mountedRef.current) {
-        setLoading(false);
-      }
-    }
-  }, [supabaseClient, handleAuthStateChange]);
-
-  // Handle visibility change with proper session refresh
-  useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
-    let wasHidden = document.hidden;
-
-    const handleVisibilityChange = async () => {
-      const isNowVisible = !document.hidden;
-      
-      // Only handle tab becoming visible after being hidden
-      if (wasHidden && isNowVisible) {
-        // Clear any pending refresh
-        if (timeoutId) {
-          clearTimeout(timeoutId);
-        }
-        
-        // Add a small delay before refreshing to prevent rapid refreshes
-        timeoutId = setTimeout(async () => {
-          if (mountedRef.current) {
-            await refreshSession(true); // Force refresh when coming back to tab
-          }
-        }, 100);
-      }
-      
-      wasHidden = document.hidden;
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-    };
-  }, [refreshSession]);
 
   // Initial session check and auth state listener setup
   useEffect(() => {

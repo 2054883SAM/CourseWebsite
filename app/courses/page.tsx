@@ -8,7 +8,6 @@ import { CourseListSkeleton } from './components/CourseListSkeleton';
 import { CourseGridSkeleton } from './components/CourseGridSkeleton';
 import { SearchBar } from './components/SearchBar';
 import { getCourses, shouldUseMockData, mockData } from '@/lib/supabase';
-import { ensureValidSession, supabase } from '@/lib/supabase/client';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Section } from '@/components/layout/Section';
 import { withAuth } from '@/components/auth/withAuth';
@@ -31,8 +30,10 @@ function CoursesPage() {
   const [loading, setLoading] = useState(true);
   const [courses, setCourses] = useState<Course[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [retryCount, setRetryCount] = useState(0);
-  const [isVisible, setIsVisible] = useState(!document.hidden);
+  const [lastFetchTime, setLastFetchTime] = useState(0);
+
+  // Add requireAuth constant since we know this page doesn't require auth
+  const requireAuth = false;
 
   const view = searchParams.get('view') || 'grid';
   const query = searchParams.get('query') || '';
@@ -45,109 +46,65 @@ function CoursesPage() {
 
   // Memoize the fetch function to prevent unnecessary recreations
   const fetchCourses = useCallback(async (mounted: boolean) => {
+    if (!mounted) return;
+    
+
     try {
-      if (!mounted) return;
-      
-      setLoading(true);
-      setError(null);
-
-      // Wait for session to be validated
-      await ensureValidSession();
-
-      if (!mounted) return;
-
       // Fetch courses based on mock data or real data
       const coursesData = shouldUseMockData()
         ? mockData.mockCourses.filter(course =>
-            !query || course.title.toLowerCase().includes(query.toLowerCase()) ||
-            course.description.toLowerCase().includes(query.toLowerCase())
-          )
+          !query || course.title.toLowerCase().includes(query.toLowerCase()) ||
+          course.description.toLowerCase().includes(query.toLowerCase())
+        )
         : await getCourses({
-            query,
-            creator_id: creator,
-            min_price: min_price ? parseFloat(min_price) : undefined,
-            max_price: max_price ? parseFloat(max_price) : undefined,
-            sort_by: sort as any,
-            sort_order: order,
-            page: parseInt(page),
-            limit: 12,
-          });
+          query,
+          creator_id: creator,
+          min_price: min_price ? parseFloat(min_price) : undefined,
+          max_price: max_price ? parseFloat(max_price) : undefined,
+          sort_by: sort as any,
+          sort_order: order,
+          page: parseInt(page),
+          limit: 12,
+        });
 
       if (!mounted) return;
-
       setCourses(coursesData);
-      setLoading(false);
-    } catch (error) {
-      console.error('Error fetching courses:', error);
+      setError(null);
+      setLastFetchTime(Date.now());
+    } catch (err) {
+      console.error('Error fetching courses:', err);
       if (!mounted) return;
-
       setError('Failed to load courses. Please try again.');
       setCourses([]);
-      setLoading(false);
-
-      // Retry logic for transient errors
-      if (retryCount < 3) {
-        setTimeout(() => {
-          if (mounted) {
-            setRetryCount(prev => prev + 1);
-          }
-        }, 2000); // Wait 2 seconds before retrying
-      }
+    } finally {
+      if (mounted) setLoading(false);
     }
-  }, [query, creator, min_price, max_price, sort, order, page, retryCount]);
+  }, [query, creator, min_price, max_price, sort, order, page]);
 
-  // Handle visibility changes
+  // Effect for initial load and filter changes
   useEffect(() => {
-    function handleVisibilityChange() {
-      const isNowVisible = !document.hidden;
-      setIsVisible(isNowVisible);
-      
-      // If becoming visible and we have an error or are loading, retry the fetch
-      if (isNowVisible && (error || loading)) {
-        setRetryCount(0); // Reset retry count
-        setError(null);
+    let mounted = true;
+    setLoading(true);
+    fetchCourses(mounted);
+    return () => { mounted = false; };
+  }, [fetchCourses]);
+
+  // Effect for handling tab visibility changes
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden && Date.now() - lastFetchTime > 5 * 60 * 1000) {
+        fetchCourses(true);
+        setLoading(true);
       }
-    }
+    };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [error, loading]);
-
-  // Handle auth state changes
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async () => {
-      if (isVisible) {
-        setRetryCount(0); // Reset retry count
-        setError(null);
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [isVisible]);
-
-  // Main data fetching effect
-  useEffect(() => {
-    let mounted = true;
-
-    if (isVisible) {
-      fetchCourses(mounted);
-    }
-
-    return () => {
-      mounted = false;
-    };
-  }, [fetchCourses, isVisible]);
-
-  const handleRetry = () => {
-    setRetryCount(0); // Reset retry count
-    setError(null);
-    setLoading(true);
-  };
+  }, [fetchCourses, lastFetchTime]);
 
   if (loading) {
     return view === 'grid' ? <CourseGridSkeleton /> : <CourseListSkeleton />;
@@ -160,8 +117,11 @@ function CoursesPage() {
           <div className="container mx-auto px-4">
             <div className="text-center text-red-600">
               <p>{error}</p>
-              <button 
-                onClick={handleRetry}
+              <button
+                onClick={() => {
+                  setLoading(true);
+                  fetchCourses(true);
+                }}
                 className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
               >
                 Retry
@@ -188,14 +148,14 @@ function CoursesPage() {
           <div className="mb-8">
             <SearchBar initialQuery={query} className="max-w-2xl" />
           </div>
-          
+
           <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
             <div>
               <p className="text-gray-600">
                 {query ? (
                   <>
-                    Found <span className="font-medium">{courses.length}</span> 
-                    {' '}course{courses.length !== 1 && 's'} for 
+                    Found <span className="font-medium">{courses.length}</span>
+                    {' '}course{courses.length !== 1 && 's'} for
                     {' '}<span className="font-medium">&ldquo;{query}&rdquo;</span>
                   </>
                 ) : (

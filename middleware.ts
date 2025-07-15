@@ -2,30 +2,33 @@ import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// List of paths that require authentication
-const PROTECTED_PATHS = ['/video-player'];
+const protectedRoutes = [
+  '/dashboard',
+  '/profile',
+  '/video-player',
+  // Add other protected routes here
+];
 
-// List of paths that are only accessible to non-authenticated users
-const AUTH_PATHS = ['/signin', '/signup', '/reset-password'];
-
-export async function middleware(request: NextRequest) {
+export async function middleware(req: NextRequest) {
   const res = NextResponse.next();
-  const supabase = createMiddlewareClient({ req: request, res });
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const path = request.nextUrl.pathname;
+  const supabase = createMiddlewareClient({ req, res });
 
-  // Check if the path is protected and user is not authenticated
-  if (PROTECTED_PATHS.some((protectedPath) => path.startsWith(protectedPath)) && !session) {
-    const redirectUrl = new URL('/signin', request.url);
-    redirectUrl.searchParams.set('redirect', path);
-    return NextResponse.redirect(redirectUrl);
-  }
+  // Refresh session if it exists
+  const { data: { session }, error } = await supabase.auth.getSession();
 
-  // Check if the path is for non-authenticated users and user is authenticated
-  if (AUTH_PATHS.includes(path) && session) {
-    return NextResponse.redirect(new URL('/', request.url));
+  // Check if trying to access protected route
+  const isProtectedRoute = protectedRoutes.some(route => req.nextUrl.pathname.startsWith(route));
+
+  if (isProtectedRoute && !session) {
+    // Store the URL they were trying to access
+    const redirectUrl = req.nextUrl.pathname + req.nextUrl.search;
+    const searchParams = new URLSearchParams();
+    searchParams.set('redirectTo', redirectUrl);
+
+    // Redirect to sign in page with return URL
+    const signInUrl = new URL('/signin', req.url);
+    signInUrl.search = searchParams.toString();
+    return NextResponse.redirect(signInUrl);
   }
 
   return res;

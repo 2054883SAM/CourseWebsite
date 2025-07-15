@@ -1,141 +1,89 @@
 import { createClient } from '@supabase/supabase-js';
 import { Database } from '@/types/supabase';
 
-if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-  throw new Error('Missing env.NEXT_PUBLIC_SUPABASE_URL');
-}
-if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-  throw new Error('Missing env.NEXT_PUBLIC_SUPABASE_ANON_KEY');
+// Constants for timeout durations
+const BACKGROUND_TAB_TIMEOUT = 30000; // 30 seconds for background tab
+
+function createFetchWithTimeout(
+  // we only need a background timeout now
+  backgroundTimeout = BACKGROUND_TAB_TIMEOUT
+): typeof fetch {
+  // on server or build, just return the normal fetch
+  if (typeof window === 'undefined' || typeof document === 'undefined') {
+    return fetch
+  }
+
+  const orig = fetch.bind(window)
+  return (input, init) => {
+    // 1) If the tab is visible, skip any timeout entirely
+    if (!document.hidden) {
+      return orig(input, init)
+    }
+
+    // 2) Only when hidden do we enforce a timeout
+    return Promise.race([
+      orig(input, init),
+      new Promise<Response>((_, rej) =>
+        setTimeout(() => rej(new Error('Request timed out')), backgroundTimeout)
+      ),
+    ]) as Promise<Response>
+  }
 }
 
-// Create Supabase client
+
+// Validate required environment variables
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+if (!SUPABASE_URL) throw new Error('Missing env.NEXT_PUBLIC_SUPABASE_URL');
+if (!SUPABASE_ANON_KEY) throw new Error('Missing env.NEXT_PUBLIC_SUPABASE_ANON_KEY');
+
+// Create Supabase client with auth configuration
 export const supabase = createClient<Database>(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY,
   {
     auth: {
       autoRefreshToken: true,
       persistSession: true,
-      detectSessionInUrl: true,
+      detectSessionInUrl: false,
+    },
+    global: {
+      fetch: createFetchWithTimeout(),
     },
   }
 );
 
-// Track the last visibility state
-let wasHidden = false;
-
-// Track if we're currently refreshing the session
-let isRefreshingSession = false;
-
-// Track the last session validation time
-let lastValidationTime = 0;
-const VALIDATION_INTERVAL = 30000; // 30 seconds
-
-/**
- * Handle visibility change events globally
- */
 if (typeof window !== 'undefined') {
-  document.addEventListener('visibilitychange', async () => {
-    const isHidden = document.hidden;
-    
-    // Only handle tab becoming visible after being hidden
-    if (wasHidden && !isHidden) {
-      await refreshSessionIfNeeded();
+  // 1) Restore in-memory session from localStorage on load
+  supabase.auth.getSession().then(({ data: { session } }) => {
+    if (session) {
+      supabase.auth.setSession({
+        access_token: session.access_token,
+        refresh_token: session.refresh_token,
+      });
     }
-    
-    wasHidden = isHidden;
+  });
+
+  // 2) Tell your app when things change (SIGN_IN, TOKEN_REFRESHED, SIGN_OUT)
+  supabase.auth.onAuthStateChange((event, session) => {
+    console.log('Supabase auth event:', event);
+    // You can dispatch to your React context or state management here
+  });
+
+  // 3) Refresh session when tab gains focus
+  window.addEventListener('focus', () => {
+    supabase.auth.refreshSession().catch(err => {
+      console.error('Error refreshing Supabase session on focus:', err);
+    });
   });
 }
 
 /**
- * Refresh session if needed
+ * Simple wrapper to get the current session. Use this before data fetches if needed.
+ * Let the data fetch layer handle any auth errors or retries.
  */
-async function refreshSessionIfNeeded() {
-  if (isRefreshingSession) return null;
-  
-  try {
-    isRefreshingSession = true;
-    
-    const { data: { session }, error } = await supabase.auth.getSession();
-    if (error) throw error;
-
-    if (!session) return null;
-
-    // Check if session is expired or close to expiring (within 5 minutes)
-    const expiresAt = session?.expires_at ? new Date(session.expires_at * 1000) : null;
-    const isExpiredOrClose = expiresAt ? expiresAt <= new Date(Date.now() + 5 * 60 * 1000) : false;
-
-    if (isExpiredOrClose) {
-      const { data: { session: newSession }, error: refreshError } = await supabase.auth.refreshSession();
-      if (refreshError) {
-        // If refresh fails, sign out to clear invalid state
-        await supabase.auth.signOut();
-        return null;
-      }
-      return newSession;
-    }
-
-    return session;
-  } catch (error) {
-    console.error('Error refreshing session:', error);
-    return null;
-  } finally {
-    isRefreshingSession = false;
-  }
-}
-
-/**
- * Ensures the Supabase client has a valid session before making data fetches
- */
-export async function ensureValidSession(retryCount = 0): Promise<any> {
-  try {
-    // Check if we've validated recently
-    const now = Date.now();
-    if (now - lastValidationTime < VALIDATION_INTERVAL) {
-      const { data: { session } } = await supabase.auth.getSession();
-      return session;
-    }
-
-    // If the tab was previously hidden, ensure session is refreshed
-    if (wasHidden) {
-      const refreshedSession = await refreshSessionIfNeeded();
-      wasHidden = false; // Reset the flag
-      lastValidationTime = now;
-      return refreshedSession;
-    }
-
-    // Get current session
-    const { data: { session }, error } = await supabase.auth.getSession();
-    if (error) throw error;
-
-    // No session is fine for public data
-    if (!session) {
-      lastValidationTime = now;
-      return null;
-    }
-
-    // Check if session needs refresh
-    const expiresAt = session?.expires_at ? new Date(session.expires_at * 1000) : null;
-    const isExpiredOrClose = expiresAt ? expiresAt <= new Date(Date.now() + 5 * 60 * 1000) : false;
-
-    if (isExpiredOrClose) {
-      const refreshedSession = await refreshSessionIfNeeded();
-      lastValidationTime = now;
-      return refreshedSession;
-    }
-
-    lastValidationTime = now;
-    return session;
-  } catch (error) {
-    console.error('Error ensuring valid session:', error);
-    
-    // Retry up to 3 times with exponential backoff
-    if (retryCount < 3) {
-      const delay = Math.pow(2, retryCount) * 1000; // 1s, 2s, 4s
-      await new Promise(resolve => setTimeout(resolve, delay));
-      return ensureValidSession(retryCount + 1);
-    }
-    
-    return null;
-  }
+export async function ensureValidSession(): Promise<any> {
+  const { data: { session } } = await supabase.auth.getSession();
+  return session;
 }
