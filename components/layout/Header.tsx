@@ -13,7 +13,6 @@ import { useAuth } from '@/lib/auth/AuthContext';
 const navigation = [
   { name: 'Home', href: '/' },
   { name: 'Courses', href: '/courses' },
-  { name: 'Pricing', href: '/pricing' },
   { name: 'About', href: '/about' },
 ];
 
@@ -179,7 +178,7 @@ export function Header() {
           </div>
 
           {/* Mobile menu button */}
-          <div className="flex md:hidden">
+          <div className="flex items-center md:hidden">
             <ThemeToggle />
             <button
               type="button"
@@ -266,7 +265,7 @@ export function Header() {
           </button>
         </div>
 
-        <div className="px-4 py-6">
+        <div className="p-4">
           <h2 id="mobile-menu-title" className="sr-only">
             Mobile navigation menu
           </h2>

@@ -1,24 +1,14 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { getCourses, shouldUseMockData, mockData } from '@/lib/supabase';
 import { Course } from '@/lib/supabase/types';
 
 interface RelatedCoursesProps {
   courseId: string;
   creatorId: string;
+  relatedCourses: Course[];
 }
 
-export async function RelatedCourses({ courseId, creatorId }: RelatedCoursesProps) {
-  // Get courses from the same creator, excluding the current course
-  const relatedCourses = shouldUseMockData()
-    ? mockData.mockCourses
-        .filter(c => c.creator_id === creatorId && c.id !== courseId)
-        .slice(0, 4)
-    : await getCourses({
-        creator_id: creatorId,
-        limit: 5,
-      }).then(courses => courses.filter(c => c.id !== courseId).slice(0, 4));
-
+export function RelatedCourses({ courseId, creatorId, relatedCourses }: RelatedCoursesProps) {
   if (relatedCourses.length === 0) {
     return null; // Don't show the section if there are no related courses
   }

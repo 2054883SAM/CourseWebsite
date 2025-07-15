@@ -146,3 +146,90 @@ export async function updateEnrollmentStatus(
     throw error;
   }
 } 
+
+/**
+ * Check if a user has a specific role
+ */
+export async function checkUserRole(userId: string, role: 'admin' | 'creator' | 'student'): Promise<boolean> {
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', userId)
+      .single();
+
+    if (error) throw error;
+    return data?.role === role;
+  } catch (error) {
+    console.error(`Error checking role for user ${userId}:`, error);
+    return false;
+  }
+}
+
+/**
+ * Update a user's role (admin only)
+ */
+export async function updateUserRole(
+  userId: string, 
+  newRole: 'admin' | 'creator' | 'student'
+): Promise<User | null> {
+  try {
+    // First verify the current user is an admin
+    const currentUser = await getCurrentUser();
+    if (!currentUser || currentUser.role !== 'admin') {
+      throw new Error('Only administrators can update user roles');
+    }
+
+    const { data, error } = await supabase
+      .from('users')
+      .update({ role: newRole })
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data as User;
+  } catch (error) {
+    console.error(`Error updating role for user ${userId}:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Get all users with a specific role
+ */
+export async function getUsersByRole(role: 'admin' | 'creator' | 'student'): Promise<User[]> {
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('role', role);
+
+    if (error) throw error;
+    return data as User[];
+  } catch (error) {
+    console.error(`Error fetching users with role ${role}:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Check if a user has admin privileges
+ */
+export async function isAdmin(userId: string): Promise<boolean> {
+  return checkUserRole(userId, 'admin');
+}
+
+/**
+ * Check if a user is a course creator
+ */
+export async function isCreator(userId: string): Promise<boolean> {
+  return checkUserRole(userId, 'creator');
+}
+
+/**
+ * Check if a user is a student
+ */
+export async function isStudent(userId: string): Promise<boolean> {
+  return checkUserRole(userId, 'student');
+} 

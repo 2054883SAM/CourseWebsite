@@ -1,13 +1,19 @@
+'use client';
+
 import Link from 'next/link';
 import { PageLayout, Section, Container, GridLayout, ContentBlock } from '../components/layout';
+import { withAuth } from '@/components/auth/withAuth';
+import { useAuth } from '@/lib/auth/AuthContext';
 
-export default function Home() {
+function Home() {
+  const { user, dbUser } = useAuth();
+
   return (
     <PageLayout>
       {/* Hero Section */}
       <Section className="py-16 text-center md:py-24">
         <h1 className="mb-6 text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
-          Welcome to Course Website
+          {user ? `Welcome back, ${dbUser?.name}!` : 'Welcome to Course Website'}
         </h1>
         <p className="mx-auto mb-8 max-w-3xl text-xl text-gray-600 dark:text-gray-400">
           An online learning platform with interactive video courses and comprehensive learning
@@ -20,17 +26,19 @@ export default function Home() {
           >
             Browse Courses
           </Link>
-          <Link
-            href="/about"
-            className="ring-offset-background inline-flex h-11 items-center justify-center rounded-md border border-gray-200 px-6 text-base font-medium transition-colors hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 dark:border-gray-800 dark:hover:bg-gray-800"
-          >
-            Learn More
-          </Link>
+          {!user ? (
+            <Link
+              href="/signin"
+              className="ring-offset-background inline-flex h-11 items-center justify-center rounded-md border border-gray-200 px-6 text-base font-medium transition-colors hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 dark:border-gray-800 dark:hover:bg-gray-800"
+            >
+              Sign In
+            </Link>
+          ) : null}
         </div>
       </Section>
 
       {/* Featured Courses Section */}
-      <Section className="bg-gray-50 dark:bg-gray-800">
+      <Section>
         <h2 className="mb-12 text-center text-3xl font-bold">Featured Courses</h2>
 
         <GridLayout columns={{ default: 1, sm: 2, lg: 3 }} className="mb-12">
@@ -111,26 +119,44 @@ export default function Home() {
       </Section>
 
       {/* Call to Action Section */}
-      <Section className="bg-primary-50 py-16 text-center dark:bg-primary-900/20">
-        <h2 className="mb-4 text-3xl font-bold">Ready to Start Learning?</h2>
+      <Section className="text-center">
+        <h2 className="mb-4 text-3xl font-bold">
+          {user ? 'Continue Learning' : 'Ready to Start Learning?'}
+        </h2>
         <p className="mx-auto mb-8 max-w-3xl text-xl text-gray-600 dark:text-gray-400">
-          Join thousands of students already learning on our platform.
+          {user
+            ? 'Check out our latest courses and continue your learning journey.'
+            : 'Join thousands of students already learning on our platform.'}
         </p>
         <div className="flex flex-col justify-center gap-4 sm:flex-row">
-          <Link
-            href="/signup"
-            className="ring-offset-background inline-flex h-11 items-center justify-center rounded-md bg-primary-600 px-6 text-base font-medium text-white transition-colors hover:bg-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
-          >
-            Sign Up Now
-          </Link>
-          <Link
-            href="/courses"
-            className="ring-offset-background inline-flex h-11 items-center justify-center rounded-md border border-gray-200 px-6 text-base font-medium transition-colors hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 dark:border-gray-800 dark:hover:bg-gray-800"
-          >
-            Browse Courses
-          </Link>
+          {user ? (
+            <Link
+              href="/courses"
+              className="ring-offset-background inline-flex h-11 items-center justify-center rounded-md bg-primary-600 px-6 text-base font-medium text-white transition-colors hover:bg-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+            >
+              Browse Courses
+            </Link>
+          ) : (
+            <>
+              <Link
+                href="/signup"
+                className="ring-offset-background inline-flex h-11 items-center justify-center rounded-md bg-primary-600 px-6 text-base font-medium text-white transition-colors hover:bg-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+              >
+                Sign Up Now
+              </Link>
+              <Link
+                href="/courses"
+                className="ring-offset-background inline-flex h-11 items-center justify-center rounded-md border border-gray-200 px-6 text-base font-medium transition-colors hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 dark:border-gray-800 dark:hover:bg-gray-800"
+              >
+                Browse Courses
+              </Link>
+            </>
+          )}
         </div>
       </Section>
     </PageLayout>
   );
 }
+
+// Export the wrapped component - no auth required for home page
+export default withAuth(Home, { requireAuth: false });

@@ -70,6 +70,16 @@ ON users FOR SELECT
 TO authenticated, anon
 USING (true);
 
+-- Allow users to create their initial profile during signup
+CREATE POLICY "Users can create their initial profile."
+ON users FOR INSERT
+TO authenticated, anon
+WITH CHECK (
+    -- Ensure the ID matches the authenticated user or allow during signup
+    (auth.uid() IS NULL AND role = 'student') OR 
+    (auth.uid() = id AND role = 'student')
+);
+
 -- Users can update their own profile
 CREATE POLICY "Users can update their own profile."
 ON users FOR UPDATE

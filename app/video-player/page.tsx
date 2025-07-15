@@ -1,14 +1,16 @@
+'use client';
+
 import React from 'react';
-// Import the client component
 import { MuxPlayer } from '@/components/video';
 import ClientOnly from '@/components/video/ClientOnly';
+import { withAuth } from '@/components/auth/withAuth';
 
 export const metadata = {
   title: 'Video Player Demo',
   description: 'Demo page for the Mux video player component',
 };
 
-export default function VideoPlayerDemo() {
+function VideoPlayerDemo() {
   // Replace with your actual Mux playback ID
   const demoPlaybackId = 'FDIZSneWt00Xg5C25lWF79VVbBvcEWnAEANb9WHqEsks';
 
@@ -33,7 +35,7 @@ export default function VideoPlayerDemo() {
           />
         </ClientOnly>
 
-        <div className="rounded-lg bg-gray-100 p-6">
+        <div>
           <h2 className="mb-4 text-xl font-semibold">About This Component</h2>
           <p className="mb-4">
             This is a demonstration of the MuxPlayer component that integrates the Mux Player SDK.
@@ -63,3 +65,6 @@ export default function VideoPlayerDemo() {
     </div>
   );
 }
+
+// Export the wrapped component with authentication required
+export default withAuth(VideoPlayerDemo, { requireAuth: true });

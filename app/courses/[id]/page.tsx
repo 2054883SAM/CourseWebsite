@@ -1,7 +1,8 @@
-import { Suspense } from 'react';
+'use client';
+
+import { Suspense, useEffect, useState, use, useCallback } from 'react';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
-import { Metadata } from 'next';
+import { notFound, useRouter } from 'next/navigation';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Section } from '@/components/layout/Section';
 import { Breadcrumbs } from '../components/Breadcrumbs';
@@ -11,7 +12,11 @@ import { CourseCurriculum } from './components/CourseCurriculum';
 import { InstructorInfo } from './components/InstructorInfo';
 import { RelatedCourses } from './components/RelatedCourses';
 import { CourseDetailSkeleton } from './components/CourseDetailSkeleton';
-import { getCourseById, getCourseSections, shouldUseMockData, mockData } from '@/lib/supabase';
+import { CourseActions } from './components/CourseActions';
+import { getCourseById, getCourseSections, getCourses, shouldUseMockData, mockData } from '@/lib/supabase';
+import { ensureValidSession, supabase } from '@/lib/supabase/client';
+import { withAuth } from '@/components/auth/withAuth';
+import { Course, Section as CourseSection } from '@/lib/supabase/types';
 
 type PageParams = {
   id: string;
@@ -21,45 +26,172 @@ type PageProps = {
   params: Promise<PageParams>;
 };
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { id } = await params;
-  const course = shouldUseMockData()
-    ? mockData.mockCourses.find(c => c.id === id)
-    : await getCourseById(id);
+function CourseDetailPage({ params }: PageProps) {
+  const { id } = use(params);
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [course, setCourse] = useState<Course | null>(null);
+  const [sections, setSections] = useState<CourseSection[]>([]);
+  const [relatedCourses, setRelatedCourses] = useState<Course[]>([]);
+  const [retryCount, setRetryCount] = useState(0);
+  const [isVisible, setIsVisible] = useState(!document.hidden);
 
-  if (!course) {
-    return {
-      title: 'Course Not Found',
-      description: 'The requested course could not be found.',
+  // Memoize the fetch function to prevent unnecessary recreations
+  const fetchData = useCallback(async (mounted: boolean) => {
+    try {
+      if (!mounted) return;
+
+      setLoading(true);
+      setError(null);
+
+      // Wait for session to be validated
+      await ensureValidSession();
+
+      if (!mounted) return;
+
+      // Get course data
+      const courseData = shouldUseMockData()
+        ? mockData.mockCourses.find(c => c.id === id)
+        : await getCourseById(id);
+
+      if (!courseData) {
+        if (mounted) {
+          router.push('/404');
+        }
+        return;
+      }
+
+      if (!mounted) return;
+
+      setCourse(courseData);
+
+      // Get sections data
+      const sectionsData = shouldUseMockData()
+        ? mockData.mockSections.filter(s => s.course_id === id)
+        : await getCourseSections(id);
+
+      if (!mounted) return;
+
+      // Sort sections by order
+      const sortedSections = [...sectionsData].sort((a, b) => a.order - b.order);
+      setSections(sortedSections);
+
+      // Get related courses
+      const relatedCoursesData = shouldUseMockData()
+        ? mockData.mockCourses
+            .filter(c => c.creator_id === courseData.creator_id && c.id !== id)
+            .slice(0, 4)
+        : await getCourses({
+            creator_id: courseData.creator_id,
+            limit: 5,
+          }).then(courses => courses.filter(c => c.id !== id).slice(0, 4));
+
+      if (!mounted) return;
+
+      setRelatedCourses(relatedCoursesData);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching course data:', error);
+      if (!mounted) return;
+
+      setError('Failed to load course. Please try again.');
+      setCourse(null);
+      setSections([]);
+      setRelatedCourses([]);
+      setLoading(false);
+
+      // Retry logic for transient errors
+      if (retryCount < 3) {
+        setTimeout(() => {
+          if (mounted) {
+            setRetryCount(prev => prev + 1);
+          }
+        }, 2000); // Wait 2 seconds before retrying
+      }
+    }
+  }, [id, router, retryCount]);
+
+  // Handle visibility changes
+  useEffect(() => {
+    function handleVisibilityChange() {
+      const isNowVisible = !document.hidden;
+      setIsVisible(isNowVisible);
+      
+      // If becoming visible and we have an error or are loading, retry the fetch
+      if (isNowVisible && (error || loading)) {
+        setRetryCount(0); // Reset retry count
+        setError(null);
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }
+  }, [error, loading]);
 
-  return {
-    title: course.title,
-    description: course.description,
+  // Handle auth state changes
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async () => {
+      if (isVisible) {
+        setRetryCount(0); // Reset retry count
+        setError(null);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [isVisible]);
+
+  // Main data fetching effect
+  useEffect(() => {
+    let mounted = true;
+
+    if (isVisible) {
+      fetchData(mounted);
+    }
+
+    return () => {
+      mounted = false;
+    };
+  }, [fetchData, isVisible]);
+
+  const handleRetry = () => {
+    setRetryCount(0); // Reset retry count
+    setError(null);
+    setLoading(true);
   };
-}
 
-export default async function CourseDetailPage({ params }: PageProps) {
-  const { id } = await params;
-
-  // Get course data from Supabase or mock data
-  const course = shouldUseMockData()
-    ? mockData.mockCourses.find(c => c.id === id)
-    : await getCourseById(id);
-
-  // Handle case where course is not found
-  if (!course) {
-    notFound();
+  if (loading) {
+    return <CourseDetailSkeleton />;
   }
 
-  // Get sections for this course
-  const sections = shouldUseMockData()
-    ? mockData.mockSections.filter(s => s.course_id === id)
-    : await getCourseSections(id);
+  if (error) {
+    return (
+      <PageLayout>
+        <Section className="bg-gray-50 py-12">
+          <div className="container mx-auto px-4">
+            <div className="text-center text-red-600">
+              <p>{error}</p>
+              <button 
+                onClick={handleRetry}
+                className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                Retry
+              </button>
+            </div>
+          </div>
+        </Section>
+      </PageLayout>
+    );
+  }
 
-  // Sort sections by order
-  const sortedSections = [...sections].sort((a, b) => a.order - b.order);
+  if (!course) {
+    return null; // Router will handle the redirect
+  }
 
   return (
     <PageLayout>
@@ -84,7 +216,7 @@ export default async function CourseDetailPage({ params }: PageProps) {
                 
                 {/* Course Curriculum */}
                 <div className="mt-8">
-                  <CourseCurriculum sections={sortedSections} />
+                  <CourseCurriculum sections={sections} />
                 </div>
                 
                 {/* Instructor Info */}
@@ -95,36 +227,7 @@ export default async function CourseDetailPage({ params }: PageProps) {
               
               {/* Sidebar - 1/3 width on large screens */}
               <div className="lg:col-span-1">
-                {/* Course Action Card */}
-                <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-                  <div className="text-2xl font-bold mb-4">${course.price.toFixed(2)}</div>
-                  
-                  <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg font-medium transition-colors mb-4">
-                    Enroll Now
-                  </button>
-                  
-                  <div className="space-y-4 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Total Sections:</span>
-                      <span className="font-semibold">{sortedSections.length}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Total Duration:</span>
-                      <span className="font-semibold">
-                        {Math.round(
-                          sortedSections.reduce(
-                            (total, section) => total + (section.duration || 0), 
-                            0
-                          ) / 60
-                        )} mins
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Created by:</span>
-                      <span className="font-semibold">{course.creator?.name || 'Unknown'}</span>
-                    </div>
-                  </div>
-                </div>
+                <CourseActions course={course} sections={sections} />
               </div>
             </div>
             
@@ -132,7 +235,8 @@ export default async function CourseDetailPage({ params }: PageProps) {
             <div className="mt-12">
               <RelatedCourses 
                 courseId={course.id} 
-                creatorId={course.creator_id} 
+                creatorId={course.creator_id}
+                relatedCourses={relatedCourses}
               />
             </div>
           </Suspense>
@@ -140,4 +244,7 @@ export default async function CourseDetailPage({ params }: PageProps) {
       </Section>
     </PageLayout>
   );
-} 
+}
+
+// Export the wrapped component with authentication required for enrolled courses
+export default withAuth(CourseDetailPage, { requireAuth: false }); 

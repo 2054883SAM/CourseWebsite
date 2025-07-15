@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 // List of paths that require authentication
-const PROTECTED_PATHS = ['/courses', '/video-player'];
+const PROTECTED_PATHS = ['/video-player'];
 
 // List of paths that are only accessible to non-authenticated users
 const AUTH_PATHS = ['/signin', '/signup', '/reset-password'];
