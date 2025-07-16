@@ -1,19 +1,34 @@
 const nextJest = require('next/jest');
 
 const createJestConfig = nextJest({
-  // Provide the path to your Next.js app to load next.config.js and .env files in your test environment
   dir: './',
 });
 
-// Add any custom config to be passed to Jest
 const customJestConfig = {
-  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   testEnvironment: 'jest-environment-jsdom',
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
   },
-  testMatch: ['**/__tests__/**/*.[jt]s?(x)', '**/?(*.)+(spec|test).[jt]s?(x)'],
+  setupFiles: ['<rootDir>/jest.polyfills.js'],
+  transformIgnorePatterns: [
+    '/node_modules/(?!(@supabase|jose|next|@auth|@babel|@jest|@testing-library|@types|superjson|@panva|@edge-runtime|nanoid|jose|@peculiar|asn1js|webcrypto-core|@peculiar|react-hook-form|@swc|@edge-runtime|uuid|@microsoft|@azure|@opentelemetry|@babel|@jest|@testing-library|@types|@microsoft|@azure|@opentelemetry|@babel|@jest|@testing-library|@types|@supabase/auth-helpers-shared|@supabase/auth-helpers-nextjs|@supabase/supabase-js|@supabase/auth-ui-shared|@supabase/auth-ui-react|@supabase/auth-helpers-react)/)',
+  ],
+  transform: {
+    '^.+\\.(js|jsx|ts|tsx|mjs)$': ['babel-jest', { presets: ['next/babel'] }],
+  },
+  moduleDirectories: ['node_modules', '<rootDir>'],
+  testPathIgnorePatterns: ['<rootDir>/node_modules/', '<rootDir>/.next/'],
+  globals: {
+    'ts-jest': {
+      tsconfig: {
+        jsx: 'react-jsx',
+      },
+    },
+  },
+  testEnvironmentOptions: {
+    customExportConditions: ['browser', 'node', 'node-addons'],
+  },
 };
 
-// createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async
 module.exports = createJestConfig(customJestConfig);

@@ -4,7 +4,6 @@ import { Inter } from 'next/font/google';
 import { ThemeProvider } from '../components/layout';
 import ErrorSuppressor from '@/components/ErrorSuppressor';
 import { AuthProvider } from '@/lib/auth/AuthContext';
-import { supabase } from '@/lib/supabase/client';
 import './globals.css';
 
 const inter = Inter({
@@ -23,7 +22,7 @@ export default function RootLayoutClient({
         className={`${inter.variable} h-full bg-white font-sans text-gray-900 antialiased dark:bg-gray-900 dark:text-gray-100`}
         suppressHydrationWarning
       >
-        <AuthProvider supabaseClient={supabase}>
+        <AuthProvider>
           <ThemeProvider>
             <ErrorSuppressor />
             {children}
