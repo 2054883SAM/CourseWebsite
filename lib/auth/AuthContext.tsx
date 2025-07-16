@@ -13,6 +13,7 @@ interface AuthContextType {
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
+  signUp: (email: string, password: string, name: string) => Promise<{ error: Error | null }>;
 }
 
 export const AuthContext = createContext<AuthContextType | null>(null);
@@ -90,8 +91,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const signUp = async (email: string, password: string, name: string) => {
+    try {
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { name } }
+      });
+
+      if (signUpError) throw signUpError;
+
+      if (data.user) {
+        const { error: profileError } = await supabase
+          .from('users')
+          .insert({
+            id: data.user.id,
+            email,
+            name,
+            role: 'student'
+          });
+
+        if (profileError) throw profileError;
+        return { error: null };
+      }
+
+      throw new Error('Signup failed. Please try again.');
+    } catch (error) {
+      return { error: error as Error };
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, dbUser, loading, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, dbUser, loading, signIn, signOut, signUp }}>
       {children}
     </AuthContext.Provider>
   );
