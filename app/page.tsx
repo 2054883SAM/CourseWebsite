@@ -1,12 +1,43 @@
 'use client';
 
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { PageLayout, Section, Container, GridLayout, ContentBlock } from '../components/layout';
 import { withAuth } from '@/components/auth/withAuth';
 import { useAuth } from '@/lib/auth/AuthContext';
+import { getCourses, shouldUseMockData, mockData } from '@/lib/supabase';
+import { Course } from '@/lib/supabase/types';
 
 function Home() {
   const { user, dbUser } = useAuth();
+  const [featuredCourses, setFeaturedCourses] = useState<Course[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch featured courses on component mount
+  useEffect(() => {
+    async function fetchFeaturedCourses() {
+      try {
+        if (shouldUseMockData()) {
+          // Use first 3 mock courses
+          setFeaturedCourses(mockData.mockCourses.slice(0, 3));
+        } else {
+          // Fetch real courses - limited to 3 for featured section
+          const courses = await getCourses({
+            limit: 3,
+            sort_by: 'created_at',
+            sort_order: 'desc'
+          });
+          setFeaturedCourses(courses);
+        }
+      } catch (error) {
+        console.error('Error fetching featured courses:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchFeaturedCourses();
+  }, []);
 
   return (
     <PageLayout>
@@ -42,25 +73,50 @@ function Home() {
         <h2 className="mb-12 text-center text-3xl font-bold">Featured Courses</h2>
 
         <GridLayout columns={{ default: 1, sm: 2, lg: 3 }} className="mb-12">
-          {/* Course card placeholders */}
-          {[1, 2, 3].map((i) => (
-            <ContentBlock key={i} variant="card" className="p-6">
-              <div className="mb-4 aspect-video rounded-md bg-gray-200 dark:bg-gray-700"></div>
-              <h3 className="mb-2 text-xl font-bold">Course Title {i}</h3>
-              <p className="mb-4 text-gray-600 dark:text-gray-400">
-                Learn everything about this amazing subject with our comprehensive course.
-              </p>
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-primary-600 dark:text-primary-400">$49.99</span>
-                <Link
-                  href={`/courses/${i}`}
-                  className="ring-offset-background inline-flex h-9 items-center justify-center rounded-md bg-primary-600 px-4 text-sm font-medium text-white transition-colors hover:bg-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
-                >
-                  View Course
-                </Link>
-              </div>
-            </ContentBlock>
-          ))}
+          {loading ? (
+            // Loading placeholders
+            Array(3).fill(0).map((_, i) => (
+              <ContentBlock key={`loading-${i}`} variant="card" className="p-6">
+                <div className="mb-4 aspect-video rounded-md bg-gray-200 dark:bg-gray-700"></div>
+                <div className="mb-2 h-6 w-3/4 rounded-md bg-gray-200 dark:bg-gray-700"></div>
+                <div className="mb-4 h-16 rounded-md bg-gray-200 dark:bg-gray-700"></div>
+                <div className="flex items-center justify-between">
+                  <div className="h-6 w-16 rounded-md bg-gray-200 dark:bg-gray-700"></div>
+                  <div className="h-9 w-24 rounded-md bg-gray-200 dark:bg-gray-700"></div>
+                </div>
+              </ContentBlock>
+            ))
+          ) : (
+            // Actual courses
+            featuredCourses.map((course) => (
+              <ContentBlock key={course.id} variant="card" className="p-6">
+                <div className="mb-4 aspect-video rounded-md bg-gray-200 dark:bg-gray-700 overflow-hidden">
+                  {course.thumbnail_url && (
+                    <img 
+                      src={course.thumbnail_url} 
+                      alt={course.title} 
+                      className="h-full w-full object-cover"
+                    />
+                  )}
+                </div>
+                <h3 className="mb-2 text-xl font-bold">{course.title}</h3>
+                <p className="mb-4 line-clamp-2 text-gray-600 dark:text-gray-400">
+                  {course.description}
+                </p>
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-primary-600 dark:text-primary-400">
+                    ${course.price.toFixed(2)}
+                  </span>
+                  <Link
+                    href={`/courses/${course.id}`}
+                    className="ring-offset-background inline-flex h-9 items-center justify-center rounded-md bg-primary-600 px-4 text-sm font-medium text-white transition-colors hover:bg-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+                  >
+                    View Course
+                  </Link>
+                </div>
+              </ContentBlock>
+            ))
+          )}
         </GridLayout>
 
         <div className="text-center">
