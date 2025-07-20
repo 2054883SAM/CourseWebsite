@@ -381,7 +381,75 @@
           5
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Paddle V2 API Integration and Setup",
+            "description": "Configure Paddle V2 API credentials and establish the connection between the application and Paddle's payment platform.",
+            "dependencies": [],
+            "details": "Create a Paddle account and obtain API keys. Install necessary Paddle SDK or libraries. Configure environment variables for API keys. Set up error handling and logging for API interactions. Test the connection with Paddle's sandbox environment.\n<info added on 2025-07-20T18:57:17.890Z>\nSuccessfully integrated Paddle V2 API with the following components:\n\n1. Created modular file structure:\n   - lib/paddle/types.ts - TypeScript interfaces for Paddle API\n   - lib/paddle/client.ts - API client with connection testing\n   - lib/paddle/webhooks.ts - Webhook handling with signature verification\n   - lib/paddle/database.ts - Supabase integration for Paddle data\n   - lib/paddle/index.ts - Central export file\n\n2. Implemented core functionality:\n   - Environment variable validation for Paddle credentials\n   - Configurable API client with sandbox/production toggle\n   - Secure webhook signature verification\n   - Subscription lifecycle event handling\n   - Database operations for subscriptions and enrollments\n\n3. Established API routes:\n   - /api/webhooks/paddle - Subscription webhook event handler\n   - /api/paddle/test-connection - API connectivity testing\n\n4. Added comprehensive test coverage and documentation in lib/paddle/README.md with setup instructions and SQL schema.\n\nThe implementation is now complete and ready for subscription management with the Paddle V2 Billing API.\n</info added on 2025-07-20T18:57:17.890Z>",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Subscription Management with Price and Product Configuration",
+            "description": "Define and configure course products in Paddle, and implement the management interface in the application.",
+            "dependencies": [
+              1
+            ],
+            "details": "Create product catalog in Paddle dashboard. Map Paddle products to course offerings in the application. Implement admin interface for managing products and prices. Create database schema for storing product/price references.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Checkout Overlay Implementation with Paddle.js",
+            "description": "Integrate Paddle.js to provide a seamless checkout experience within the application.",
+            "dependencies": [
+              2
+            ],
+            "details": "Install and configure Paddle.js in the frontend. Create checkout buttons for course purchases. Implement price display components. Handle checkout success and failure scenarios. Test checkout flow in sandbox environment. Ensure mobile responsiveness of checkout overlay.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Webhook Handling for Subscription Lifecycle Events",
+            "description": "Implement webhook endpoints to process subscription events from Paddle such as creation, cancellation, and payment failures.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Create secure webhook endpoint in the application. Implement signature verification for webhook payloads. Process subscription_created, subscription_updated, subscription_cancelled events. Handle payment_succeeded and payment_failed events. Update database records based on webhook data. Implement retry logic for failed webhook processing.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Course Enrollment Based on Subscription Status",
+            "description": "Implement the logic to grant or revoke access to courses based on subscription status.",
+            "dependencies": [
+              3,
+              4
+            ],
+            "details": "Create enrollment records when subscription is active. Implement access control checks for course content. Handle subscription expiration and renewal scenarios. Integrate with existing authentication system. Create admin interface for managing enrollments manually if needed.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Transaction History and Receipt Generation",
+            "description": "Develop functionality to display transaction history to users and generate downloadable receipts for purchases.",
+            "dependencies": [
+              4,
+              5
+            ],
+            "details": "Create database schema for storing transaction records. Implement transaction history page in user dashboard. Generate PDF receipts with proper tax information. Allow users to download past receipts. Display subscription status and renewal information. Implement email notifications for receipts and payment confirmations.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
       },
       {
         "id": 9,
@@ -422,7 +490,7 @@
     ],
     "metadata": {
       "created": "2025-07-09T13:32:08.672Z",
-      "updated": "2025-07-16T19:41:15.081Z",
+      "updated": "2025-07-20T18:56:53.469Z",
       "description": "Tasks for master context"
     }
   }
