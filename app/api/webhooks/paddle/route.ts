@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyWebhookSignature, processSubscriptionWebhook, paddleDb } from '@/lib/paddle';
+import { verifyWebhookSignature, processSubscriptionWebhook } from '@/lib/paddle';
+import { paddleDb } from '@/lib/paddle/database';
 
 export async function POST(req: NextRequest) {
   try {

@@ -359,7 +359,7 @@
         "id": 7,
         "title": "Implement Video Processing and Subtitle Support",
         "description": "Integrate Mux for video hosting and processing. Add multi-language subtitle support with language switching.",
-        "details": "Set up Mux API for video upload and processing. Implement subtitle upload and management. Add language switching to video player. Use DeepL and Whisper for translation and transcription.",
+        "details": "Set up Mux API for video upload and processing. Implement subtitle upload and management. Add language switching to video player. Use Whisper for translation and transcription.",
         "testStrategy": "Test video upload and processing. Verify subtitle upload and language switching. Check translation workflow.",
         "priority": "medium",
         "dependencies": [
@@ -490,7 +490,7 @@
     ],
     "metadata": {
       "created": "2025-07-09T13:32:08.672Z",
-      "updated": "2025-07-20T18:56:53.469Z",
+      "updated": "2025-07-21T14:54:10.090Z",
       "description": "Tasks for master context"
     }
   }

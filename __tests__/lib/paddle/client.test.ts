@@ -2,24 +2,21 @@ import { describe, it, expect, beforeEach, jest, afterAll } from '@jest/globals'
 
 // Mock the client module first
 jest.mock('@/lib/paddle/client', () => {
-  // Mock ensurePaddleConfig function
-  const ensurePaddleConfig = jest.fn(() => {
+  // Mock validate function
+  const validatePaddleConfig = jest.fn(() => {
     const PADDLE_API_KEY = process.env.PADDLE_API_KEY;
     const PADDLE_SELLER_ID = process.env.NEXT_PUBLIC_PADDLE_SELLER_ID;
-    const PADDLE_PUBLIC_KEY = process.env.NEXT_PUBLIC_PADDLE_PUBLIC_KEY;
     const PADDLE_WEBHOOK_SECRET = process.env.PADDLE_WEBHOOK_SECRET;
 
     if (!PADDLE_API_KEY) throw new Error('Missing env.PADDLE_API_KEY');
     if (!PADDLE_SELLER_ID) throw new Error('Missing env.NEXT_PUBLIC_PADDLE_SELLER_ID');
-    if (!PADDLE_PUBLIC_KEY) throw new Error('Missing env.NEXT_PUBLIC_PADDLE_PUBLIC_KEY');
     if (!PADDLE_WEBHOOK_SECRET) throw new Error('Missing env.PADDLE_WEBHOOK_SECRET');
   });
 
   // Mock paddle client
-  const paddle = {
+  const mockPaddleClient = {
     apiKey: 'test-api-key',
     sellerId: 'test-seller-id',
-    publicKey: 'test-public-key',
     webhookSecret: 'test-webhook-secret',
     sandboxMode: true,
     baseUrl: 'https://sandbox-api.paddle.com',
@@ -30,20 +27,32 @@ jest.mock('@/lib/paddle/client', () => {
     listProducts: jest.fn(),
     getClientConfig: jest.fn().mockReturnValue({
       sellerId: 'test-seller-id',
-      publicKey: 'test-public-key',
       sandboxMode: true,
     }),
   };
 
+  // Mock client instance cache
+  let clientInstance = null;
+
   return {
-    ensurePaddleConfig,
-    paddle,
+    validatePaddleConfig,
+    getPaddleClient: jest.fn(() => {
+      if (!clientInstance) {
+        clientInstance = mockPaddleClient;
+      }
+      return clientInstance;
+    }),
+    getClientSafeConfig: jest.fn(() => ({
+      sellerId: 'test-seller-id',
+      sandboxMode: true
+    })),
     loadPaddleJs: jest.fn(),
+    ensurePaddleConfig: validatePaddleConfig
   };
 });
 
 // Import after mock
-import { paddle, ensurePaddleConfig } from '@/lib/paddle/client';
+import { getPaddleClient, ensurePaddleConfig } from '@/lib/paddle/client';
 
 // Mock fetch globally
 global.fetch = jest.fn(() =>
@@ -67,7 +76,6 @@ describe('Paddle Client', () => {
       NEXT_PUBLIC_PADDLE_SANDBOX_MODE: 'true',
       PADDLE_API_KEY: 'test-api-key',
       NEXT_PUBLIC_PADDLE_SELLER_ID: 'test-seller-id',
-      NEXT_PUBLIC_PADDLE_PUBLIC_KEY: 'test-public-key',
       PADDLE_WEBHOOK_SECRET: 'test-webhook-secret',
     };
   });
@@ -88,11 +96,6 @@ describe('Paddle Client', () => {
       expect(() => ensurePaddleConfig()).toThrow('Missing env.NEXT_PUBLIC_PADDLE_SELLER_ID');
     });
 
-    it('should throw error if NEXT_PUBLIC_PADDLE_PUBLIC_KEY is missing', () => {
-      delete process.env.NEXT_PUBLIC_PADDLE_PUBLIC_KEY;
-      expect(() => ensurePaddleConfig()).toThrow('Missing env.NEXT_PUBLIC_PADDLE_PUBLIC_KEY');
-    });
-
     it('should throw error if PADDLE_WEBHOOK_SECRET is missing', () => {
       delete process.env.PADDLE_WEBHOOK_SECRET;
       expect(() => ensurePaddleConfig()).toThrow('Missing env.PADDLE_WEBHOOK_SECRET');
@@ -103,26 +106,30 @@ describe('Paddle Client', () => {
     });
   });
 
-  describe('paddle client', () => {
-    it('should have correct properties', () => {
-      expect(paddle.apiKey).toBe('test-api-key');
-      expect(paddle.sellerId).toBe('test-seller-id');
-      expect(paddle.publicKey).toBe('test-public-key');
-      expect(paddle.webhookSecret).toBe('test-webhook-secret');
-      expect(paddle.sandboxMode).toBe(true);
+  describe('getPaddleClient', () => {
+    it('should return a client with correct properties', () => {
+      const client = getPaddleClient();
+      
+      expect(client.apiKey).toBe('test-api-key');
+      expect(client.sellerId).toBe('test-seller-id');
+      expect(client.webhookSecret).toBe('test-webhook-secret');
+      expect(client.sandboxMode).toBe(true);
     });
 
     it('should return correct client config', () => {
-      const config = paddle.getClientConfig();
+      const client = getPaddleClient();
+      const config = client.getClientConfig();
+      
       expect(config).toEqual({
         sellerId: 'test-seller-id',
-        publicKey: 'test-public-key',
         sandboxMode: true,
       });
     });
 
     it('should successfully call testConnection', async () => {
-      const result = await paddle.testConnection();
+      const client = getPaddleClient();
+      const result = await client.testConnection();
+      
       expect(result).toEqual({ success: true });
     });
   });

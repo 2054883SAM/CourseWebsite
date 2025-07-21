@@ -1,5 +1,10 @@
 // Re-export from client
-export { paddle, ensurePaddleConfig, loadPaddleJs } from './client';
+export { 
+  getPaddleClient, 
+  getClientSafeConfig, 
+  ensurePaddleConfig, 
+  loadPaddleJs 
+} from './client';
 
 // Re-export from types
 export {

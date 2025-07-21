@@ -1,6 +1,6 @@
 import { describe, it, expect, jest } from '@jest/globals';
 import { verifyWebhookSignature, processSubscriptionWebhook } from '@/lib/paddle/webhooks';
-import { paddle } from '@/lib/paddle/client';
+import { getPaddleClient } from '@/lib/paddle/client';
 
 // Mock crypto module
 jest.mock('crypto', () => ({
@@ -13,11 +13,11 @@ jest.mock('crypto', () => ({
   timingSafeEqual: jest.fn().mockReturnValue(true),
 }));
 
-// Mock paddle client
+// Mock getPaddleClient function
 jest.mock('@/lib/paddle/client', () => ({
-  paddle: {
+  getPaddleClient: jest.fn(() => ({
     webhookSecret: 'test-webhook-secret',
-  },
+  })),
 }));
 
 describe('Paddle Webhooks', () => {
@@ -28,6 +28,7 @@ describe('Paddle Webhooks', () => {
       const payload = JSON.stringify({ event_type: 'test', data: { foo: 'bar' } });
 
       expect(verifyWebhookSignature(payload, validSignature)).toBe(true);
+      expect(getPaddleClient).toHaveBeenCalled();
     });
 
     it('should return false for invalid signature', () => {

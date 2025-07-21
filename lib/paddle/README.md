@@ -94,13 +94,18 @@ useEffect(() => {
 ### Creating a Checkout
 
 ```tsx
-import { paddle } from '@/lib/paddle';
+import { loadPaddleJs, getClientSafeConfig } from '@/lib/paddle';
 
 function PurchaseButton({ productId }) {
+  const config = getClientSafeConfig();
+  
   const handleClick = () => {
     // @ts-ignore - Paddle is loaded via script tag
     window.Paddle.Checkout.open({
-      product: productId,
+      items: [{
+        priceId: productId,
+        quantity: 1
+      }],
       successCallback: (data) => {
         console.log('Purchase successful', data);
       },
@@ -108,6 +113,18 @@ function PurchaseButton({ productId }) {
   };
 
   return <button onClick={handleClick}>Purchase</button>;
+}
+```
+
+### Server-Side API Usage
+
+```tsx
+import { getPaddleClient } from '@/lib/paddle';
+
+// In a server component or API route
+export async function getProducts() {
+  const paddleClient = getPaddleClient();
+  return await paddleClient.listProducts();
 }
 ```
 

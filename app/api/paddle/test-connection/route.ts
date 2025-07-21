@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { paddle } from '@/lib/paddle';
+import { getPaddleClient } from '@/lib/paddle';
 
 /**
  * API endpoint to test Paddle API connection
@@ -22,8 +22,9 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Test connection to Paddle API
-    const result = await paddle.testConnection();
+    // Get the Paddle client and test connection
+    const paddleClient = getPaddleClient();
+    const result = await paddleClient.testConnection();
 
     // Return success response with vendor details
     return NextResponse.json({ success: true, data: result });

@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import { paddle } from './client';
+import { getPaddleClient } from './client';
 import { PaddleWebhookEvent, PaddleSubscriptionStatus } from './types';
 
 /**
@@ -10,8 +10,11 @@ import { PaddleWebhookEvent, PaddleSubscriptionStatus } from './types';
  */
 export function verifyWebhookSignature(payload: string, signature: string): boolean {
   try {
+    // Get Paddle client to access webhook secret
+    const paddleClient = getPaddleClient();
+    
     // Create HMAC using webhook secret
-    const hmac = crypto.createHmac('sha256', paddle.webhookSecret);
+    const hmac = crypto.createHmac('sha256', paddleClient.webhookSecret);
 
     // Update HMAC with the payload
     hmac.update(payload);
