@@ -14,6 +14,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   signUp: (email: string, password: string, name: string) => Promise<{ error: Error | null }>;
+  checkPermission: (requiredRole: string) => boolean;
 }
 
 export const AuthContext = createContext<AuthContextType | null>(null);
@@ -121,8 +122,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Fonction pour vérifier le rôle
+  const checkPermission = (requiredRole: string) => {
+    const role = dbUser?.role;
+    if (!role) return false;
+    if (requiredRole === 'admin') return role === 'admin';
+    if (requiredRole === 'creator') return role === 'admin' || role === 'creator';
+    if (requiredRole === 'student') return true;
+    return false;
+  };
+
   return (
-    <AuthContext.Provider value={{ user, dbUser, loading, signIn, signOut, signUp }}>
+    <AuthContext.Provider value={{ user, dbUser, loading, signIn, signOut, signUp, checkPermission }}>
       {children}
     </AuthContext.Provider>
   );

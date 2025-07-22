@@ -9,6 +9,7 @@ import { Logo } from './Logo';
 import { DropdownMenu } from './DropdownMenu';
 import { DropdownMenuItem } from './DropdownMenuItem';
 import { useAuth } from '@/lib/auth/AuthContext';
+import CreateVideoButton from '@/app/video-player/CreateVideoButton';
 
 const navigation = [
   { name: 'Home', href: '/' },
@@ -120,6 +121,8 @@ export function Header() {
                   {item.name}
                 </ActiveLink>
               ))}
+              {/* Ajout du bouton Créer une vidéo pour admin/creator */}
+              <CreateVideoButton />
             </div>
 
             <div className="flex items-center space-x-4">
