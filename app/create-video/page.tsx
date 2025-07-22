@@ -23,8 +23,12 @@ export default function CreateVideoPage() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [selectedThumbnail, setSelectedThumbnail] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string>('');
+  const [selectedVideo, setSelectedVideo] = useState<File | null>(null);
+  const [videoUploadProgress, setVideoUploadProgress] = useState(0);
+  const [playbackId, setPlaybackId] = useState<string>('');
   
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -47,6 +51,67 @@ export default function CreateVideoPage() {
         setThumbnailPreview(e.target?.result as string);
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedVideo(file);
+      console.log('Vidéo sélectionnée:', file.name, 'Taille:', file.size);
+    }
+  };
+
+  const uploadVideoToMux = async (file: File): Promise<string> => {
+    try {
+      // Étape 1: Créer l'upload URL avec notre API
+      const response = await fetch('/api/upload-video', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: formData.title,
+          description: formData.description,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la création de l\'upload URL');
+      }
+
+      const { uploadUrl, uploadId } = await response.json();
+      setVideoUploadProgress(25);
+
+      // Étape 2: Uploader la vidéo directement vers Mux
+      const uploadResponse = await fetch(uploadUrl, {
+        method: 'PUT',
+        body: file,
+        headers: {
+          'Content-Type': file.type,
+        },
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error('Erreur lors de l\'upload vers Mux');
+      }
+
+      setVideoUploadProgress(75);
+
+      // Étape 3: Attendre que la vidéo soit traitée et récupérer le playback ID
+      // Note: En production, vous devriez utiliser un webhook ou polling
+      // Pour simplifier, on simule un délai
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      setVideoUploadProgress(100);
+
+      // Pour l'instant, on retourne un playback ID fictif
+      // En production, vous devriez récupérer le vrai playback ID depuis Mux
+      return 'demo-playback-id-' + Date.now();
+
+    } catch (error) {
+      console.error('Erreur upload vidéo:', error);
+      throw error;
     }
   };
 
@@ -74,11 +139,18 @@ export default function CreateVideoPage() {
       return;
     }
 
+    if (!selectedVideo) {
+      alert('Veuillez sélectionner une vidéo.');
+      return;
+    }
+
     setIsSubmitting(true);
     setUploadProgress(0);
+    setVideoUploadProgress(0);
 
     try {
       let thumbnailUrl = formData.thumbnailUrl;
+      let videoPlaybackId = '';
 
       // Upload thumbnail si une image a été sélectionnée
       if (selectedThumbnail) {
@@ -86,6 +158,12 @@ export default function CreateVideoPage() {
         thumbnailUrl = await uploadThumbnail(selectedThumbnail);
         setUploadProgress(50);
       }
+
+      // Upload vidéo vers Mux
+      setUploadProgress(60);
+      videoPlaybackId = await uploadVideoToMux(selectedVideo);
+      setPlaybackId(videoPlaybackId);
+      setUploadProgress(80);
 
       // Créer le cours dans Supabase
       const { data: course, error } = await supabase
@@ -110,7 +188,7 @@ export default function CreateVideoPage() {
 
       setUploadProgress(100);
       
-      alert(`Cours "${formData.title}" créé avec succès!`);
+      alert(`Cours "${formData.title}" créé avec succès! Playback ID: ${videoPlaybackId}`);
       
       // Rediriger vers la page du cours ou la liste des cours
       window.location.href = `/courses/${course.id}`;
@@ -121,6 +199,7 @@ export default function CreateVideoPage() {
     } finally {
       setIsSubmitting(false);
       setUploadProgress(0);
+      setVideoUploadProgress(0);
     }
   };
 
@@ -145,24 +224,26 @@ export default function CreateVideoPage() {
                     <p className="text-xs mt-2">Formats supportés: MP4, MOV, AVI (Max 2GB)</p>
                   </div>
                   <input
+                    ref={videoInputRef}
                     type="file"
                     accept="video/*"
                     className="hidden"
                     id="video-upload"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        console.log('Fichier sélectionné:', file);
-                        // TODO: Upload vers Mux
-                      }
-                    }}
+                    onChange={handleVideoChange}
                   />
                   <label
                     htmlFor="video-upload"
                     className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 cursor-pointer"
                   >
-                    Sélectionner une vidéo
+                    {selectedVideo ? `Vidéo sélectionnée: ${selectedVideo.name}` : 'Sélectionner une vidéo'}
                   </label>
+                  
+                  {selectedVideo && (
+                    <div className="mt-4 text-sm text-gray-600 dark:text-gray-400">
+                      <p>Taille: {(selectedVideo.size / (1024 * 1024)).toFixed(2)} MB</p>
+                      <p>Type: {selectedVideo.type}</p>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -333,23 +414,46 @@ export default function CreateVideoPage() {
                 </div>
               </div>
 
-              {/* Barre de progression */}
+              {/* Barres de progression */}
               {isSubmitting && (
-                <div className="bg-blue-50 dark:bg-blue-900 p-4 rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
-                      Création du cours en cours...
-                    </span>
-                    <span className="text-sm text-blue-600 dark:text-blue-400">
-                      {uploadProgress}%
-                    </span>
+                <div className="space-y-4">
+                  {/* Progression générale */}
+                  <div className="bg-blue-50 dark:bg-blue-900 p-4 rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                        Création du cours en cours...
+                      </span>
+                      <span className="text-sm text-blue-600 dark:text-blue-400">
+                        {uploadProgress}%
+                      </span>
+                    </div>
+                    <div className="w-full bg-blue-200 dark:bg-blue-700 rounded-full h-2">
+                      <div 
+                        className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${uploadProgress}%` }}
+                      ></div>
+                    </div>
                   </div>
-                  <div className="w-full bg-blue-200 dark:bg-blue-700 rounded-full h-2">
-                    <div 
-                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${uploadProgress}%` }}
-                    ></div>
-                  </div>
+
+                  {/* Progression vidéo */}
+                  {videoUploadProgress > 0 && videoUploadProgress < 100 && (
+                    <div className="bg-green-50 dark:bg-green-900 p-4 rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-green-700 dark:text-green-300">
+                          Upload vidéo vers Mux...
+                        </span>
+                        <span className="text-sm text-green-600 dark:text-green-400">
+                          {videoUploadProgress}%
+                        </span>
+                      </div>
+                      <div className="w-full bg-green-200 dark:bg-green-700 rounded-full h-2">
+                        <div 
+                          className="bg-green-600 h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${videoUploadProgress}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -364,7 +468,7 @@ export default function CreateVideoPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || !selectedVideo}
                   className="px-6 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {isSubmitting ? 'Création en cours...' : 'Créer la vidéo'}
