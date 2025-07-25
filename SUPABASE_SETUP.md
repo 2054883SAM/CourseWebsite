@@ -1,111 +1,121 @@
-# Configuration Supabase Storage - Guide étape par étape
+# Configuration Supabase
 
-## 1. Accéder à votre projet Supabase
+Ce guide vous aide à configurer Supabase pour votre application de cours vidéo.
 
-1. Allez sur [supabase.com](https://supabase.com)
-2. Connectez-vous à votre compte
-3. Sélectionnez votre projet CourseWebsite
+## 1. Configuration de la base de données
 
-## 2. Créer le bucket pour les thumbnails
+### 1.1 Créer les tables
 
-### Étape 1 : Aller dans Storage
-1. Dans le menu de gauche, cliquez sur **"Storage"**
-2. Cliquez sur **"New bucket"**
+1. Allez dans votre dashboard Supabase
+2. Naviguez vers **SQL Editor**
+3. Exécutez le script `supabase-schema.sql` pour créer toutes les tables
 
-### Étape 2 : Créer le bucket `course-thumbnails`
-- **Nom du bucket** : `course-thumbnails`
-- **Public bucket** : ✅ **Cocher** (pour que les images soient accessibles publiquement)
-- **File size limit** : `5 MB` (suffisant pour les thumbnails)
-- **Allowed MIME types** : `image/*` (tous les types d'images)
+### 1.2 Mettre à jour la table courses (si déjà existante)
 
-### Étape 3 : Créer le bucket pour les vidéos (optionnel)
-- **Nom du bucket** : `course-videos`
-- **Public bucket** : ❌ **Ne pas cocher** (les vidéos ne doivent pas être publiques)
-- **File size limit** : `2 GB`
-- **Allowed MIME types** : `video/*`
+Si vous avez déjà une table `courses`, exécutez ce script pour ajouter les nouveaux champs :
 
-## 3. Configurer les politiques RLS (Row Level Security)
-
-### Pour le bucket `course-thumbnails` :
-
-1. Cliquez sur le bucket `course-thumbnails`
-2. Allez dans l'onglet **"Policies"**
-3. Cliquez sur **"New Policy"**
-
-#### Politique pour l'upload (INSERT) :
 ```sql
--- Nom : "Allow authenticated users to upload thumbnails"
--- Operation : INSERT
--- Target roles : authenticated
--- Policy definition :
-(auth.role() = 'authenticated')
-```
+-- Ajouter les nouvelles colonnes à la table courses
+ALTER TABLE courses 
+ADD COLUMN IF NOT EXISTS thumbnail_description TEXT,
+ADD COLUMN IF NOT EXISTS is_featured BOOLEAN DEFAULT false,
+ADD COLUMN IF NOT EXISTS ce_que_vous_allez_apprendre TEXT,
+ADD COLUMN IF NOT EXISTS prerequis TEXT,
+ADD COLUMN IF NOT EXISTS public_cible TEXT,
+ADD COLUMN IF NOT EXISTS duree_estimee TEXT,
+ADD COLUMN IF NOT EXISTS niveau_difficulte TEXT CHECK (niveau_difficulte IN ('debutant', 'intermediaire', 'avance'));
 
-#### Politique pour la lecture (SELECT) :
-```sql
--- Nom : "Allow public read access to thumbnails"
--- Operation : SELECT
--- Target roles : public
--- Policy definition :
-(true)
-```
-
-### Pour le bucket `course-videos` (si créé) :
-
-#### Politique pour l'upload (INSERT) :
-```sql
--- Nom : "Allow creators and admins to upload videos"
--- Operation : INSERT
--- Target roles : authenticated
--- Policy definition :
-(
-  EXISTS (
-    SELECT 1 FROM users 
-    WHERE id = auth.uid() 
-    AND role IN ('admin', 'creator')
-  )
-)
-```
-
-#### Politique pour la lecture (SELECT) :
-```sql
--- Nom : "Allow enrolled students and course creators to view videos"
--- Operation : SELECT
--- Target roles : authenticated
--- Policy definition :
-(
-  EXISTS (
-    SELECT 1 FROM users u
-    LEFT JOIN enrollments e ON e.user_id = u.id
-    WHERE u.id = auth.uid()
-    AND (
-      u.role = 'admin' 
-      OR u.role = 'creator'
-      OR (u.role = 'student' AND e.payment_status = 'paid')
+-- Mettre à jour les politiques pour permettre aux creators de créer des cours
+DROP POLICY IF EXISTS "Only admins can create courses." ON courses;
+CREATE POLICY "Admins and creators can create courses."
+ON courses FOR INSERT
+TO authenticated
+WITH CHECK (
+    EXISTS (
+        SELECT 1 FROM users
+        WHERE id = (select auth.uid())
+        AND (role = 'admin' OR role = 'creator')
     )
-  )
-)
+);
 ```
 
-## 4. Vérifier la configuration
+## 2. Configuration du Storage
 
-1. Testez l'upload d'une image dans le bucket `course-thumbnails`
-2. Vérifiez que l'URL publique est accessible
-3. Testez les politiques de sécurité
+### 2.1 Créer le bucket pour les thumbnails
 
-## 5. Variables d'environnement
+1. Allez dans **Storage** dans votre dashboard Supabase
+2. Cliquez sur **New bucket**
+3. Nommez-le `course-thumbnails`
+4. Cochez **Public bucket** pour permettre l'accès public aux images
+5. Cliquez sur **Create bucket**
 
-Assurez-vous que vos variables d'environnement sont configurées :
+### 2.2 Configurer les politiques RLS pour le bucket thumbnails
+
+1. Allez dans **Storage** > **Policies**
+2. Sélectionnez le bucket `course-thumbnails`
+3. Cliquez sur **New Policy**
+4. Utilisez ce script :
+
+```sql
+-- Politique pour permettre l'upload de thumbnails
+CREATE POLICY "Allow authenticated users to upload thumbnails"
+ON storage.objects FOR INSERT
+TO authenticated
+WITH CHECK (
+    bucket_id = 'course-thumbnails' AND
+    (storage.foldername(name))[1] = 'public'
+);
+
+-- Politique pour permettre la lecture publique des thumbnails
+CREATE POLICY "Allow public read access to thumbnails"
+ON storage.objects FOR SELECT
+TO public
+USING (bucket_id = 'course-thumbnails');
+
+-- Politique pour permettre la suppression de ses propres thumbnails
+CREATE POLICY "Allow users to delete their own thumbnails"
+ON storage.objects FOR DELETE
+TO authenticated
+USING (
+    bucket_id = 'course-thumbnails' AND
+    auth.uid()::text = (storage.foldername(name))[1]
+);
+```
+
+### 2.3 Créer le bucket pour les vidéos (optionnel)
+
+Si vous voulez stocker des vidéos dans Supabase (en plus de Mux) :
+
+1. Créez un nouveau bucket nommé `course-videos`
+2. **Ne cochez PAS** Public bucket (les vidéos restent privées)
+3. Ajoutez les politiques RLS appropriées
+
+## 3. Configuration des variables d'environnement
+
+Ajoutez ces variables dans votre fichier `.env.local` :
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+NEXT_PUBLIC_SUPABASE_URL=votre_url_supabase
+NEXT_PUBLIC_SUPABASE_ANON_KEY=votre_clé_anon_supabase
+SUPABASE_SERVICE_ROLE_KEY=votre_clé_service_role
 ```
 
-## 6. Test de l'intégration
+## 4. Vérification
 
-Une fois configuré, vous pourrez :
-- Uploader des thumbnails depuis l'appareil photo
-- Voir les aperçus en temps réel
-- Créer des cours avec des images de couverture 
+1. Testez la création d'un cours avec une image
+2. Vérifiez que l'image s'affiche correctement
+3. Vérifiez que tous les nouveaux champs sont sauvegardés
+
+## 5. Dépannage
+
+### Problème : "bucket not found"
+- Vérifiez que le bucket `course-thumbnails` existe
+- Vérifiez que les politiques RLS sont correctement configurées
+
+### Problème : "permission denied"
+- Vérifiez que l'utilisateur est authentifié
+- Vérifiez que l'utilisateur a le rôle `admin` ou `creator`
+
+### Problème : "column does not exist"
+- Exécutez le script SQL pour ajouter les nouvelles colonnes
+- Vérifiez que le script s'est bien exécuté sans erreur 

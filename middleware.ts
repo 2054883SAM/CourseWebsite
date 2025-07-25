@@ -1,22 +1,20 @@
 import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { Role } from '@/lib/auth/types';
-import { validateApiAuth } from '@/lib/auth/api-middleware';
 
 // Define route patterns and their required roles
 const protectedRoutes = [
-  { pattern: '/dashboard', role: 'student' as Role },
-  { pattern: '/profile', role: 'student' as Role },
-  { pattern: '/video-player', role: 'student' as Role },
-  { pattern: '/admin', role: 'admin' as Role },
-  { pattern: '/creator', role: 'creator' as Role },
-  { pattern: '/courses/create', role: 'creator' as Role },
-  { pattern: '/courses/edit', role: 'creator' as Role },
+  { pattern: '/dashboard', role: 'student' },
+  { pattern: '/profile', role: 'student' },
+  // Supprimé /video-player pour permettre l'accès public
+  { pattern: '/admin', role: 'admin' },
+  { pattern: '/creator', role: 'creator' },
+  { pattern: '/courses/create', role: 'creator' },
+  { pattern: '/courses/edit', role: 'creator' },
 ];
 
 // Helper function to check role hierarchy
-const checkRoleAccess = (userRole: Role | undefined, requiredRole: Role): boolean => {
+const checkRoleAccess = (userRole: string | undefined, requiredRole: string): boolean => {
   if (!userRole) return false;
   
   switch (requiredRole) {
@@ -49,22 +47,50 @@ export async function middleware(req: NextRequest) {
 
     // For protected routes, validate authentication
     try {
-      const authResult = await validateApiAuth(req);
-      if (authResult && checkRoleAccess(authResult.role as Role, matchedRoute.role)) {
+      // Get session using middleware client
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        // Authentication failed, redirect to signin
+        const redirectUrl = path + req.nextUrl.search;
+        const signInUrl = new URL('/signin', req.url);
+        signInUrl.searchParams.set('redirectTo', redirectUrl);
+        return NextResponse.redirect(signInUrl.toString());
+      }
+
+      // Get user role from database
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', session.user.id)
+        .single();
+
+      if (userError || !userData) {
+        // User not found in database, redirect to signin
+        const redirectUrl = path + req.nextUrl.search;
+        const signInUrl = new URL('/signin', req.url);
+        signInUrl.searchParams.set('redirectTo', redirectUrl);
+        return NextResponse.redirect(signInUrl.toString());
+      }
+
+      // Check if user has required role
+      if (checkRoleAccess(userData.role, matchedRoute.role)) {
         return res;
       }
+
+      // User is authenticated but lacks required role
+      const unauthorizedUrl = new URL('/unauthorized', req.url);
+      unauthorizedUrl.searchParams.set('requiredRole', matchedRoute.role);
+      return NextResponse.redirect(unauthorizedUrl.toString());
+
     } catch (error) {
+      console.error('Middleware authentication error:', error);
       // Authentication failed, redirect to signin
       const redirectUrl = path + req.nextUrl.search;
       const signInUrl = new URL('/signin', req.url);
       signInUrl.searchParams.set('redirectTo', redirectUrl);
       return NextResponse.redirect(signInUrl.toString());
     }
-
-    // If we get here, user is authenticated but lacks required role
-    const unauthorizedUrl = new URL('/unauthorized', req.url);
-    unauthorizedUrl.searchParams.set('requiredRole', matchedRoute.role);
-    return NextResponse.redirect(unauthorizedUrl.toString());
 
   } catch (error) {
     console.error('Middleware error:', error);

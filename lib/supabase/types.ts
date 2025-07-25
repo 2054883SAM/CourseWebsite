@@ -18,9 +18,19 @@ export interface Course {
   title: string;
   description: string;
   thumbnail_url?: string;
+  thumbnail_description?: string;
   price: number;
   creator_id: string; // UUID linked to users.id
   created_at: string;
+  is_featured?: boolean;
+  // Nouveaux champs pour les informations détaillées
+  ce_que_vous_allez_apprendre?: string;
+  prerequis?: string;
+  public_cible?: string;
+  duree_estimee?: string;
+  niveau_difficulte?: 'debutant' | 'intermediaire' | 'avance';
+  // Champ pour le playbackId de Mux
+  playback_id?: string;
   // Computed fields (not in DB)
   creator?: User;
   section_count?: number;

@@ -5,44 +5,100 @@ interface CourseOverviewProps {
 }
 
 export function CourseOverview({ course }: CourseOverviewProps) {
-  // This is a placeholder for the rich text description
-  // In a real application, you might want to use a markdown parser
-  // or a rich text editor component
-  
+  // Fonction pour convertir le texte en liste d'éléments
+  const parseTextToList = (text: string | undefined): string[] => {
+    if (!text) return [];
+    // Divise le texte par les retours à la ligne et filtre les lignes vides
+    return text.split('\n').filter(line => line.trim().length > 0);
+  };
+
+  // Fonction pour afficher une section avec des données réelles ou un fallback
+  const renderSection = (title: string, data: string | undefined, fallbackItems: string[]) => {
+    const items = data ? parseTextToList(data) : fallbackItems;
+    
+    if (items.length === 0) return null;
+
+    return (
+      <>
+        <h3 className="text-lg font-medium mt-6 mb-2">{title}</h3>
+        <ul className="list-disc pl-5 space-y-1 text-gray-700">
+          {items.map((item, index) => (
+            <li key={index}>{item}</li>
+          ))}
+        </ul>
+      </>
+    );
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
       <div className="p-6">
-        <h2 className="text-xl font-semibold mb-4">Course Overview</h2>
+        <h2 className="text-xl font-semibold mb-4">Aperçu du cours</h2>
         
         <div className="prose prose-blue max-w-none">
-          {/* We're using basic formatting here, but in a real app you might want to render 
-              the description as markdown or HTML if it contains rich formatting */}
+          {/* Description du cours */}
           <p className="text-gray-700 whitespace-pre-line">
             {course.description}
           </p>
           
-          {/* Additional placeholder content to demonstrate formatting */}
-          <h3 className="text-lg font-medium mt-6 mb-2">What you&apos;ll learn</h3>
-          <ul className="list-disc pl-5 space-y-1 text-gray-700">
-            <li>Comprehensive understanding of {course.title} fundamentals</li>
-            <li>Hands-on experience with practical examples and exercises</li>
-            <li>Best practices and industry standards</li>
-            <li>How to apply these concepts to real-world scenarios</li>
-          </ul>
+          {/* Ce que vous allez apprendre */}
+          {renderSection(
+            "Ce que vous allez apprendre",
+            course.ce_que_vous_allez_apprendre,
+            [
+              `Compréhension complète des fondamentaux de ${course.title}`,
+              "Expérience pratique avec des exemples et exercices",
+              "Meilleures pratiques et standards de l'industrie",
+              "Comment appliquer ces concepts à des scénarios réels"
+            ]
+          )}
           
-          <h3 className="text-lg font-medium mt-6 mb-2">Requirements</h3>
-          <ul className="list-disc pl-5 space-y-1 text-gray-700">
-            <li>Basic understanding of programming concepts</li>
-            <li>A computer with internet access</li>
-            <li>Enthusiasm to learn and practice</li>
-          </ul>
+          {/* Prérequis */}
+          {renderSection(
+            "Prérequis",
+            course.prerequis,
+            [
+              "Compréhension de base des concepts de programmation",
+              "Un ordinateur avec accès à Internet",
+              "Enthousiasme pour apprendre et pratiquer"
+            ]
+          )}
           
-          <h3 className="text-lg font-medium mt-6 mb-2">Who this course is for</h3>
-          <ul className="list-disc pl-5 space-y-1 text-gray-700">
-            <li>Beginners looking to get started with {course.title.split(' ').slice(-1)}</li>
-            <li>Intermediate learners wanting to strengthen their skills</li>
-            <li>Anyone interested in expanding their knowledge in this area</li>
-          </ul>
+          {/* Public cible */}
+          {renderSection(
+            "Ce cours est pour...",
+            course.public_cible,
+            [
+              `Débutants qui veulent commencer avec ${course.title.split(' ').slice(-1)}`,
+              "Apprenants intermédiaires qui veulent renforcer leurs compétences",
+              "Toute personne intéressée par l'expansion de ses connaissances dans ce domaine"
+            ]
+          )}
+
+          {/* Informations supplémentaires */}
+          {(course.duree_estimee || course.niveau_difficulte) && (
+            <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+              <h3 className="text-lg font-medium mb-3">Informations du cours</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {course.duree_estimee && (
+                  <div>
+                    <span className="font-medium text-gray-700">Durée estimée :</span>
+                    <span className="ml-2 text-gray-600">{course.duree_estimee}</span>
+                  </div>
+                )}
+                {course.niveau_difficulte && (
+                  <div>
+                    <span className="font-medium text-gray-700">Niveau :</span>
+                    <span className="ml-2 text-gray-600 capitalize">
+                      {course.niveau_difficulte === 'debutant' && 'Débutant'}
+                      {course.niveau_difficulte === 'intermediaire' && 'Intermédiaire'}
+                      {course.niveau_difficulte === 'avance' && 'Avancé'}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

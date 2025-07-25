@@ -4,14 +4,28 @@ import VideoPlayerClient from './video-player-client';
 
 // Metadata can be exported from server components
 export const metadata = {
-  title: 'Video Player Demo',
-  description: 'Demo page for the Mux video player component',
+  title: 'Video Player',
+  description: 'Watch your course video',
 };
 
-export default function VideoPlayerPage() {
-  // Replace with your actual Mux playback ID
-  const demoPlaybackId = 'FDIZSneWt00Xg5C25lWF79VVbBvcEWnAEANb9WHqEsks';
+interface VideoPlayerPageProps {
+  searchParams: Promise<{
+    playbackId?: string;
+    courseId?: string;
+    courseTitle?: string;
+  }>;
+}
 
-  // Render the client component
-  return <VideoPlayerClient demoPlaybackId={demoPlaybackId} />;
+export default async function VideoPlayerPage({ searchParams }: VideoPlayerPageProps) {
+  const { playbackId, courseId, courseTitle } = await searchParams;
+  const demoPlaybackId = 'FDIZSneWt00Xg5C25lWF79VVbBvcEWnAEANb9WHqEsks';
+  const finalPlaybackId = playbackId || demoPlaybackId;
+
+  return (
+    <VideoPlayerClient 
+      playbackId={finalPlaybackId}
+      courseId={courseId}
+      courseTitle={courseTitle ? decodeURIComponent(courseTitle) : undefined}
+    />
+  );
 }

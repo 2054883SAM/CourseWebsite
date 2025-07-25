@@ -21,8 +21,14 @@ export function CourseActions({ course, sections }: CourseActionsProps) {
       return;
     }
 
-    // TODO: Handle enrollment logic here
-    console.log('Enrolling in course:', course.id);
+    // Rediriger vers la page de lecture vidéo avec le playbackId
+    if (course.playback_id) {
+      router.push(`/video-player?playbackId=${course.playback_id}&courseId=${course.id}&courseTitle=${encodeURIComponent(course.title)}`);
+    } else {
+      // Fallback si pas de playbackId
+      console.log('Enrolling in course:', course.id);
+      alert('Vidéo non disponible pour le moment.');
+    }
   };
 
   // Calculate total duration from sections
@@ -39,7 +45,7 @@ export function CourseActions({ course, sections }: CourseActionsProps) {
         className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg font-medium transition-colors mb-4"
         disabled={loading}
       >
-        {loading ? 'Loading...' : 'Enroll Now'}
+        {loading ? 'Loading...' : course.playback_id ? 'Watch Video' : 'Enroll Now'}
       </button>
       
       <div className="space-y-4 text-sm">
@@ -57,6 +63,12 @@ export function CourseActions({ course, sections }: CourseActionsProps) {
           <span className="text-gray-600">Created by:</span>
           <span className="font-semibold">{course.creator?.name || 'Unknown'}</span>
         </div>
+        {course.playback_id && (
+          <div className="flex justify-between">
+            <span className="text-gray-600">Video Status:</span>
+            <span className="font-semibold text-green-600">Available</span>
+          </div>
+        )}
       </div>
     </div>
   );
