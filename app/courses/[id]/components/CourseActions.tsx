@@ -45,28 +45,28 @@ export function CourseActions({ course, sections }: CourseActionsProps) {
         className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg font-medium transition-colors mb-4"
         disabled={loading}
       >
-        {loading ? 'Loading...' : course.playback_id ? 'Watch Video' : 'Enroll Now'}
+        {loading ? 'Chargement...' : course.playback_id ? 'Regarder la vidéo' : 'S\'inscrire maintenant'}
       </button>
       
       <div className="space-y-4 text-sm">
         <div className="flex justify-between">
-          <span className="text-gray-600">Total Sections:</span>
+          <span className="text-gray-600">Sections totales :</span>
           <span className="font-semibold">{sections.length}</span>
         </div>
         <div className="flex justify-between">
-          <span className="text-gray-600">Total Duration:</span>
+          <span className="text-gray-600">Durée totale :</span>
           <span className="font-semibold">
-            {totalDuration} mins
+            {totalDuration} min
           </span>
         </div>
         <div className="flex justify-between">
-          <span className="text-gray-600">Created by:</span>
-          <span className="font-semibold">{course.creator?.name || 'Unknown'}</span>
+          <span className="text-gray-600">Créé par :</span>
+          <span className="font-semibold">{course.creator?.name || 'Inconnu'}</span>
         </div>
         {course.playback_id && (
           <div className="flex justify-between">
-            <span className="text-gray-600">Video Status:</span>
-            <span className="font-semibold text-green-600">Available</span>
+            <span className="text-gray-600">Statut vidéo :</span>
+            <span className="font-semibold text-green-600">Disponible</span>
           </div>
         )}
       </div>

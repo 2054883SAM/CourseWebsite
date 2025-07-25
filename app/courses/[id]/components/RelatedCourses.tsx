@@ -16,7 +16,7 @@ export function RelatedCourses({ courseId, creatorId, relatedCourses }: RelatedC
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
       <div className="p-6">
-        <h2 className="text-xl font-semibold mb-4">More Courses by This Creator</h2>
+        <h2 className="text-xl font-semibold mb-4">Plus de cours de ce créateur</h2>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {relatedCourses.map(course => (
@@ -29,7 +29,7 @@ export function RelatedCourses({ courseId, creatorId, relatedCourses }: RelatedC
             href={`/courses?creator=${creatorId}`}
             className="text-blue-600 hover:text-blue-800 font-medium"
           >
-            View All Courses by This Creator
+            Voir tous les cours de ce créateur
           </Link>
         </div>
       </div>
@@ -54,7 +54,7 @@ function CourseCard({ course }: { course: Course }) {
           />
         ) : (
           <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-            <span className="text-gray-400 text-sm">No image</span>
+            <span className="text-gray-400 text-sm">Aucune image</span>
           </div>
         )}
         

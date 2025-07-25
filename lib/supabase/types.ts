@@ -9,6 +9,7 @@ export interface User {
   name: string;
   email: string;
   photo_url?: string;
+  bio?: string;
   created_at: string;
 }
 

@@ -29,11 +29,11 @@ export function CourseCurriculum({ sections }: CourseCurriculumProps) {
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
       <div className="p-6">
-        <h2 className="text-xl font-semibold mb-4">Course Curriculum</h2>
+        <h2 className="text-xl font-semibold mb-4">Programme du cours</h2>
         
         {sections.length === 0 ? (
           <div className="text-gray-600 text-center py-6">
-            No sections available for this course yet.
+            Aucune section disponible pour ce cours pour le moment.
           </div>
         ) : (
           <div className="space-y-3">
@@ -77,17 +77,17 @@ export function CourseCurriculum({ sections }: CourseCurriculumProps) {
                         <PlayIcon className="w-6 h-6" />
                       </div>
                       <div>
-                        <div className="font-medium">{section.title} Video</div>
+                        <div className="font-medium">{section.title} Vidéo</div>
                         <div className="text-sm text-gray-600">
                           {formatDuration(section.duration)}
                         </div>
                       </div>
-                      <div className="ml-auto text-sm text-gray-500">Preview</div>
+                      <div className="ml-auto text-sm text-gray-500">Aperçu</div>
                     </div>
                     
                     {/* Additional lesson content would go here */}
                     <div className="mt-3 text-sm text-gray-600">
-                      <p>This section covers fundamental concepts and practical applications.</p>
+                      <p>Cette section couvre les concepts fondamentaux et les applications pratiques.</p>
                     </div>
                   </div>
                 )}
@@ -100,10 +100,10 @@ export function CourseCurriculum({ sections }: CourseCurriculumProps) {
           <div className="text-gray-700 text-sm mb-2">
             {sections.length} sections • {Math.round(
               sections.reduce((total, section) => total + (section.duration || 0), 0) / 60
-            )} total minutes
+            )} minutes totales
           </div>
           <button className="text-blue-600 font-medium text-sm hover:text-blue-800">
-            Expand All Sections
+            Développer toutes les sections
           </button>
         </div>
       </div>

@@ -31,7 +31,7 @@ export async function getCourses(params?: CourseSearchParams): Promise<Course[]>
     const offset = (page - 1) * limit;
 
     // Start building the query
-    let queryBuilder = supabase.from('courses').select('*, users!creator_id(name, photo_url)');
+    let queryBuilder = supabase.from('courses').select('*, users!creator_id(name, photo_url, bio)');
 
     // Apply filters if provided
     if (query) {
@@ -82,7 +82,7 @@ export async function getCourseById(id: string): Promise<Course | null> {
     // Fetch the course with creator info
     const courseResponse = await supabase
       .from('courses')
-      .select('*, users!creator_id(id, name, email, photo_url, role)')
+      .select('*, users!creator_id(id, name, email, photo_url, role, bio)')
       .eq('id', id)
       .single();
     
