@@ -23,7 +23,7 @@ export function CourseHeader({ course }: CourseHeaderProps) {
               />
             ) : (
               <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                <span className="text-gray-400">No image</span>
+                <span className="text-gray-400">Aucune image</span>
               </div>
             )}
           </div>
@@ -42,7 +42,7 @@ export function CourseHeader({ course }: CourseHeaderProps) {
           <div className="flex flex-wrap gap-4 items-center text-sm">
             {course.creator && (
               <div className="flex items-center">
-                <span className="text-gray-600 mr-1">Created by:</span>
+                <span className="text-gray-600 mr-1">Créé par :</span>
                 <div className="flex items-center">
                   {course.creator.photo_url ? (
                     <Image 
@@ -63,12 +63,12 @@ export function CourseHeader({ course }: CourseHeaderProps) {
             )}
             
             <div className="flex items-center">
-              <span className="text-gray-600 mr-1">Price:</span>
+              <span className="text-gray-600 mr-1">Prix :</span>
               <span className="font-medium">${course.price.toFixed(2)}</span>
             </div>
             
             <div className="flex items-center">
-              <span className="text-gray-600 mr-1">Sections:</span>
+              <span className="text-gray-600 mr-1">Sections :</span>
               <span className="font-medium">{course.section_count || 0}</span>
             </div>
           </div>

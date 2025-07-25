@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Container } from './Container';
 import { ThemeToggle } from './ThemeToggle';
 import { ActiveLink } from './ActiveLink';
@@ -12,13 +13,13 @@ import { useAuth } from '@/lib/auth/AuthContext';
 import CreateVideoButton from '@/app/video-player/CreateVideoButton';
 
 const navigation = [
-  { name: 'Home', href: '/' },
-  { name: 'Courses', href: '/courses' },
-  { name: 'About', href: '/about' },
+  { name: 'Accueil', href: '/' },
+  { name: 'Cours', href: '/courses' },
+  { name: 'À propos', href: '/about' },
 ];
 
 export function Header() {
-  const { user, signOut } = useAuth();
+  const { user, dbUser, signOut } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
@@ -95,9 +96,9 @@ export function Header() {
 
   return (
     <header
-      className={`sticky top-0 z-40 transition-shadow duration-300 ${
+      className={`sticky top-0 z-40 transition-all duration-300 ${
         isScrolled
-          ? 'bg-white/90 shadow-sm backdrop-blur-sm dark:bg-gray-900/90'
+          ? 'bg-white/90 shadow-lg backdrop-blur-sm dark:bg-gray-900/90'
           : 'bg-white dark:bg-gray-900'
       }`}
       role="banner"
@@ -115,8 +116,8 @@ export function Header() {
                 <ActiveLink
                   key={item.name}
                   href={item.href}
-                  className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
-                  activeClassName="text-primary-600 dark:text-primary-400 font-medium"
+                  className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors duration-200"
+                  activeClassName="text-blue-600 dark:text-blue-400 font-medium"
                 >
                   {item.name}
                 </ActiveLink>
@@ -133,47 +134,69 @@ export function Header() {
                   trigger={
                     <button
                       type="button"
-                      className="flex items-center text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
-                      aria-label="User menu"
+                      className="flex items-center text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors duration-200"
+                      aria-label="Menu utilisateur"
                       aria-haspopup="true"
                     >
-                      <span className="sr-only">Open user menu</span>
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 dark:bg-gray-700">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-5 w-5 text-gray-600 dark:text-gray-400"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                          />
-                        </svg>
+                      <span className="sr-only">Ouvrir le menu utilisateur</span>
+                      <div className="relative">
+                        {dbUser?.photo_url ? (
+                          <div className="h-10 w-10 rounded-full overflow-hidden border-2 border-gray-200 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-400 transition-colors duration-200">
+                            <Image
+                              src={dbUser.photo_url}
+                              alt={`Photo de profil de ${dbUser.name}`}
+                              width={40}
+                              height={40}
+                              className="h-full w-full object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900 dark:to-purple-900 border-2 border-gray-200 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-400 transition-colors duration-200">
+                            <span className="text-lg font-semibold text-gray-600 dark:text-gray-300">
+                              {dbUser?.name?.[0]?.toUpperCase() || 'U'}
+                            </span>
+                          </div>
+                        )}
+                        {/* Indicateur de rôle */}
+                        <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-green-500 border-2 border-white dark:border-gray-900"></div>
                       </div>
                     </button>
                   }
                 >
-                  <DropdownMenuItem href="/profile">Your Profile</DropdownMenuItem>
-                  <DropdownMenuItem href="/settings">Settings</DropdownMenuItem>
-                  <DropdownMenuItem onClick={signOut}>Sign out</DropdownMenuItem>
+                                           <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+                           <p className="text-sm font-medium text-gray-900 dark:text-white">
+                             {dbUser?.name || 'Utilisateur'}
+                           </p>
+                           <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
+                             {dbUser?.role || 'student'}
+                           </p>
+                         </div>
+                  <DropdownMenuItem href="/profile">
+                    <span className="mr-2">👤</span>
+                    Mon Profil
+                  </DropdownMenuItem>
+                  <DropdownMenuItem href="/settings">
+                    <span className="mr-2">⚙️</span>
+                    Paramètres
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={signOut}>
+                    <span className="mr-2">🚪</span>
+                    Se déconnecter
+                  </DropdownMenuItem>
                 </DropdownMenu>
               ) : (
                 <div className="flex items-center space-x-4">
                   <Link
                     href="/signin"
-                    className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+                    className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors duration-200"
                   >
-                    Sign in
+                    Se connecter
                   </Link>
                   <Link
                     href="/signup"
-                    className="ring-offset-background inline-flex h-9 items-center justify-center rounded-md bg-primary-600 px-4 text-sm font-medium text-white transition-colors hover:bg-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+                    className="inline-flex h-10 items-center justify-center rounded-full bg-gradient-to-r from-blue-600 to-purple-600 px-6 text-sm font-semibold text-white transition-all duration-300 hover:from-blue-700 hover:to-purple-700 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                   >
-                    Sign up
+                    S'inscrire
                   </Link>
                 </div>
               )}
@@ -185,13 +208,13 @@ export function Header() {
             <ThemeToggle />
             <button
               type="button"
-              className="ml-4 text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+              className="ml-4 text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors duration-200"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-expanded={mobileMenuOpen}
               aria-controls="mobile-menu"
-              aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+              aria-label={mobileMenuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
             >
-              <span className="sr-only">{mobileMenuOpen ? 'Close menu' : 'Open menu'}</span>
+              <span className="sr-only">{mobileMenuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}</span>
               {mobileMenuOpen ? (
                 <svg
                   className="h-6 w-6"
@@ -242,14 +265,45 @@ export function Header() {
         aria-modal="true"
         aria-labelledby="mobile-menu-title"
       >
-        <div className="flex justify-end p-4">
+        <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center space-x-3">
+            {user && (
+              <>
+                {dbUser?.photo_url ? (
+                  <div className="h-10 w-10 rounded-full overflow-hidden border-2 border-gray-200 dark:border-gray-600">
+                    <Image
+                      src={dbUser.photo_url}
+                      alt={`Photo de profil de ${dbUser.name}`}
+                      width={40}
+                      height={40}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900 dark:to-purple-900 border-2 border-gray-200 dark:border-gray-600">
+                    <span className="text-lg font-semibold text-gray-600 dark:text-gray-300">
+                      {dbUser?.name?.[0]?.toUpperCase() || 'U'}
+                    </span>
+                  </div>
+                )}
+                                       <div>
+                         <p className="text-sm font-medium text-gray-900 dark:text-white">
+                           {dbUser?.name || 'Utilisateur'}
+                         </p>
+                         <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
+                           {dbUser?.role || 'student'}
+                         </p>
+                       </div>
+              </>
+            )}
+          </div>
           <button
             type="button"
-            className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+            className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors duration-200"
             onClick={() => setMobileMenuOpen(false)}
-            aria-label="Close menu"
+            aria-label="Fermer le menu"
           >
-            <span className="sr-only">Close menu</span>
+            <span className="sr-only">Fermer le menu</span>
             <svg
               className="h-6 w-6"
               xmlns="http://www.w3.org/2000/svg"
@@ -270,36 +324,66 @@ export function Header() {
 
         <div className="p-4">
           <h2 id="mobile-menu-title" className="sr-only">
-            Mobile navigation menu
+            Menu de navigation mobile
           </h2>
           <div className="space-y-1">
             {navigation.map((item) => (
               <Link
                 key={item.name}
                 href={item.href}
-                className="block border-b border-gray-200 py-3 text-base font-medium text-gray-900 dark:border-gray-800 dark:text-gray-100"
+                className="block border-b border-gray-200 py-3 text-base font-medium text-gray-900 dark:border-gray-800 dark:text-gray-100 transition-colors duration-200"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 {item.name}
               </Link>
             ))}
+            {user && (
+              <>
+                <Link
+                  href="/profile"
+                  className="block border-b border-gray-200 py-3 text-base font-medium text-gray-900 dark:border-gray-800 dark:text-gray-100 transition-colors duration-200"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  👤 Mon Profil
+                </Link>
+                <Link
+                  href="/settings"
+                  className="block border-b border-gray-200 py-3 text-base font-medium text-gray-900 dark:border-gray-800 dark:text-gray-100 transition-colors duration-200"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  ⚙️ Paramètres
+                </Link>
+              </>
+            )}
           </div>
-          {!user && (
+          {!user ? (
             <div className="mt-8 space-y-4">
               <Link
                 href="/signin"
-                className="ring-offset-background flex h-10 w-full items-center justify-center rounded-md bg-primary-600 px-4 text-sm font-medium text-white transition-colors hover:bg-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+                className="flex h-12 w-full items-center justify-center rounded-full bg-gradient-to-r from-blue-600 to-purple-600 px-4 text-sm font-semibold text-white transition-all duration-300 hover:from-blue-700 hover:to-purple-700 hover:shadow-lg"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Sign in
+                Se connecter
               </Link>
               <Link
                 href="/signup"
-                className="ring-offset-background flex h-10 w-full items-center justify-center rounded-md border border-gray-200 px-4 text-sm font-medium transition-colors hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 dark:border-gray-800 dark:hover:bg-gray-800"
+                className="flex h-12 w-full items-center justify-center rounded-full border-2 border-gray-300 px-4 text-sm font-semibold text-gray-700 transition-all duration-300 hover:border-blue-500 hover:text-blue-600 dark:border-gray-600 dark:text-gray-300 dark:hover:border-blue-400 dark:hover:text-blue-400"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Sign up
+                S'inscrire
               </Link>
+            </div>
+          ) : (
+            <div className="mt-8">
+              <button
+                onClick={() => {
+                  signOut();
+                  setMobileMenuOpen(false);
+                }}
+                className="flex h-12 w-full items-center justify-center rounded-full border-2 border-red-300 px-4 text-sm font-semibold text-red-600 transition-all duration-300 hover:border-red-500 hover:bg-red-50 dark:border-red-600 dark:text-red-400 dark:hover:border-red-500 dark:hover:bg-red-900/20"
+              >
+                🚪 Se déconnecter
+              </button>
             </div>
           )}
         </div>

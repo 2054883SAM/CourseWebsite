@@ -99,13 +99,9 @@ export function SearchBar({ initialQuery = '', className = '' }: SearchBarProps)
     // Close suggestions
     setIsFocused(false);
   };
-  
-  // Handle suggestion click
+
   const handleSuggestionClick = (suggestion: string) => {
-    // Set the query to the selected suggestion
     setQuery(suggestion);
-    
-    // Add to recent searches
     addToRecentSearches(suggestion);
     
     // Create new URLSearchParams with existing parameters
@@ -120,51 +116,39 @@ export function SearchBar({ initialQuery = '', className = '' }: SearchBarProps)
     // Close suggestions
     setIsFocused(false);
   };
-  
-  // Add search to recent searches
+
   const addToRecentSearches = (search: string) => {
-    try {
-      // Get current searches
-      const currentSearches = [...recentSearches];
-      
-      // Remove if already exists
-      const filteredSearches = currentSearches.filter(
-        (item) => item.toLowerCase() !== search.toLowerCase()
-      );
-      
-      // Add to beginning
-      const newSearches = [search, ...filteredSearches].slice(0, MAX_RECENT_SEARCHES);
-      
-      // Update state
-      setRecentSearches(newSearches);
+    const trimmedSearch = search.trim();
+    if (!trimmedSearch) return;
+    
+    setRecentSearches(prev => {
+      const filtered = prev.filter(s => s !== trimmedSearch);
+      const updated = [trimmedSearch, ...filtered].slice(0, MAX_RECENT_SEARCHES);
       
       // Save to localStorage
-      localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(newSearches));
-    } catch (error) {
-      console.error('Error saving recent searches:', error);
-    }
+      try {
+        localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(updated));
+      } catch (error) {
+        console.error('Error saving recent searches:', error);
+      }
+      
+      return updated;
+    });
   };
-  
-  // Clear search input
+
   const handleClearSearch = () => {
     setQuery('');
-    setSuggestions([]);
     searchInputRef.current?.focus();
   };
 
-  // Handle clicks outside the search component to close suggestions
+  // Handle click outside to close suggestions
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        suggestionsRef.current && 
-        !suggestionsRef.current.contains(event.target as Node) && 
-        searchInputRef.current && 
-        !searchInputRef.current.contains(event.target as Node)
-      ) {
+      if (suggestionsRef.current && !suggestionsRef.current.contains(event.target as Node)) {
         setIsFocused(false);
       }
     };
-    
+
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
@@ -173,85 +157,95 @@ export function SearchBar({ initialQuery = '', className = '' }: SearchBarProps)
 
   return (
     <div className={`relative ${className}`}>
-      <form onSubmit={handleSearch} className="flex w-full">
-        <div className="relative flex-grow">
+      <form onSubmit={handleSearch} className="relative">
+        <div className="relative">
           <input
             ref={searchInputRef}
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onFocus={() => setIsFocused(true)}
-            placeholder="Search courses..."
-            className="w-full px-4 py-2 pl-10 border rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            aria-label="Search courses"
+            placeholder="Rechercher des cours..."
+            className="w-full px-6 py-4 pl-14 pr-12 text-lg border-2 border-gray-200 dark:border-gray-600 rounded-2xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-300 shadow-lg hover:shadow-xl"
+            aria-label="Rechercher des cours"
           />
-          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-            <SearchIcon className="w-5 h-5 text-gray-400" />
+          <div className="absolute inset-y-0 left-0 flex items-center pl-5 pointer-events-none">
+            <SearchIcon className="w-6 h-6 text-gray-400 dark:text-gray-500" />
           </div>
           {query && (
             <button
               type="button"
-              className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+              className="absolute inset-y-0 right-0 flex items-center pr-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200"
               onClick={handleClearSearch}
-              aria-label="Clear search"
+              aria-label="Effacer la recherche"
             >
-              <XIcon className="w-4 h-4" />
+              <XIcon className="w-5 h-5" />
             </button>
           )}
         </div>
         <button
           type="submit"
-          className="px-4 py-2 font-medium text-white bg-blue-600 rounded-r-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          aria-label="Search"
+          className="absolute right-2 top-2 px-6 py-2 font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-300 transform hover:scale-105 shadow-lg"
+          aria-label="Rechercher"
         >
-          Search
+          Rechercher
         </button>
       </form>
       
       {isFocused && (
         <div 
           ref={suggestionsRef}
-          className="absolute z-10 w-full mt-1 bg-white border rounded-lg shadow-lg"
+          className="absolute top-full left-0 right-0 mt-3 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-600 rounded-2xl shadow-2xl backdrop-blur-sm z-[99999]"
         >
           {query.length >= 2 ? (
-            <div>
+            <div className="p-4">
               {isLoading ? (
-                <div className="p-3 text-gray-500">Loading suggestions...</div>
+                <div className="flex items-center justify-center py-4">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                  <span className="ml-3 text-gray-500 dark:text-gray-400">Chargement des suggestions...</span>
+                </div>
               ) : suggestions.length > 0 ? (
                 <div>
-                  <div className="p-2 text-xs font-semibold text-gray-500 uppercase">Suggestions</div>
-                  <ul>
+                  <div className="px-2 py-2 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Suggestions
+                  </div>
+                  <ul className="space-y-1">
                     {suggestions.map((suggestion, index) => (
                       <li key={`suggestion-${index}`}>
                         <button
                           type="button"
-                          className="w-full px-4 py-2 text-left hover:bg-gray-100"
+                          className="w-full px-4 py-3 text-left rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
                           onClick={() => handleSuggestionClick(suggestion)}
                         >
-                          {suggestion}
+                          🔍 {suggestion}
                         </button>
                       </li>
                     ))}
                   </ul>
                 </div>
               ) : (
-                <div className="p-3 text-gray-500">No suggestions found</div>
+                <div className="text-center py-6 text-gray-500 dark:text-gray-400">
+                  <span className="text-2xl mb-2 block">🔍</span>
+                  Aucune suggestion trouvée
+                </div>
               )}
             </div>
           ) : (
-            <div>
+            <div className="p-4">
               {recentSearches.length > 0 && (
-                <div>
-                  <div className="p-2 text-xs font-semibold text-gray-500 uppercase">Recent Searches</div>
-                  <ul>
+                <div className="mb-4">
+                  <div className="px-2 py-2 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Recherches récentes
+                  </div>
+                  <ul className="space-y-1">
                     {recentSearches.map((search, index) => (
                       <li key={`recent-${index}`}>
                         <button
                           type="button"
-                          className="w-full px-4 py-2 text-left hover:bg-gray-100"
+                          className="w-full px-4 py-3 text-left rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
                           onClick={() => handleSuggestionClick(search)}
                         >
-                          {search}
+                          ⏰ {search}
                         </button>
                       </li>
                     ))}
@@ -260,16 +254,18 @@ export function SearchBar({ initialQuery = '', className = '' }: SearchBarProps)
               )}
               
               <div>
-                <div className="p-2 text-xs font-semibold text-gray-500 uppercase">Popular Searches</div>
-                <ul>
+                <div className="px-2 py-2 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Recherches populaires
+                </div>
+                <ul className="space-y-1">
                   {popularSearches.map((search, index) => (
                     <li key={`popular-${index}`}>
                       <button
                         type="button"
-                        className="w-full px-4 py-2 text-left hover:bg-gray-100"
+                        className="w-full px-4 py-3 text-left rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
                         onClick={() => handleSuggestionClick(search)}
                       >
-                        {search}
+                        🔥 {search}
                       </button>
                     </li>
                   ))}

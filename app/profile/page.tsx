@@ -1,12 +1,10 @@
 import UserProfile from '@/components/profile/UserProfile';
-import { Container, Section } from '@/components/layout';
+import { PageLayout } from '@/components/layout/PageLayout';
 
 export default function ProfilePage() {
   return (
-    <Container>
-      <Section>
-        <UserProfile />
-      </Section>
-    </Container>
+    <PageLayout>
+      <UserProfile />
+    </PageLayout>
   );
 } 
