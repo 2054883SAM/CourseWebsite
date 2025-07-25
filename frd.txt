@@ -1,0 +1,181 @@
+# Course Enrollment, Payment and Course Access
+
+## Overview
+This feature enables students to enroll in courses through secure online payments, access their purchased content through a personalized learning dashboard, and view course materials including video content. It forms the core business functionality of the platform, connecting the payment processing system with content access controls.
+
+## Core Features
+
+### Student Enrollment System
+- Allows authenticated students to purchase and enroll in courses
+- Uses Paddle V2 for one-time payments with hosted checkout
+- Creates enrollment records upon successful payment
+- Restricts enrollment to authenticated users with "student" role
+
+### My Learning Dashboard
+- Personalized dashboard showing all enrolled courses
+- Direct access to course content from dashboard
+- Progress tracking for enrolled courses
+- Sorting and filtering options for multiple enrollments
+
+### Course Content Access Control
+- Securely restricts course content to enrolled students
+- Section-by-section navigation of course materials
+- Video playback for each section using Mux Player
+- Progress tracking across course sections
+
+## User Experience
+
+### User Personas
+- **Students**: Primary users who browse, purchase, and consume course content
+- **Creators**: Course creators who provide the educational material
+- **Admins**: Platform administrators who manage enrollments and access
+
+### Key User Flows
+
+#### Enrollment Flow
+1. Student browses course catalog and views course details
+2. Student clicks "Enroll" button on desired course
+3. System verifies authentication status and role
+4. Student completes payment through Paddle checkout
+5. System records enrollment and grants access to course content
+6. Student is redirected to course content or confirmation page
+
+#### Course Access Flow
+1. Student navigates to "My Learning" section
+2. System displays all enrolled courses
+3. Student selects desired course
+4. System loads course sections and materials
+5. Student navigates between sections, viewing video content
+6. System tracks progress through sections and course completion
+
+### UI/UX Considerations
+- Enrollment button states reflect current status (not enrolled, processing, enrolled)
+- Clear messaging for authentication/authorization requirements
+- Intuitive navigation between enrolled courses and course sections
+- Seamless video playback experience for course content
+- Visual indicators for course progress and completion status
+
+## Technical Architecture
+
+### System Components
+1. **EnrollButton Component**: Manages enrollment flow initiation
+2. **MyLearningPage Component**: Displays enrolled courses
+3. **CourseAccess Component**: Controls content access based on enrollment
+4. **CourseContentPlayer Component**: Renders course section videos
+5. **EnrollmentService**: Handles enrollment records and status checks
+
+### Data Models
+- Existing database schema in Supabase is sufficient
+- Key tables: enrollments, courses, sections, users
+- Enrollment status values: active, refunded, disputed
+- Section records contain unique Mux playbackId for video content
+
+### APIs and Integrations
+1. **Supabase Integration**
+   - Authentication and role verification
+   - Enrollment record storage and querying
+   - Row-level security for data access control
+
+2. **Paddle V2 Integration**
+   - Hosted checkout for one-time payments
+   - Webhook handling for payment events
+   - Transaction tracking and verification
+
+3. **Mux Integration**
+   - Video playback for course sections
+   - Secure content delivery
+   - Player configuration with section-specific playbackIds
+
+### API Endpoints
+1. **`POST /api/checkout/:courseId`**: Creates checkout session
+2. **`GET /api/courses/enrollment/:id`**: Checks enrollment status
+3. **`POST /api/webhooks/paddle`**: Handles payment webhooks
+
+## Development Roadmap
+
+### MVP Requirements
+1. **Basic Enrollment System**
+   - Authentication and role verification
+   - Paddle checkout integration for one-time payments
+   - Enrollment record creation upon successful payment
+   - Basic access control for course content
+
+2. **Essential Course Access**
+   - My Learning page with enrolled courses listing
+   - Course content page with section navigation
+   - Basic video playback for course sections
+   - Simple enrollment status checks
+
+### Future Enhancements
+1. **Advanced Enrollment Features**
+   - Gifting courses to other users
+   - Course bundles with discounted pricing
+   - Subscription-based access options
+   - Payment plan options for expensive courses
+
+2. **Enhanced Learning Experience**
+   - Detailed progress tracking and reporting
+   - Bookmarking and notes within course content
+   - Resume watching functionality
+   - Course completion certificates
+
+3. **Content Access Improvements**
+   - Offline viewing options
+   - Mobile-optimized video playback
+   - Adaptive streaming based on connection quality
+   - Enhanced subtitle and language support
+
+## Logical Dependency Chain
+
+### Foundation (Build First)
+1. Database schema verification and access policies
+2. Authentication and role-based access control integration
+3. Basic enrollment service implementation
+
+### Core Functionality
+1. Paddle checkout integration for course purchases
+2. Webhook handling for payment confirmation
+3. Enrollment record creation and management
+4. My Learning page implementation
+
+### Enhanced Features
+1. Course content access control implementation
+2. Section-based video playback with Mux
+3. Course navigation and section progression
+4. Progress tracking across course sections
+
+## Risks and Mitigations
+
+### Technical Challenges
+- **Risk**: Payment webhook failures could lead to access issues
+  **Mitigation**: Implement robust error handling and manual override capabilities
+
+- **Risk**: Video playback issues across different devices
+  **Mitigation**: Extensive cross-device testing and progressive enhancement
+
+### Integration Concerns
+- **Risk**: Paddle API changes could break payment functionality
+  **Mitigation**: Build abstraction layer between payment provider and application
+
+- **Risk**: Mux video playback security vulnerabilities
+  **Mitigation**: Implement proper authentication checks and signed URLs
+
+### User Experience Risks
+- **Risk**: Complex enrollment process decreasing conversion
+  **Mitigation**: Streamline checkout flow, minimize steps, provide clear feedback
+
+- **Risk**: Confusion about course access after purchase
+  **Mitigation**: Clear post-purchase guidance and immediate access to content
+
+## Appendix
+
+### Related Documentation
+- Paddle V2 API Documentation
+- Mux Player Integration Guide
+- Supabase RLS Policy Configuration
+
+### Testing Guidelines
+- Authentication testing scenarios
+- Payment processing test cases
+- Access control verification methods
+- Cross-device playback testing requirements

@@ -78,6 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email,
         password,
       });
+      
       return { error: error };
     } catch (error) {
       return { error: error as Error };
