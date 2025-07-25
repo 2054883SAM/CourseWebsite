@@ -45,12 +45,14 @@ CREATE TABLE subtitles (
 );
 
 CREATE TABLE enrollments (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
-    course_id UUID REFERENCES courses(id) ON DELETE CASCADE NOT NULL,
-    enrolled_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
-    payment_status TEXT NOT NULL CHECK (payment_status IN ('paid', 'pending')),
-    UNIQUE(user_id, course_id)
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  course_id UUID NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  paddle_transaction_id TEXT,
+  status TEXT NOT NULL CHECK (status IN ('active', 'refunded', 'disputed')),
+  UNIQUE (user_id, course_id)
 );
 
 -- Create indexes for better performance
@@ -337,3 +339,15 @@ USING (
         AND role = 'admin'
     )
 ); 
+
+-- Row Level Security
+ALTER TABLE enrollments ENABLE ROW LEVEL SECURITY;
+
+-- Policies: students can view their own enrollments, admins can view all
+CREATE POLICY "Users can view their own enrollments" 
+  ON enrollments FOR SELECT 
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Admins can manage all enrollments" 
+  ON enrollments FOR ALL 
+  USING (EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin'));

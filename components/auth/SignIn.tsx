@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth/AuthContext';
@@ -10,9 +10,21 @@ export function SignIn() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { signIn } = useAuth();
+  const { signIn, user, loading: authLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      const redirectTo =
+        searchParams.get('redirectTo') ||
+        sessionStorage.getItem('redirectAfterLogin') ||
+        '/';
+
+      sessionStorage.removeItem('redirectAfterLogin');
+      router.replace(redirectTo);
+    }
+  }, [user, authLoading, router, searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

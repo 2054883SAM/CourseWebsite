@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+import { NextRequest, NextResponse } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
+=======
 import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
@@ -33,13 +37,58 @@ export async function middleware(req: NextRequest) {
   const res = NextResponse.next();
   const supabase = createMiddlewareClient({ req, res });
   const path = req.nextUrl.pathname;
+>>>>>>> 37f7e1a1c2f9bc553f93145408e4c5d644d96795
 
+export async function middleware(request: NextRequest) {
   try {
-    // Find matching protected route pattern
-    const matchedRoute = protectedRoutes.find(route => 
-      path.startsWith(route.pattern)
-    );
+    // Create an unmodified response
+    let response = NextResponse.next({
+      request: {
+        headers: request.headers,
+      },
+    })
 
+<<<<<<< HEAD
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name) {
+            return request.cookies.get(name)?.value
+          },
+          set(name, value, options) {
+            response.cookies.set({
+              name,
+              value,
+              ...options,
+            })
+          },
+          remove(name, options) {
+            response.cookies.set({
+              name,
+              value: '',
+              ...options,
+              maxAge: 0,
+            })
+          },
+        },
+      }
+    )
+
+    // This will refresh session if expired - required for Server Components
+    // https://supabase.com/docs/guides/auth/server-side/nextjs
+    await supabase.auth.getUser()
+
+    return response
+  } catch (e) {
+    console.error('Supabase middleware error:', e)
+    return NextResponse.next({
+      request: {
+        headers: request.headers,
+      },
+    })
+=======
     // If it's not a protected route, allow access
     if (!matchedRoute) {
       return res;
@@ -98,19 +147,19 @@ export async function middleware(req: NextRequest) {
     const signInUrl = new URL('/signin', req.url);
     signInUrl.searchParams.set('redirectTo', path);
     return NextResponse.redirect(signInUrl.toString());
+>>>>>>> 37f7e1a1c2f9bc553f93145408e4c5d644d96795
   }
 }
 
 export const config = {
   matcher: [
     /*
-     * Match all request paths except:
+     * Match all request paths except for the ones starting with:
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - public folder
-     * - api routes (handled separately)
+     * Feel free to modify this pattern to include more paths.
      */
-    '/((?!_next/static|_next/image|favicon.ico|public/|api/).*)',
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
-};
+}

@@ -13,4 +13,5 @@ export * from './Footer';
 export * from './MainContent';
 export * from './Newsletter';
 export * from './ContentBlock';
-export * from './SkipToContent'; 
+export * from './SkipToContent';
+export * from './Tooltip'; 
