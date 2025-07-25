@@ -9,14 +9,20 @@ import { Database } from '@/types/supabase';
 export default function CreateVideoPage() {
   const { user, dbUser } = useAuth();
   const supabase = createClientComponentClient<Database>();
-  
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     price: '',
     isFeatured: false,
     thumbnailUrl: '',
-    thumbnailDescription: ''
+    thumbnailDescription: '',
+    // Nouveaux champs
+    ceQueVousAllezApprendre: '',
+    prerequis: '',
+    publicCible: '',
+    dureeEstimee: '',
+    niveauDifficulte: 'debutant' as 'debutant' | 'intermediaire' | 'avance'
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -26,14 +32,14 @@ export default function CreateVideoPage() {
   const [selectedVideo, setSelectedVideo] = useState<File | null>(null);
   const [videoUploadProgress, setVideoUploadProgress] = useState(0);
   const [playbackId, setPlaybackId] = useState<string>('');
-  
+
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
-    
+
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
@@ -44,8 +50,6 @@ export default function CreateVideoPage() {
     const file = e.target.files?.[0];
     if (file) {
       setSelectedThumbnail(file);
-      
-      // Créer un aperçu
       const reader = new FileReader();
       reader.onload = (e) => {
         setThumbnailPreview(e.target?.result as string);
@@ -64,7 +68,6 @@ export default function CreateVideoPage() {
 
   const uploadVideoToMux = async (file: File): Promise<string> => {
     try {
-      // Étape 1: Créer l'upload URL avec notre API
       const response = await fetch('/api/upload-video', {
         method: 'POST',
         headers: {
@@ -83,7 +86,6 @@ export default function CreateVideoPage() {
       const { uploadUrl, uploadId } = await response.json();
       setVideoUploadProgress(25);
 
-      // Étape 2: Uploader la vidéo directement vers Mux
       const uploadResponse = await fetch(uploadUrl, {
         method: 'PUT',
         body: file,
@@ -97,18 +99,29 @@ export default function CreateVideoPage() {
       }
 
       setVideoUploadProgress(75);
-
-      // Étape 3: Attendre que la vidéo soit traitée et récupérer le playback ID
-      // Note: En production, vous devriez utiliser un webhook ou polling
-      // Pour simplifier, on simule un délai
+      
+      // Attendre un peu que l'upload soit traité
       await new Promise(resolve => setTimeout(resolve, 2000));
       
+      // Récupérer le playbackId après l'upload en utilisant l'uploadId
+      const playbackResponse = await fetch(`/api/upload-video?uploadId=${uploadId}`, {
+        method: 'GET',
+      });
+
+      if (!playbackResponse.ok) {
+        throw new Error('Erreur lors de la récupération du playbackId');
+      }
+
+      const { playbackId } = await playbackResponse.json();
+      
+      if (!playbackId) {
+        throw new Error('PlaybackId non disponible');
+      }
+
       setVideoUploadProgress(100);
 
-      // Pour l'instant, on retourne un playback ID fictif
-      // En production, vous devriez récupérer le vrai playback ID depuis Mux
-      return 'demo-playback-id-' + Date.now();
-
+      // Retourner le vrai playbackId de Mux
+      return playbackId;
     } catch (error) {
       console.error('Erreur upload vidéo:', error);
       throw error;
@@ -118,7 +131,7 @@ export default function CreateVideoPage() {
   const uploadThumbnail = async (file: File): Promise<string> => {
     const fileExt = file.name.split('.').pop();
     const fileName = `${user?.id}-${Date.now()}.${fileExt}`;
-    
+
     const { data, error } = await supabase.storage
       .from('course-thumbnails')
       .upload(fileName, file);
@@ -152,45 +165,45 @@ export default function CreateVideoPage() {
       let thumbnailUrl = formData.thumbnailUrl;
       let videoPlaybackId = '';
 
-      // Upload thumbnail si une image a été sélectionnée
       if (selectedThumbnail) {
         setUploadProgress(25);
         thumbnailUrl = await uploadThumbnail(selectedThumbnail);
         setUploadProgress(50);
       }
 
-      // Upload vidéo vers Mux
       setUploadProgress(60);
       videoPlaybackId = await uploadVideoToMux(selectedVideo);
       setPlaybackId(videoPlaybackId);
       setUploadProgress(80);
 
-      // Créer le cours dans Supabase
-      const { data: course, error } = await supabase
+      // Créer le cours avec le playbackId
+      const { data: course, error: courseError } = await supabase
         .from('courses')
         .insert({
           title: formData.title,
           description: formData.description,
           price: parseFloat(formData.price) || 0,
           thumbnail_url: thumbnailUrl || null,
+          thumbnail_description: formData.thumbnailDescription || null,
           creator_id: user.id,
-          // Ajouter les champs manquants si ils existent dans la DB
-          ...(formData.isFeatured && { is_featured: formData.isFeatured }),
-          ...(formData.thumbnailDescription && { thumbnail_description: formData.thumbnailDescription })
+          is_featured: formData.isFeatured,
+          ce_que_vous_allez_apprendre: formData.ceQueVousAllezApprendre || null,
+          prerequis: formData.prerequis || null,
+          public_cible: formData.publicCible || null,
+          duree_estimee: formData.dureeEstimee || null,
+          niveau_difficulte: formData.niveauDifficulte,
+          playback_id: videoPlaybackId // Stocker le playbackId directement dans le cours
         })
         .select()
         .single();
 
-      if (error) {
-        console.error('Erreur lors de la création du cours:', error);
-        throw error;
+      if (courseError) {
+        console.error('Erreur lors de la création du cours:', courseError);
+        throw courseError;
       }
 
       setUploadProgress(100);
-      
       alert(`Cours "${formData.title}" créé avec succès! Playback ID: ${videoPlaybackId}`);
-      
-      // Rediriger vers la page du cours ou la liste des cours
       window.location.href = `/courses/${course.id}`;
 
     } catch (error) {
@@ -209,7 +222,6 @@ export default function CreateVideoPage() {
         <Section>
           <div className="max-w-4xl mx-auto">
             <h1 className="text-3xl font-bold mb-8">Créer une nouvelle vidéo</h1>
-            
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Section Upload Vidéo */}
               <div className="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg">
@@ -237,7 +249,6 @@ export default function CreateVideoPage() {
                   >
                     {selectedVideo ? `Vidéo sélectionnée: ${selectedVideo.name}` : 'Sélectionner une vidéo'}
                   </label>
-                  
                   {selectedVideo && (
                     <div className="mt-4 text-sm text-gray-600 dark:text-gray-400">
                       <p>Taille: {(selectedVideo.size / (1024 * 1024)).toFixed(2)} MB</p>
@@ -250,7 +261,6 @@ export default function CreateVideoPage() {
               {/* Section Informations de base */}
               <div className="bg-white dark:bg-gray-900 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
                 <h2 className="text-xl font-semibold mb-4">Informations de base</h2>
-                
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -267,7 +277,6 @@ export default function CreateVideoPage() {
                       placeholder="Ex: Introduction à React"
                     />
                   </div>
-
                   <div>
                     <label htmlFor="price" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Prix ($)
@@ -285,7 +294,6 @@ export default function CreateVideoPage() {
                     />
                   </div>
                 </div>
-
                 <div className="mt-6">
                   <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Description
@@ -300,7 +308,6 @@ export default function CreateVideoPage() {
                     placeholder="Décrivez le contenu de votre vidéo..."
                   />
                 </div>
-
                 <div className="mt-6">
                   <label className="flex items-center">
                     <input
@@ -317,10 +324,90 @@ export default function CreateVideoPage() {
                 </div>
               </div>
 
+              {/* Section Informations détaillées */}
+              <div className="bg-white dark:bg-gray-900 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+                <h2 className="text-xl font-semibold mb-4">Informations détaillées</h2>
+                <div className="space-y-6">
+                  <div>
+                    <label htmlFor="ceQueVousAllezApprendre" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Ce que vous allez apprendre
+                    </label>
+                    <textarea
+                      id="ceQueVousAllezApprendre"
+                      name="ceQueVousAllezApprendre"
+                      value={formData.ceQueVousAllezApprendre}
+                      onChange={handleInputChange}
+                      rows={4}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-800 dark:text-white"
+                      placeholder="Listez les compétences et connaissances que les étudiants acquerront..."
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="prerequis" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Prérequis
+                    </label>
+                    <textarea
+                      id="prerequis"
+                      name="prerequis"
+                      value={formData.prerequis}
+                      onChange={handleInputChange}
+                      rows={3}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-800 dark:text-white"
+                      placeholder="Quelles connaissances préalables sont nécessaires ?"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="publicCible" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Ce cours est pour...
+                    </label>
+                    <textarea
+                      id="publicCible"
+                      name="publicCible"
+                      value={formData.publicCible}
+                      onChange={handleInputChange}
+                      rows={3}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-800 dark:text-white"
+                      placeholder="Décrivez le public cible de ce cours..."
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label htmlFor="dureeEstimee" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Durée estimée
+                      </label>
+                      <input
+                        type="text"
+                        id="dureeEstimee"
+                        name="dureeEstimee"
+                        value={formData.dureeEstimee}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-800 dark:text-white"
+                        placeholder="Ex: 2 heures, 30 minutes"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="niveauDifficulte" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Niveau de difficulté
+                      </label>
+                      <select
+                        id="niveauDifficulte"
+                        name="niveauDifficulte"
+                        value={formData.niveauDifficulte}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-800 dark:text-white"
+                      >
+                        <option value="debutant">Débutant</option>
+                        <option value="intermediaire">Intermédiaire</option>
+                        <option value="avance">Avancé</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Section Thumbnail */}
               <div className="bg-white dark:bg-gray-900 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
                 <h2 className="text-xl font-semibold mb-4">Image de couverture (Thumbnail)</h2>
-                
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label htmlFor="thumbnailUrl" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -336,7 +423,6 @@ export default function CreateVideoPage() {
                       placeholder="https://example.com/image.jpg"
                     />
                   </div>
-
                   <div>
                     <label htmlFor="thumbnailDescription" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Description courte
@@ -352,7 +438,6 @@ export default function CreateVideoPage() {
                     />
                   </div>
                 </div>
-
                 {/* Upload d'image depuis l'appareil */}
                 <div className="mt-6">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -399,14 +484,12 @@ export default function CreateVideoPage() {
                       📁 Choisir une image
                     </button>
                   </div>
-                  
-                  {/* Aperçu de l'image sélectionnée */}
                   {thumbnailPreview && (
                     <div className="mt-4">
                       <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Aperçu:</p>
-                      <img 
-                        src={thumbnailPreview} 
-                        alt="Aperçu thumbnail" 
+                      <img
+                        src={thumbnailPreview}
+                        alt="Aperçu thumbnail"
                         className="w-32 h-24 object-cover rounded-md border"
                       />
                     </div>
@@ -428,7 +511,7 @@ export default function CreateVideoPage() {
                       </span>
                     </div>
                     <div className="w-full bg-blue-200 dark:bg-blue-700 rounded-full h-2">
-                      <div 
+                      <div
                         className="bg-blue-600 h-2 rounded-full transition-all duration-300"
                         style={{ width: `${uploadProgress}%` }}
                       ></div>
@@ -447,7 +530,7 @@ export default function CreateVideoPage() {
                         </span>
                       </div>
                       <div className="w-full bg-green-200 dark:bg-green-700 rounded-full h-2">
-                        <div 
+                        <div
                           className="bg-green-600 h-2 rounded-full transition-all duration-300"
                           style={{ width: `${videoUploadProgress}%` }}
                         ></div>

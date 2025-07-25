@@ -41,28 +41,58 @@ export interface Database {
           title: string
           description: string
           thumbnail_url: string | null
+          thumbnail_description: string | null
           price: number
           creator_id: string
           created_at: string
+          is_featured: boolean
+          ce_que_vous_allez_apprendre: string | null
+          prerequis: string | null
+          public_cible: string | null
+          duree_estimee: string | null
+          niveau_difficulte: 'debutant' | 'intermediaire' | 'avance' | null
         }
         Insert: {
           id?: string
           title: string
           description: string
           thumbnail_url?: string | null
+          thumbnail_description?: string | null
           price: number
           creator_id: string
           created_at?: string
+          is_featured?: boolean
+          ce_que_vous_allez_apprendre?: string | null
+          prerequis?: string | null
+          public_cible?: string | null
+          duree_estimee?: string | null
+          niveau_difficulte?: 'debutant' | 'intermediaire' | 'avance' | null
         }
         Update: {
           id?: string
           title?: string
           description?: string
           thumbnail_url?: string | null
+          thumbnail_description?: string | null
           price?: number
           creator_id?: string
           created_at?: string
+          is_featured?: boolean
+          ce_que_vous_allez_apprendre?: string | null
+          prerequis?: string | null
+          public_cible?: string | null
+          duree_estimee?: string | null
+          niveau_difficulte?: 'debutant' | 'intermediaire' | 'avance' | null
         }
+        Relationships: [
+          {
+            foreignKeyName: "courses_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       sections: {
         Row: {

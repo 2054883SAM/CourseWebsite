@@ -13,9 +13,17 @@ CREATE TABLE courses (
     title TEXT NOT NULL,
     description TEXT NOT NULL,
     thumbnail_url TEXT,
+    thumbnail_description TEXT,
     price NUMERIC NOT NULL,
     creator_id UUID REFERENCES users(id) NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+    is_featured BOOLEAN DEFAULT false,
+    -- Nouveaux champs pour les informations du cours
+    ce_que_vous_allez_apprendre TEXT,
+    prerequis TEXT,
+    public_cible TEXT,
+    duree_estimee TEXT,
+    niveau_difficulte TEXT CHECK (niveau_difficulte IN ('debutant', 'intermediaire', 'avance'))
 );
 
 CREATE TABLE sections (
@@ -108,15 +116,15 @@ ON courses FOR SELECT
 TO authenticated, anon
 USING (true);
 
--- Only admins can create courses
-CREATE POLICY "Only admins can create courses."
+-- Admins and creators can create courses
+CREATE POLICY "Admins and creators can create courses."
 ON courses FOR INSERT
 TO authenticated
 WITH CHECK (
     EXISTS (
         SELECT 1 FROM users
         WHERE id = (select auth.uid())
-        AND role = 'admin'
+        AND (role = 'admin' OR role = 'creator')
     )
 );
 

@@ -72,6 +72,7 @@ export function CourseActions({ course, sections }: CourseActionsProps) {
       return;
     }
 
+<<<<<<< HEAD
     // Clear any previous errors
     setErrorMessage(null);
     
@@ -122,6 +123,15 @@ export function CourseActions({ course, sections }: CourseActionsProps) {
         setErrorMessage(error.message || 'An error occurred during enrollment');
         setTooltipMessage('Click to try enrolling again');
       }
+=======
+    // Rediriger vers la page de lecture vidéo avec le playbackId
+    if (course.playback_id) {
+      router.push(`/video-player?playbackId=${course.playback_id}&courseId=${course.id}&courseTitle=${encodeURIComponent(course.title)}`);
+    } else {
+      // Fallback si pas de playbackId
+      console.log('Enrolling in course:', course.id);
+      alert('Vidéo non disponible pour le moment.');
+>>>>>>> 37f7e1a1c2f9bc553f93145408e4c5d644d96795
     }
   };
 
@@ -149,6 +159,7 @@ export function CourseActions({ course, sections }: CourseActionsProps) {
     <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
       <div className="text-2xl font-bold mb-4">${course.price.toFixed(2)}</div>
       
+<<<<<<< HEAD
       {/* Error message display */}
       {errorMessage && (
         <div className="mb-4 p-3 text-sm bg-red-50 text-red-700 rounded-md border border-red-200">
@@ -165,6 +176,15 @@ export function CourseActions({ course, sections }: CourseActionsProps) {
           className="w-full"
         />
       </div>
+=======
+      <button 
+        onClick={handleEnrollClick}
+        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg font-medium transition-colors mb-4"
+        disabled={loading}
+      >
+        {loading ? 'Loading...' : course.playback_id ? 'Watch Video' : 'Enroll Now'}
+      </button>
+>>>>>>> 37f7e1a1c2f9bc553f93145408e4c5d644d96795
       
       <div className="space-y-4 text-sm">
         <div className="flex justify-between">
@@ -181,6 +201,12 @@ export function CourseActions({ course, sections }: CourseActionsProps) {
           <span className="text-gray-600">Created by:</span>
           <span className="font-semibold">{course.creator?.name || 'Unknown'}</span>
         </div>
+        {course.playback_id && (
+          <div className="flex justify-between">
+            <span className="text-gray-600">Video Status:</span>
+            <span className="font-semibold text-green-600">Available</span>
+          </div>
+        )}
       </div>
     </div>
   );
