@@ -85,9 +85,11 @@ export function DropdownMenu({ trigger, children, align = 'right' }: DropdownMen
     };
   }, [isOpen, activeIndex, children, triggerId]);
 
-  // Add aria-selected to the active item
+  // Add aria-selected to the active item, only for menu items that support it
   const childrenWithProps = React.Children.map(children, (child, index) => {
-    if (React.isValidElement(child)) {
+    if (React.isValidElement(child) && 
+        // Only pass isActive to components, not DOM elements
+        typeof child.type !== 'string') {
       return React.cloneElement(child, {
         ...child.props,
         isActive: index === activeIndex,
