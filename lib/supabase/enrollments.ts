@@ -66,7 +66,7 @@ export async function getUserEnrollments(userId: string): Promise<Course[]> {
     // Extract and return course objects
     return data
       .filter(enrollment => enrollment.courses)
-      .map(enrollment => enrollment.courses as Course);
+      .map(enrollment => enrollment.courses as unknown as Course);
   } catch (err) {
     console.error('Failed to get user enrollments:', err);
     return [];

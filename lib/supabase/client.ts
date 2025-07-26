@@ -38,23 +38,43 @@ const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 if (!SUPABASE_URL) throw new Error('Missing env.NEXT_PUBLIC_SUPABASE_URL');
 if (!SUPABASE_ANON_KEY) throw new Error('Missing env.NEXT_PUBLIC_SUPABASE_ANON_KEY');
 
+// Determine if we're running on the server or client
+const isServer = typeof window === 'undefined';
+
+// Extract project reference from URL for proper cookie naming
+const getProjectRef = () => {
+  if (!SUPABASE_URL) return 'default';
+  // Extract the project reference from the URL
+  const matches = SUPABASE_URL.match(/https:\/\/([a-z0-9-]+)\.supabase\.co/);
+  return matches ? matches[1] : 'default';
+};
+
+const projectRef = getProjectRef();
+console.log('Supabase project ref for cookies:', projectRef);
+
+// Create different client configs for server and browser environments
+const clientOptions = {
+  auth: {
+    autoRefreshToken: !isServer, // Only refresh token on client-side
+    persistSession: !isServer,   // Only persist session on client-side
+    detectSessionInUrl: false,
+    storageKey: `sb-${projectRef}-auth-token` // Use the correct cookie name format
+  },
+  // Only add fetch timeout in browser context
+  global: isServer ? undefined : {
+    fetch: createFetchWithTimeout(),
+  },
+};
+
 // Create Supabase client with auth configuration
 export const supabase = createClient<Database>(
   SUPABASE_URL,
   SUPABASE_ANON_KEY,
-  {
-    auth: {
-      autoRefreshToken: true,
-      persistSession: true,
-      detectSessionInUrl: false,
-    },
-    global: {
-      fetch: createFetchWithTimeout(),
-    },
-  }
+  clientOptions
 );
 
-if (typeof window !== 'undefined') {
+// Only run client-side initialization code in browser context
+if (!isServer) {
   // 1) Restore in-memory session from localStorage on load
   supabase.auth.getSession().then(({ data: { session } }) => {
     if (session) {

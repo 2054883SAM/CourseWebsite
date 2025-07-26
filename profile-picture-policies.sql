@@ -1,3 +1,6 @@
+-- Enable RLS on the users table if not already enabled
+ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
+
 -- Politiques pour le bucket profile-picture
 -- Ces politiques permettent aux utilisateurs de gérer leurs photos de profil
 
@@ -29,8 +32,24 @@ FOR DELETE USING (
   AND (storage.foldername(name))[1] = auth.uid()::text
 );
 
+-- Politiques pour la table users
+-- Ces politiques permettent aux utilisateurs de gérer leur profil
+
+-- 1. Politique SELECT pour users - Permettre aux utilisateurs de lire leur propre profil
+CREATE POLICY "Allow users to read own profile" ON public.users
+FOR SELECT USING (auth.uid() = id);
+
+-- 2. Politique SELECT pour users - Permettre la lecture publique des profils (informations limitées)
+CREATE POLICY "Allow users to read public profile data" ON public.users
+FOR SELECT USING (true);
+
+-- 3. Politique UPDATE pour users - Permettre aux utilisateurs de mettre à jour leur propre profil
+CREATE POLICY "Allow users to update own profile" ON public.users
+FOR UPDATE USING (auth.uid() = id);
+
 -- Note: Ces politiques garantissent que :
 -- - Seuls les utilisateurs authentifiés peuvent uploader des photos
 -- - Les photos sont organisées par dossier utilisateur (user_id/filename)
 -- - Les utilisateurs ne peuvent modifier que leurs propres photos
 -- - Les photos sont accessibles publiquement pour l'affichage 
+-- - Les utilisateurs peuvent uniquement mettre à jour leur propre enregistrement dans la table users 

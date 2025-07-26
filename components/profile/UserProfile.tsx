@@ -65,10 +65,21 @@ export default function UserProfile() {
 
       setIsUploadingPhoto(true);
 
+      // Ensure we have the latest auth context
+      const { data: authData } = await supabase.auth.getUser();
+      const userId = authData.user?.id;
+      
+      if (!userId) {
+        throw new Error("Vous devez être connecté pour télécharger une photo");
+      }
+
       // Upload photo to Supabase Storage
       const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-      const filePath = `${user.id}/${fileName}`;
+      const fileName = `${userId}-${Date.now()}.${fileExt}`;
+      const filePath = `${userId}/${fileName}`;
+
+      console.log('Using auth ID for upload:', userId);
+      console.log('Upload path:', filePath);
 
       const { error: uploadError } = await supabase.storage
         .from('profile-picture')
@@ -76,10 +87,10 @@ export default function UserProfile() {
           cacheControl: '3600',
           upsert: true
         });
-
+      
       if (uploadError) {
         console.error('Upload error:', uploadError);
-        throw new Error('Erreur lors de l\'upload de la photo');
+        throw new Error('Erreur lors de l&apos;upload de la photo');
       }
 
       // Get public URL
@@ -91,7 +102,7 @@ export default function UserProfile() {
       const { error: updateError } = await supabase
         .from('users')
         .update({ photo_url: publicUrl })
-        .eq('id', user.id);
+        .eq('id', userId);
 
       if (updateError) {
         console.error('Update error:', updateError);
@@ -108,7 +119,7 @@ export default function UserProfile() {
     } catch (err) {
       console.error('Error uploading photo:', err);
       const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
-      error('Échec de l\'upload de la photo: ' + errorMessage);
+      error('Échec de l&apos;upload de la photo: ' + errorMessage);
     } finally {
       setIsUploadingPhoto(false);
     }
@@ -312,7 +323,7 @@ export default function UserProfile() {
                   placeholder="email@exemple.com"
                 />
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  L'email ne peut pas être modifié
+                  L&apos;email ne peut pas être modifié
                 </p>
               </div>
 
@@ -330,7 +341,7 @@ export default function UserProfile() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Date d'inscription
+                  Date d&apos;inscription
                 </label>
                 <div className="w-full px-4 py-3 border border-gray-300 rounded-xl bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-400">
                   {dbUser.created_at ? new Date(dbUser.created_at).toLocaleDateString('fr-FR') : 'N/A'}
