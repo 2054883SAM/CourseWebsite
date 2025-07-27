@@ -10,14 +10,14 @@ function createFetchWithTimeout(
 ): typeof fetch {
   // on server or build, just return the normal fetch
   if (typeof window === 'undefined' || typeof document === 'undefined') {
-    return fetch
+    return fetch;
   }
 
-  const orig = fetch.bind(window)
+  const orig = fetch.bind(window);
   return (input, init) => {
     // 1) If the tab is visible, skip any timeout entirely
     if (!document.hidden) {
-      return orig(input, init)
+      return orig(input, init);
     }
 
     // 2) Only when hidden do we enforce a timeout
@@ -26,10 +26,9 @@ function createFetchWithTimeout(
       new Promise<Response>((_, rej) =>
         setTimeout(() => rej(new Error('Request timed out')), backgroundTimeout)
       ),
-    ]) as Promise<Response>
-  }
+    ]) as Promise<Response>;
+  };
 }
-
 
 // Validate required environment variables
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -55,23 +54,37 @@ console.log('Supabase project ref for cookies:', projectRef);
 // Create different client configs for server and browser environments
 const clientOptions = {
   auth: {
-    autoRefreshToken: !isServer, // Only refresh token on client-side
-    persistSession: !isServer,   // Only persist session on client-side
-    detectSessionInUrl: false,
-    storageKey: `sb-${projectRef}-auth-token` // Use the correct cookie name format
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true,
+    storageKey: `sb-${projectRef}-auth-token`,
+    cookieOptions: {
+      name: `sb-${projectRef}-auth-token`,
+      // Remove domain restriction which might be preventing cookie creation
+      // domain: 'localhost',
+      path: '/',
+      sameSite: 'Lax',
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+    },
   },
   // Only add fetch timeout in browser context
-  global: isServer ? undefined : {
-    fetch: createFetchWithTimeout(),
-  },
+  global: isServer
+    ? undefined
+    : {
+        fetch: createFetchWithTimeout(),
+      },
 };
 
+console.log('Supabase client initialized with cookie config:', {
+  cookieName: clientOptions.auth.cookieOptions.name,
+  cookiePath: clientOptions.auth.cookieOptions.path,
+  detectSessionInUrl: clientOptions.auth.detectSessionInUrl,
+  persistSession: clientOptions.auth.persistSession,
+});
+
 // Create Supabase client with auth configuration
-export const supabase = createClient<Database>(
-  SUPABASE_URL,
-  SUPABASE_ANON_KEY,
-  clientOptions
-);
+export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, clientOptions);
 
 // Only run client-side initialization code in browser context
 if (!isServer) {
@@ -93,7 +106,7 @@ if (!isServer) {
 
   // 3) Refresh session when tab gains focus
   window.addEventListener('focus', () => {
-    supabase.auth.refreshSession().catch(err => {
+    supabase.auth.refreshSession().catch((err) => {
       console.error('Error refreshing Supabase session on focus:', err);
     });
   });
@@ -104,6 +117,8 @@ if (!isServer) {
  * Let the data fetch layer handle any auth errors or retries.
  */
 export async function ensureValidSession(): Promise<any> {
-  const { data: { session } } = await supabase.auth.getSession();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
   return session;
 }

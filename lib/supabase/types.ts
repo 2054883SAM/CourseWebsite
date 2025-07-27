@@ -32,6 +32,8 @@ export interface Course {
   niveau_difficulte?: 'debutant' | 'intermediaire' | 'avance';
   // Champ pour le playbackId de Mux
   playback_id?: string;
+  // Paddle checkout integration
+  paddle_price_id?: string; // Paddle price ID for the checkout
   // Computed fields (not in DB)
   creator?: User;
   section_count?: number;
@@ -62,8 +64,10 @@ export interface Enrollment {
   id: string; // UUID
   user_id: string; // UUID linked to users.id
   course_id: string; // UUID linked to courses.id
-  enrolled_at: string;
-  payment_status: 'paid' | 'pending';
+  created_at: string;
+  updated_at: string;
+  status: 'active' | 'refunded' | 'disputed'; // Updated to match schema
+  paddle_transaction_id?: string; // Paddle transaction ID
 }
 
 // Search params for course filtering
@@ -76,4 +80,4 @@ export interface CourseSearchParams {
   sort_order?: 'asc' | 'desc';
   page?: number;
   limit?: number;
-} 
+}

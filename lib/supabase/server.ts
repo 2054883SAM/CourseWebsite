@@ -1,43 +1,63 @@
 import { createServerClient } from '@supabase/ssr';
 import { Database } from '@/types/supabase';
-import { ReadonlyRequestCookies } from 'next/dist/server/web/spec-extension/adapters/request-cookies';
+import { cookies } from 'next/headers';
 
-// Extract project reference from Supabase URL for proper cookie naming
-const getProjectRef = () => {
-  const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  if (!SUPABASE_URL) return 'default';
-  
-  // Extract the project reference from the URL
-  const matches = SUPABASE_URL.match(/https:\/\/([a-z0-9-]+)\.supabase\.co/);
-  return matches ? matches[1] : 'default';
-};
+/**
+ * Especially important if using Fluid compute: Don't put this client in a
+ * global variable. Always create a new client within each function when using
+ * it.
+ */
+export async function createClient() {
+  const cookieStore = await cookies();
 
-const projectRef = getProjectRef();
-
-export function createClient(cookieStore: ReadonlyRequestCookies) {
-  return createServerClient<Database>(
+  return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name) {
-          // Check for the cookie name in the correct format first
-          const cookieName = name === 'sb-auth-token' ? 
-            `sb-${projectRef}-auth-token` : name;
-          
-          return cookieStore.get(cookieName)?.value;
+        getAll() {
+          return cookieStore.getAll();
         },
-        set() {
-          throw new Error('Setting cookies not supported in this context');
-        },
-        remove() {
-          throw new Error('Removing cookies not supported in this context');
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            );
+          } catch {
+            // The `setAll` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing
+            // user sessions.
+          }
         },
       },
-      // Ensure correct cookie name format for authentication
-      auth: {
-        storageKey: `sb-${projectRef}-auth-token`
-      }
+    }
+  );
+}
+
+// Route handler specific client
+export async function createRouteHandlerClient() {
+  const cookieStore = await cookies();
+
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            );
+          } catch {
+            // The `setAll` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing
+            // user sessions.
+          }
+        },
+      },
     }
   );
 }

@@ -122,13 +122,13 @@ function validatePaddleConfig(): void {
 export function getPaddleClient(): PaddleClient {
   // We can now use this on client-side since we're using NEXT_PUBLIC vars
   // Remove the client-side check since we're explicitly using public env vars
-  
+
   if (!paddleClientInstance) {
     // Validate config before instantiating
     validatePaddleConfig();
     paddleClientInstance = new PaddleClient();
   }
-  
+
   return paddleClientInstance;
 }
 
@@ -149,73 +149,52 @@ export function getClientSafeConfig() {
  */
 export function loadPaddleJs() {
   if (typeof window !== 'undefined') {
-    // Get the client-safe config
-    const config = getClientSafeConfig();
-    
-    // Debug: Log environment variables
-    console.log('Paddle environment variables:');
-    console.log('- NEXT_PUBLIC_PADDLE_SELLER_ID:', process.env.NEXT_PUBLIC_PADDLE_SELLER_ID);
-    console.log('- NEXT_PUBLIC_PADDLE_SANDBOX_MODE:', process.env.NEXT_PUBLIC_PADDLE_SANDBOX_MODE);
-    console.log('- NEXT_PUBLIC_PADDLE_CLIENT_TOKEN exists:', !!process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN);
-    
-    // Only run in browser environment
-    const paddleScript = document.createElement('script');
-    paddleScript.src = 'https://cdn.paddle.com/paddle/v2/paddle.js';
-    paddleScript.async = true;
-    paddleScript.onload = () => {
-      console.log('Paddle.js loaded successfully');
-      // Initialize Paddle
+    // Return a promise that resolves when Paddle is loaded
+    return new Promise((resolve, reject) => {
+      // Check if Paddle is already loaded
       if (window.Paddle) {
-        try {
-          if (config.sandboxMode) {
-            console.log('Setting Paddle environment to sandbox');
-            window.Paddle.Environment.set('sandbox');
-          }
-          
-          // Use the new Paddle.Initialize() method for Paddle V2
-          console.log('Config values:', { 
-            sellerId: config.sellerId, 
-            hasClientToken: !!config.clientToken,
-            sandboxMode: config.sandboxMode
-          });
-          
-          // Make sure we have a valid seller ID or token
-          if (!config.clientToken && !config.sellerId) {
-            console.error('Missing both client token and seller ID. At least one is required.');
-          }
-          
-          // Ensure the seller ID is a number if used
-          let initOptions;
-          if (config.clientToken) {
-            initOptions = { token: config.clientToken };
-          } else {
-            // Convert sellerId to a number and ensure it's valid
-            const sellerIdNum = Number(config.sellerId);
-            if (isNaN(sellerIdNum) || sellerIdNum <= 0) {
-              console.error('Invalid seller ID:', config.sellerId);
-            } else {
-              initOptions = { sellerId: sellerIdNum };
-            }
-          }
-          
-          // Log what we're actually passing to Paddle.Initialize
-          console.log('Paddle init options:', initOptions);
-          
-          if (initOptions) {
-            window.Paddle.Initialize(initOptions);
-            console.log('Paddle initialized successfully');
-          } else {
-            console.error('Cannot initialize Paddle: missing valid configuration');
-          }
-        } catch (error) {
-          console.error('Error setting up Paddle:', error);
-        }
-      } else {
-        console.error('Paddle.js loaded but window.Paddle is undefined');
+        console.log('Paddle already loaded');
+        resolve(window.Paddle);
+        return;
       }
-    };
-    document.head.appendChild(paddleScript);
+
+      // Debug: Log environment variables
+      console.log('Paddle environment variables:');
+      console.log('- NEXT_PUBLIC_PADDLE_SELLER_ID:', process.env.NEXT_PUBLIC_PADDLE_SELLER_ID);
+      console.log(
+        '- NEXT_PUBLIC_PADDLE_SANDBOX_MODE:',
+        process.env.NEXT_PUBLIC_PADDLE_SANDBOX_MODE
+      );
+      console.log(
+        '- NEXT_PUBLIC_PADDLE_CLIENT_TOKEN exists:',
+        !!process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN
+      );
+
+      // Create script element
+      const paddleScript = document.createElement('script');
+      paddleScript.src = 'https://cdn.paddle.com/paddle/v2/paddle.js';
+      paddleScript.async = true;
+      paddleScript.defer = true;
+
+      // Setup onload handler
+      paddleScript.onload = () => {
+        console.log('Paddle.js loaded successfully');
+
+        // Resolve the promise
+        resolve(window.Paddle);
+      };
+
+      // Setup error handler
+      paddleScript.onerror = (error) => {
+        console.error('Failed to load Paddle script:', error);
+        reject(new Error('Failed to load Paddle script'));
+      };
+
+      // Add to document
+      document.head.appendChild(paddleScript);
+    });
   }
+  return Promise.resolve(null);
 }
 
 // Re-export validation function for use in other modules

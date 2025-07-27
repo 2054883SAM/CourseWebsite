@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import React, { useEffect, useState } from "react";
-import { loadPaddleJs } from "@/lib/paddle";
+import React, { useEffect, useState } from 'react';
+import { loadPaddleJs } from '@/lib/paddle';
 
 // Props for the client component
 interface PaymentTestClientProps {
@@ -66,12 +66,12 @@ export function PaymentTestClient({ productId }: PaymentTestClientProps) {
 
         // Hard-coding sellerId for reliability
         const sellerId = Number(34619); // Your seller ID from .env
-        
+
         console.log('Initializing Paddle with seller ID:', sellerId);
 
         // Initialize Paddle
         window.Paddle.Initialize({
-          seller: sellerId
+          seller: sellerId,
         });
 
         console.log('Paddle setup complete');
@@ -93,80 +93,81 @@ export function PaymentTestClient({ productId }: PaymentTestClientProps) {
   // Handle opening the checkout
   const openCheckout = () => {
     setIsLoading(true);
-    
+
     // Check if Paddle is loaded
-    if (typeof window !== "undefined" && window.Paddle) {
+    if (typeof window !== 'undefined' && window.Paddle) {
       try {
         // Log the product ID to verify it's not undefined
-        console.log("Opening checkout with product ID:", productId);
-        
+        console.log('Opening checkout with product ID:', productId);
+
         // @ts-ignore - Paddle is loaded via script tag
         window.Paddle.Checkout.open({
           settings: {
             displayMode: 'overlay',
-            theme: 'light'
+            theme: 'light',
           },
-          items: [{
-            priceId: productId,
-            quantity: 1
-          }],
+          items: [
+            {
+              priceId: productId,
+              quantity: 1,
+            },
+          ],
           onComplete: (data: any) => {
-            console.log("Payment successful", data);
-            alert("Payment successful! Check console for details.");
+            console.log('Payment successful', data);
+            alert('Payment successful! Check console for details.');
             setIsLoading(false);
           },
           onClose: () => {
-            console.log("Checkout was closed");
+            console.log('Checkout was closed');
             setIsLoading(false);
           },
         });
-        
       } catch (error) {
-        console.error("Error opening checkout:", error);
-        alert("Error opening checkout. See console for details.");
+        console.error('Error opening checkout:', error);
+        alert('Error opening checkout. See console for details.');
         setIsLoading(false);
       }
     } else {
-      console.error("Paddle is not loaded");
-      alert("Payment system is not loaded. Please check your browser console for details.");
+      console.error('Paddle is not loaded');
+      alert('Payment system is not loaded. Please check your browser console for details.');
       setIsLoading(false);
     }
   };
 
   return (
     <>
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <h2 className="text-lg font-semibold mb-4">Test Product Checkout</h2>
+      <div className="rounded-lg bg-white p-6 shadow-md">
+        <h2 className="mb-4 text-lg font-semibold">Test Product Checkout</h2>
         <p className="mb-4">
-          This page allows you to test the Paddle V2 API integration by purchasing
-          a test product.
+          This page allows you to test the Paddle V2 API integration by purchasing a test product.
         </p>
-        <p className="text-sm text-gray-600 mb-4">
-          Product ID: <code className="bg-gray-100 px-1 py-0.5 rounded">{productId}</code>
+        <p className="mb-4 text-sm text-gray-600">
+          Product ID: <code className="rounded bg-gray-100 px-1 py-0.5">{productId}</code>
         </p>
-        <p className="text-sm text-gray-600 mb-6">
-          <strong>Note:</strong> Make sure your Paddle environment variables are properly set in <code className="bg-gray-100 px-1 py-0.5 rounded">.env</code>. 
-          For testing, you can use Paddle&apos;s test card: 4242 4242 4242 4242, any future expiry date, and any CVC.
+        <p className="mb-6 text-sm text-gray-600">
+          <strong>Note:</strong> Make sure your Paddle environment variables are properly set in{' '}
+          <code className="rounded bg-gray-100 px-1 py-0.5">.env</code>. For testing, you can use
+          Paddle&apos;s test card: 4242 4242 4242 4242, any future expiry date, and any CVC.
         </p>
         <div className="flex items-center space-x-3">
           <button
             onClick={openCheckout}
             disabled={isLoading}
-            className={`bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition-colors ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+            className={`rounded bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700 ${isLoading ? 'cursor-not-allowed opacity-50' : ''}`}
           >
-            {isLoading ? "Loading..." : "Open Checkout"}
+            {isLoading ? 'Loading...' : 'Open Checkout'}
           </button>
           {!paddleLoaded && (
             <p className="text-sm text-amber-600">
-              <span className="inline-block animate-pulse mr-2">⚠️</span>
+              <span className="mr-2 inline-block animate-pulse">⚠️</span>
               Paddle.js is still loading...
             </p>
           )}
         </div>
       </div>
-      <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded">
-        <h3 className="font-medium text-yellow-800 mb-2">Testing Instructions</h3>
-        <ul className="list-disc list-inside space-y-1 text-sm text-yellow-800">
+      <div className="mt-6 rounded border border-yellow-200 bg-yellow-50 p-4">
+        <h3 className="mb-2 font-medium text-yellow-800">Testing Instructions</h3>
+        <ul className="list-inside list-disc space-y-1 text-sm text-yellow-800">
           <li>This page tests the Paddle V2 API integration from task 8.1.</li>
           <li>The checkout button will open a Paddle checkout overlay.</li>
           <li>For sandbox testing, use Paddle&apos;s test payment details.</li>
@@ -183,4 +184,4 @@ declare global {
   interface Window {
     Paddle: any;
   }
-} 
+}

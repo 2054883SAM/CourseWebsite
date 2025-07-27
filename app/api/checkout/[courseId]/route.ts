@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Database } from '@/types/supabase';
 import { Course } from '@/lib/supabase/types';
 import { getPaddleClient } from '@/lib/paddle/client';
-import { cookies } from 'next/headers';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { createRouteHandlerClient } from '@/lib/supabase/server';
 
 // Function to check if a user is already enrolled in a course
 async function checkExistingEnrollment(userId: string, courseId: string, supabaseClient: any) {
@@ -12,10 +11,11 @@ async function checkExistingEnrollment(userId: string, courseId: string, supabas
     .select('id')
     .eq('user_id', userId)
     .eq('course_id', courseId)
-    .eq('payment_status', 'paid')
+    .eq('status', 'active') // Updated to match new schema field name
     .single();
 
-  if (error && error.code !== 'PGRST116') { // PGRST116 is the error code for "no rows found"
+  if (error && error.code !== 'PGRST116') {
+    // PGRST116 is the error code for "no rows found"
     throw new Error(`Error checking enrollment: ${error.message}`);
   }
 
@@ -26,7 +26,8 @@ async function checkExistingEnrollment(userId: string, courseId: string, supabas
 async function getCourseDetails(courseId: string, supabaseClient: any): Promise<Course> {
   const { data, error } = await supabaseClient
     .from('courses')
-    .select(`
+    .select(
+      `
       id, 
       title, 
       description, 
@@ -34,6 +35,7 @@ async function getCourseDetails(courseId: string, supabaseClient: any): Promise<
       price, 
       creator_id,
       created_at,
+      paddle_price_id,
       creator:creator_id (
         id,
         name,
@@ -41,7 +43,8 @@ async function getCourseDetails(courseId: string, supabaseClient: any): Promise<
         role,
         created_at
       )
-    `)
+    `
+    )
     .eq('id', courseId)
     .single();
 
@@ -57,49 +60,28 @@ async function getCourseDetails(courseId: string, supabaseClient: any): Promise<
 }
 
 // Main API handler for course checkout
-export async function POST(
-  req: NextRequest,
-  { params }: { params: { courseId: string } }
-) {
+export async function POST(req: NextRequest, context: { params: { courseId: string } }) {
   try {
     // Get the courseId from the params
-    const { courseId } = await params;
+    const { courseId } = await context.params;
 
     // Log information about request to help debug
     console.log('API: Processing checkout for courseId:', courseId);
-    
-    // Create a Supabase client with the Next.js cookies
-    const cookiesStore = cookies();
-    
-    // Extract project reference from URL for proper cookie naming
-    const getProjectRef = () => {
-      const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      if (!SUPABASE_URL) return 'default';
-      // Extract the project reference from the URL
-      const matches = SUPABASE_URL.match(/https:\/\/([a-z0-9-]+)\.supabase\.co/);
-      return matches ? matches[1] : 'default';
-    };
-    
-    const projectRef = getProjectRef();
-    
-    // No need to try to log cookies as they're not directly accessible
-    
-    // Create the Supabase client with the correct cookie name format
-    const supabase = createRouteHandlerClient<Database>({ 
-      cookies: () => cookiesStore
-    });
+
+    // Create a Supabase client with the proper route handler
+    const supabase = await createRouteHandlerClient();
 
     // Try to authenticate the user
     try {
       // Debug request headers
       console.log('API: Request headers:', {
         cookie: req.headers.has('cookie') ? 'Present' : 'Missing',
-        authorization: req.headers.has('authorization') ? 'Present' : 'Missing'
+        authorization: req.headers.has('authorization') ? 'Present' : 'Missing',
       });
-      
+
       // Get the authenticated user session
       const { data, error } = await supabase.auth.getSession();
-      
+
       if (error) {
         console.error('API: Authentication error:', error);
         return NextResponse.json(
@@ -107,7 +89,7 @@ export async function POST(
           { status: 401 }
         );
       }
-      
+
       if (!data.session) {
         console.error('API: No active session found');
         return NextResponse.json(
@@ -115,26 +97,23 @@ export async function POST(
           { status: 401 }
         );
       }
-      
+
       // Get the user ID from the session
       const userId = data.session.user.id;
       console.log('API: Authenticated user ID:', userId);
-      
+
       // Get the user data including role
       const { data: user, error: userError } = await supabase
         .from('users')
         .select('role')
         .eq('id', userId)
         .single();
-      
+
       if (userError) {
         console.error('API: Error fetching user data:', userError);
-        return NextResponse.json(
-          { error: 'Error fetching user data' },
-          { status: 500 }
-        );
+        return NextResponse.json({ error: 'Error fetching user data' }, { status: 500 });
       }
-      
+
       const role = user?.role;
       console.log('API: User role:', role);
 
@@ -164,11 +143,24 @@ export async function POST(
       // Get Paddle API client
       const paddle = getPaddleClient();
 
+      // Determine which price ID to use (prefer the one from the course)
+      const priceId = course.paddle_price_id || process.env.NEXT_PUBLIC_PADDLE_COURSE_PRICE_ID;
+
+      if (!priceId) {
+        console.error('API: No price ID available for course:', courseId);
+        return NextResponse.json(
+          { error: 'Course pricing information is missing' },
+          { status: 500 }
+        );
+      }
+
+      console.log('API: Using price ID for checkout:', priceId);
+
       // Create checkout data response
       return NextResponse.json({
         success: true,
         checkoutData: {
-          priceId: process.env.NEXT_PUBLIC_PADDLE_COURSE_PRICE_ID, // This should be configured per course in a real app
+          priceId: priceId,
           title: course.title,
           courseId: course.id,
           price: course.price,
@@ -177,28 +169,30 @@ export async function POST(
           passthrough: JSON.stringify({
             courseId: course.id,
             userId: userId,
-            clientReferenceId: clientReferenceId
+            clientReferenceId: clientReferenceId,
           }),
           successUrl: `${req.nextUrl.origin}/courses/${courseId}?enrollment=success`,
-          cancelUrl: `${req.nextUrl.origin}/courses/${courseId}?enrollment=cancelled`
+          cancelUrl: `${req.nextUrl.origin}/courses/${courseId}?enrollment=cancelled`,
         },
         paddleConfig: {
           sellerId: paddle.sellerId,
-          sandboxMode: paddle.sandboxMode
-        }
+          sandboxMode: paddle.sandboxMode,
+        },
       });
-      
     } catch (authError: any) {
       console.error('Authentication error:', authError);
-      
+
       // Check if it's a session expired error
-      if (authError.message?.includes('Session expired') || authError.message?.includes('sign in again')) {
+      if (
+        authError.message?.includes('Session expired') ||
+        authError.message?.includes('sign in again')
+      ) {
         return NextResponse.json(
           { error: 'Your session has expired. Please sign in again.', sessionExpired: true },
           { status: 401 }
         );
       }
-      
+
       // Default auth error
       return NextResponse.json(
         { error: 'Authentication required. Please sign in.', authRequired: true },
@@ -211,5 +205,6 @@ export async function POST(
       { error: error.message || 'Error creating checkout session' },
       { status: 500 }
     );
+  } finally {
   }
-} 
+}
