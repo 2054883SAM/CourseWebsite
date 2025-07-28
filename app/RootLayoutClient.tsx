@@ -2,6 +2,7 @@
 
 import { Inter } from 'next/font/google';
 import { ThemeProvider } from '../components/layout';
+import { Header } from '@/components/layout/Header';
 import ErrorSuppressor from '@/components/ErrorSuppressor';
 import { AuthProvider } from '@/lib/auth/AuthContext';
 import './globals.css';
@@ -25,7 +26,12 @@ export default function RootLayoutClient({
         <AuthProvider>
           <ThemeProvider>
             <ErrorSuppressor />
-            {children}
+            <div className="flex min-h-full flex-col">
+              <Header />
+              <main className="flex-1">
+                {children}
+              </main>
+            </div>
           </ThemeProvider>
         </AuthProvider>
       </body>

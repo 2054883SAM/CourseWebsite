@@ -1,8 +1,7 @@
 import { ReactNode } from 'react';
-import { Header } from './Header';
 import { Footer } from './Footer';
 import { MainContent } from './MainContent';
-import { SkipToContent } from './SkipToContent';
+
 
 interface PageLayoutProps {
   children: ReactNode;
@@ -21,8 +20,6 @@ export function PageLayout({
 }: PageLayoutProps) {
   return (
     <div className={`flex min-h-screen flex-col ${className}`}>
-      <SkipToContent />
-      <Header />
       <MainContent maxWidth={maxWidth} withPadding={withPadding} id="main-content">
         {children}
       </MainContent>

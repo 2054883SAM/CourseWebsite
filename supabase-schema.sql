@@ -23,7 +23,8 @@ CREATE TABLE courses (
     prerequis TEXT,
     public_cible TEXT,
     duree_estimee TEXT,
-    niveau_difficulte TEXT CHECK (niveau_difficulte IN ('debutant', 'intermediaire', 'avance'))
+    niveau_difficulte TEXT CHECK (niveau_difficulte IN ('debutant', 'intermediaire', 'avance')),
+    paddle_price_id TEXT
 );
 
 CREATE TABLE sections (
@@ -48,8 +49,7 @@ CREATE TABLE enrollments (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   course_id UUID NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  enrolled_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   paddle_transaction_id TEXT,
   status TEXT NOT NULL CHECK (status IN ('active', 'refunded', 'disputed')),
   UNIQUE (user_id, course_id)

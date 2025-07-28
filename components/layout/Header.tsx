@@ -94,6 +94,18 @@ export function Header() {
     };
   }, [mobileMenuOpen]);
 
+  // Get navigation items based on authentication
+  const getNavItems = () => {
+    const baseItems = [...navigation];
+    
+    // Add "My Learning" only for authenticated users
+    if (user) {
+      baseItems.splice(2, 0, { name: 'Mes formations', href: '/my-learning' });
+    }
+    
+    return baseItems;
+  };
+
   return (
     <header
       className={`sticky top-0 z-40 transition-all duration-300 ${
@@ -112,7 +124,7 @@ export function Header() {
           {/* Desktop navigation */}
           <div className="hidden items-center space-x-8 md:flex">
             <div className="flex items-center space-x-6">
-              {navigation.map((item) => (
+              {getNavItems().map((item) => (
                 <ActiveLink
                   key={item.name}
                   href={item.href}
@@ -327,7 +339,7 @@ export function Header() {
             Menu de navigation mobile
           </h2>
           <div className="space-y-1">
-            {navigation.map((item) => (
+            {getNavItems().map((item) => (
               <Link
                 key={item.name}
                 href={item.href}

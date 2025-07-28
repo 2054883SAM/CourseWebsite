@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
         .update({
           status: 'active',
           paddle_transaction_id: paddleTransactionId,
-          updated_at: new Date().toISOString(),
+          enrolled_at: new Date().toISOString(),
         })
         .eq('user_id', userId)
         .eq('course_id', courseId);
@@ -73,8 +73,7 @@ export async function POST(req: NextRequest) {
       course_id: courseId,
       paddle_transaction_id: paddleTransactionId,
       status: 'active', // Use 'active' instead of 'paid' to match the schema update
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      enrolled_at: new Date().toISOString(),
     });
 
     if (insertError) {
@@ -89,6 +88,19 @@ export async function POST(req: NextRequest) {
     });
   } catch (error: any) {
     console.error('API: Enrollment creation error:', error);
+    
+    // Handle the unique constraint violation as a success case
+    // This means the user is already enrolled in the course
+    if (error.code === '23505' && 
+        error.message?.includes('enrollments_user_id_course_id_key')) {
+      console.log('API: User already enrolled in this course, treating as success');
+      return NextResponse.json({
+        success: true,
+        message: 'User already enrolled in this course',
+        alreadyEnrolled: true
+      });
+    }
+    
     return NextResponse.json(
       { error: error.message || 'Error creating enrollment' },
       { status: 500 }

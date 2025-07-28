@@ -80,9 +80,58 @@ export function CourseActions({ course, sections }: CourseActionsProps) {
 
         console.log('Initializing Paddle with seller ID:', sellerId);
 
-        // Initialize Paddle
+        // Initialize Paddle with event callback for Paddle Billing (v2)
         window.Paddle.Initialize({
           seller: sellerId,
+          eventCallback: function(data: any) {
+            console.log('Paddle event:', data);
+            
+            // Handle checkout:completed event
+            if (data.name === 'checkout.completed') {
+              console.log('Checkout completed event received:', data);
+              
+              // Extract transaction ID for Paddle Billing v2 format
+              // The transaction ID in Paddle Billing v2 is in data.checkout.transaction_id or data.id
+              const transactionId = 
+                data?.checkout?.transaction_id || 
+                data?.data?.checkout?.transaction_id || 
+                data?.data?.id || 
+                data?.id || 
+                `paddle_${Date.now()}`;
+              console.log('Transaction ID from event:', transactionId);
+              
+              // Create enrollment record
+              createEnrollmentRecord(transactionId).then(success => {
+                if (success) {
+                  // Update UI to reflect successful enrollment
+                  setEnrollmentStatus('enrolled');
+                  setTooltipMessage("You're enrolled in this course");
+                  
+                  // Refresh the page to show enrolled content
+                  setTimeout(() => {
+                    router.refresh();
+                  }, 1000);
+                }
+              }).catch(error => {
+                console.error('Error creating enrollment from event:', error);
+              });
+            }
+            
+            // Handle checkout:closed event
+            if (data.name === 'checkout.closed') {
+              console.log('Checkout closed event received');
+              setEnrollmentStatus('not-enrolled');
+              setTooltipMessage('Click to try enrolling again');
+            }
+            
+            // Handle checkout:error event
+            if (data.name === 'checkout.error') {
+              console.error('Checkout error event received:', data);
+              setEnrollmentStatus('not-enrolled');
+              setErrorMessage('An error occurred during checkout. Please try again.');
+              setTooltipMessage('Click to try enrolling again');
+            }
+          }
         });
 
         console.log('Paddle setup complete');
@@ -147,12 +196,22 @@ export function CourseActions({ course, sections }: CourseActionsProps) {
 
       const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to create enrollment record');
-      }
+          if (!response.ok) {
+      console.error('API response error:', response.status, data);
+      throw new Error(data.error || 'Failed to create enrollment record');
+    }
 
       console.log('Enrollment record created successfully:', data);
-      return true;
+      
+      // Handle both standard success and "already enrolled" success case
+      if (data.success) {
+        if (data.alreadyEnrolled) {
+          console.log('User was already enrolled in this course');
+        }
+        return true;
+      } else {
+        throw new Error(data.error || 'Unknown error during enrollment');
+      }
     } catch (error: any) {
       console.error('Error creating enrollment record:', error);
       setErrorMessage(`Enrollment failed: ${error.message}. Please contact support.`);
@@ -200,60 +259,56 @@ export function CourseActions({ course, sections }: CourseActionsProps) {
 
         // Open Paddle checkout directly using the price ID from the course
         if (typeof window !== 'undefined' && window.Paddle) {
+          console.log('Paddle is loaded');
+          console.log('Paddle object:', window.Paddle);
+          
+          // Setup a fallback mechanism to check enrollment status after a delay
+          const checkAfterDelay = () => {
+            console.log('Setting up fallback enrollment check');
+            setTimeout(async () => {
+              console.log('Running fallback enrollment check');
+              try {
+                const { status, message } = await verifyEnrollmentEligibility(
+                  user?.id,
+                  dbUser?.role,
+                  course.id
+                );
+                
+                if (status === 'enrolled') {
+                  console.log('Fallback check: User is enrolled');
+                  setEnrollmentStatus('enrolled');
+                  setTooltipMessage("You're enrolled in this course");
+                  router.refresh();
+                }
+              } catch (err) {
+                console.error('Error in fallback enrollment check:', err);
+              }
+            }, 5000); // Give webhook 5 seconds to process
+          };
+
+          // Set up checkout options using Paddle Billing v2 approach
           window.Paddle.Checkout.open({
             settings: {
               displayMode: 'overlay',
               theme: 'light',
+              frameTarget: 'paddle-checkout',
+              frameInitialHeight: 416
             },
             items: [
               {
                 priceId: course.paddle_price_id,
                 quantity: 1,
               },
-            ],
-            onComplete: async (data: any) => {
-              console.log('Payment successful', data);
-
-              // Extract the transaction ID from the Paddle response
-              const transactionId = data.transactionId || data.order?.id || `paddle_${Date.now()}`;
-              console.log('Transaction ID:', transactionId);
-
-              // Create the enrollment record with the transaction ID
-              const enrollmentCreated = await createEnrollmentRecord(transactionId);
-
-              if (enrollmentCreated) {
-                // Update UI to reflect successful enrollment
-                setEnrollmentStatus('enrolled');
-                setTooltipMessage("You're enrolled in this course");
-
-                // Optional: Refresh the page to show enrolled content
-                setTimeout(() => {
-                  router.refresh();
-                }, 1000);
-              } else {
-                // Handle enrollment creation failure
-                setEnrollmentStatus('not-enrolled');
-                if (!errorMessage) {
-                  setErrorMessage(
-                    'Payment was successful, but enrollment failed. Please contact support.'
-                  );
-                }
-              }
-            },
-            onClose: () => {
-              console.log('Checkout was closed');
-              setEnrollmentStatus('not-enrolled');
-              setTooltipMessage('Click to try enrolling again');
-            },
-            onError: (error: any) => {
-              console.error('Paddle checkout error:', error);
-              setEnrollmentStatus('not-enrolled');
-              setErrorMessage(error.message || 'An error occurred during checkout');
-              setTooltipMessage('Click to try enrolling again');
-            },
+            ]
           });
+          
+          // Add a fallback check as safety net
+          checkAfterDelay();
+          
           return;
         }
+      } else {
+        console.log('No paddle_price_id found');
       }
 
       // Fall back to the API-based checkout if no paddle_price_id is available
@@ -262,6 +317,7 @@ export function CourseActions({ course, sections }: CourseActionsProps) {
 
       if (result.success) {
         // Successful payment and enrollment
+        console.log('Enrollment successful');
         setEnrollmentStatus('enrolled');
         setTooltipMessage("You're enrolled in this course");
       } else if (result.alreadyEnrolled) {
