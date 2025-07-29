@@ -28,23 +28,6 @@ export default function MyLearningPage() {
     sortOrder: 'desc'
   });
 
-  // Debug output
-  useEffect(() => {
-    console.log('Auth state:', { 
-      isAuthenticated: !!user, 
-      userId: user?.id,
-      dbUserId: dbUser?.id,
-      role: dbUser?.role 
-    });
-    console.log('Enrolled courses:', { 
-      isLoading, 
-      error, 
-      courseCount: courses.length, 
-      totalCount,
-      courses 
-    });
-  }, [user, dbUser, courses, isLoading, error, totalCount]);
-
   return (
     <main className="py-8">
       <Container>
@@ -69,19 +52,6 @@ export default function MyLearningPage() {
               <ViewToggle currentView={viewMode} onViewChange={setViewMode} />
             </div>
           </div>
-          
-          {/* Debug info for development */}
-          {process.env.NODE_ENV === 'development' && (
-            <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md">
-              <p className="text-xs font-mono">
-                User ID: {user?.id || 'Not authenticated'}<br />
-                Course Count: {courses.length}<br />
-                Auth Status: {user ? 'Authenticated' : 'Not authenticated'}<br />
-                Loading: {isLoading ? 'Yes' : 'No'}<br />
-                Error: {error || 'None'}
-              </p>
-            </div>
-          )}
           
           {/* Error message */}
           {error && (

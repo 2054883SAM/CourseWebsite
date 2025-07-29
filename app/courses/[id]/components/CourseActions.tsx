@@ -11,18 +11,28 @@ import { initiateCheckout } from '@/lib/supabase/checkout';
 interface CourseActionsProps {
   course: Course;
   sections: Section[];
+  initialEnrollmentStatus?: 'enrolled' | 'not-enrolled';
 }
 
-export function CourseActions({ course, sections }: CourseActionsProps) {
+export function CourseActions({ course, sections, initialEnrollmentStatus = 'not-enrolled' }: CourseActionsProps) {
   const { user, dbUser, loading: authLoading } = useAuth();
   const router = useRouter();
   const [enrollmentStatus, setEnrollmentStatus] = useState<
     'not-enrolled' | 'processing' | 'enrolled'
-  >('not-enrolled');
-  const [isEnrollmentChecked, setIsEnrollmentChecked] = useState(false);
+  >(initialEnrollmentStatus);
+  const [isEnrollmentChecked, setIsEnrollmentChecked] = useState(!!initialEnrollmentStatus);
   const [tooltipMessage, setTooltipMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [paddleLoaded, setPaddleLoaded] = useState(false);
+
+  // Set initial tooltip message based on enrollment status
+  useEffect(() => {
+    if (initialEnrollmentStatus === 'enrolled') {
+      setTooltipMessage('Click to watch this course');
+    } else {
+      setTooltipMessage('Click to enroll in this course');
+    }
+  }, [initialEnrollmentStatus]);
 
   // Load Paddle.js when component mounts - using the approach from payment-test-client.tsx
   useEffect(() => {
@@ -150,8 +160,13 @@ export function CourseActions({ course, sections }: CourseActionsProps) {
     // No cleanup needed
   }, []);
 
-  // Check enrollment eligibility when user or course changes
+  // Check enrollment eligibility when user or course changes, but only if initialEnrollmentStatus is not provided
   useEffect(() => {
+    // If we already have the enrollment status from the parent, skip this check
+    if (initialEnrollmentStatus && isEnrollmentChecked) {
+      return;
+    }
+    
     const checkEligibility = async () => {
       if (!course?.id) return;
 
@@ -176,7 +191,7 @@ export function CourseActions({ course, sections }: CourseActionsProps) {
     if (!authLoading) {
       checkEligibility();
     }
-  }, [user, dbUser, course.id, authLoading]);
+  }, [user, dbUser, course.id, authLoading, initialEnrollmentStatus, isEnrollmentChecked]);
 
   // Create an enrollment record in the database
   const createEnrollmentRecord = async (paddleTransactionId: string) => {
@@ -220,6 +235,13 @@ export function CourseActions({ course, sections }: CourseActionsProps) {
   };
 
   const handleEnrollClick = async () => {
+    // If user is already enrolled, navigate to the course content
+    if (enrollmentStatus === 'enrolled') {
+      // Navigate to the course content page
+      router.push(`/my-learning/${course.id}`);
+      return;
+    }
+
     // Clear any previous errors
     setErrorMessage(null);
 
@@ -394,8 +416,9 @@ export function CourseActions({ course, sections }: CourseActionsProps) {
         <EnrollButton
           status={enrollmentStatus}
           onClick={handleEnrollClick}
-          disabled={authLoading || enrollmentStatus === 'enrolled' || !paddleLoaded}
+          disabled={authLoading || enrollmentStatus === 'processing' || !paddleLoaded}
           tooltipText={!paddleLoaded ? 'Payment system is loading...' : tooltipMessage}
+          enrolledText="Watch Course"
           className="w-full"
         />
       </div>

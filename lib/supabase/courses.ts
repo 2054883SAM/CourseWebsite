@@ -75,7 +75,7 @@ export async function getCourses(params?: CourseSearchParams): Promise<Course[]>
 }
 
 /**
- * Fetch a single course by ID with sections
+ * Fetch a single course by ID with creator information
  */
 export async function getCourseById(id: string): Promise<Course | null> {
   try {
@@ -91,22 +91,11 @@ export async function getCourseById(id: string): Promise<Course | null> {
     if (courseError) throw courseError;
     if (!courseData) return null;
 
-    // Fetch the sections for this course
-    const sectionsResponse = await supabase
-      .from('sections')
-      .select('*')
-      .eq('course_id', id)
-      .order('order', { ascending: true });
-    
-    const { data: sectionsData, error: sectionsError } = sectionsResponse;
-
-    if (sectionsError) throw sectionsError;
-
     // Transform the data to match our interfaces
     const course: Course = {
       ...courseData,
       creator: courseData.users,
-      section_count: sectionsData?.length || 0,
+      section_count: 0, // Default to 0 since sections table doesn't exist
     };
 
     return course;
@@ -117,46 +106,19 @@ export async function getCourseById(id: string): Promise<Course | null> {
 }
 
 /**
- * Fetch course sections
+ * Fetch course sections - stubbed since sections table doesn't exist
  */
 export async function getCourseSections(courseId: string): Promise<Section[]> {
-  try {
-    const response = await supabase
-      .from('sections')
-      .select('*')
-      .eq('course_id', courseId)
-      .order('order', { ascending: true });
-    
-    const { data, error } = response;
-
-    if (error) throw error;
-    if (!data) return [];
-    return data as Section[];
-  } catch (error) {
-    console.error(`Error fetching sections for course ${courseId}:`, error);
-    handleTimeoutError(error, 'load sections');
-  }
+  console.log(`Note: sections table does not exist. Returning empty array for courseId: ${courseId}`);
+  return [];
 }
 
 /**
- * Fetch subtitles for a section
+ * Fetch subtitles for a section - stubbed since sections table doesn't exist
  */
 export async function getSectionSubtitles(sectionId: string): Promise<Subtitle[]> {
-  try {
-    const response = await supabase
-      .from('subtitles')
-      .select('*')
-      .eq('section_id', sectionId);
-    
-    const { data, error } = response;
-
-    if (error) throw error;
-    if (!data) return [];
-    return data as Subtitle[];
-  } catch (error) {
-    console.error(`Error fetching subtitles for section ${sectionId}:`, error);
-    handleTimeoutError(error, 'load subtitles');
-  }
+  console.log(`Note: subtitles/sections tables do not exist. Returning empty array for sectionId: ${sectionId}`);
+  return [];
 }
 
 /**

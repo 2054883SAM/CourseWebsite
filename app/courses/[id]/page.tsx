@@ -16,6 +16,8 @@ import { CourseActions } from './components/CourseActions';
 import { getCourseById, getCourseSections, getCourses, shouldUseMockData, mockData } from '@/lib/supabase';
 import { withAuth } from '@/components/auth/withAuth';
 import { Course, Section as CourseSection } from '@/lib/supabase/types';
+import { useAuth } from '@/lib/auth/AuthContext';
+import { checkEnrollmentStatus } from '@/lib/supabase/enrollments';
 
 type PageParams = {
   id: string;
@@ -28,15 +30,37 @@ type PageProps = {
 function CourseDetailPage({ params }: PageProps) {
   const { id } = use(params);
   const router = useRouter();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [course, setCourse] = useState<Course | null>(null);
   const [sections, setSections] = useState<CourseSection[]>([]);
   const [relatedCourses, setRelatedCourses] = useState<Course[]>([]);
   const [lastFetchTime, setLastFetchTime] = useState(0);
+  const [isEnrolled, setIsEnrolled] = useState(false);
 
   // Add requireAuth constant since we know this page doesn't require auth
   const requireAuth = false;
+
+  // Check enrollment status
+  useEffect(() => {
+    const checkEnrollment = async () => {
+      if (!user?.id || !id) {
+        setIsEnrolled(false);
+        return;
+      }
+
+      try {
+        const { isEnrolled } = await checkEnrollmentStatus(user.id, id);
+        setIsEnrolled(isEnrolled);
+      } catch (error) {
+        console.error('Error checking enrollment:', error);
+        setIsEnrolled(false);
+      }
+    };
+
+    checkEnrollment();
+  }, [user, id]);
 
   // Memoize the fetch function to prevent unnecessary recreations
   const fetchData = useCallback(async (mounted: boolean) => {
@@ -191,7 +215,11 @@ function CourseDetailPage({ params }: PageProps) {
               
               {/* Sidebar - 1/3 width on large screens */}
               <div className="lg:col-span-1">
-                <CourseActions course={course} sections={sections} />
+                <CourseActions 
+                  course={course} 
+                  sections={sections} 
+                  initialEnrollmentStatus={isEnrolled ? 'enrolled' : 'not-enrolled'} 
+                />
               </div>
             </div>
             

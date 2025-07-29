@@ -24,25 +24,9 @@ CREATE TABLE courses (
     public_cible TEXT,
     duree_estimee TEXT,
     niveau_difficulte TEXT CHECK (niveau_difficulte IN ('debutant', 'intermediaire', 'avance')),
-    paddle_price_id TEXT
-);
-
-CREATE TABLE sections (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    course_id UUID REFERENCES courses(id) ON DELETE CASCADE NOT NULL,
-    title TEXT NOT NULL,
-    "order" INTEGER NOT NULL,
+    paddle_price_id TEXT,
     playback_id TEXT,
-    duration NUMERIC,
-    UNIQUE(course_id, "order")
-);
-
-CREATE TABLE subtitles (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    section_id UUID REFERENCES sections(id) ON DELETE CASCADE NOT NULL,
-    language_code TEXT NOT NULL,
-    subtitle_url TEXT NOT NULL,
-    UNIQUE(section_id, language_code)
+    duration NUMERIC
 );
 
 CREATE TABLE enrollments (
@@ -58,19 +42,13 @@ CREATE TABLE enrollments (
 -- Create indexes for better performance
 CREATE INDEX idx_users_role ON users(role);
 CREATE INDEX idx_courses_creator_id ON courses(creator_id);
-CREATE INDEX idx_sections_course_id ON sections(course_id);
-CREATE INDEX idx_sections_order ON sections(course_id, "order");
-CREATE INDEX idx_subtitles_section_id ON subtitles(section_id);
-CREATE INDEX idx_subtitles_language ON subtitles(section_id, language_code);
 CREATE INDEX idx_enrollments_user_id ON enrollments(user_id);
 CREATE INDEX idx_enrollments_course_id ON enrollments(course_id);
-CREATE INDEX idx_enrollments_status ON enrollments(payment_status);
+CREATE INDEX idx_enrollments_status ON enrollments(status);
 
 -- Enable RLS on all tables
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE courses ENABLE ROW LEVEL SECURITY;
-ALTER TABLE sections ENABLE ROW LEVEL SECURITY;
-ALTER TABLE subtitles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE enrollments ENABLE ROW LEVEL SECURITY;
 
 -- Users table policies
@@ -150,129 +128,6 @@ WITH CHECK (
 -- Only admins can delete courses
 CREATE POLICY "Only admins can delete courses."
 ON courses FOR DELETE
-TO authenticated
-USING (
-    EXISTS (
-        SELECT 1 FROM users
-        WHERE id = (select auth.uid())
-        AND role = 'admin'
-    )
-);
-
--- Sections table policies
--- Enrolled students, creators of the course, and admins can view sections
-CREATE POLICY "Sections are viewable by enrolled students, course creators, and admins."
-ON sections FOR SELECT
-TO authenticated
-USING (
-    EXISTS (
-        SELECT 1 FROM users u
-        LEFT JOIN enrollments e ON e.user_id = u.id AND e.course_id = sections.course_id
-        WHERE u.id = (select auth.uid())
-        AND (
-            u.role = 'admin' 
-            OR (u.role = 'creator' AND u.id = (SELECT creator_id FROM courses WHERE id = sections.course_id))
-            OR (u.role = 'student' AND e.payment_status = 'paid')
-        )
-    )
-);
-
--- Only admins can create sections
-CREATE POLICY "Only admins can create sections."
-ON sections FOR INSERT
-TO authenticated
-WITH CHECK (
-    EXISTS (
-        SELECT 1 FROM users
-        WHERE id = (select auth.uid())
-        AND role = 'admin'
-    )
-);
-
--- Only admins can update sections
-CREATE POLICY "Only admins can update sections."
-ON sections FOR UPDATE
-TO authenticated
-USING (
-    EXISTS (
-        SELECT 1 FROM users
-        WHERE id = (select auth.uid())
-        AND role = 'admin'
-    )
-)
-WITH CHECK (
-    EXISTS (
-        SELECT 1 FROM users
-        WHERE id = (select auth.uid())
-        AND role = 'admin'
-    )
-);
-
--- Only admins can delete sections
-CREATE POLICY "Only admins can delete sections."
-ON sections FOR DELETE
-TO authenticated
-USING (
-    EXISTS (
-        SELECT 1 FROM users
-        WHERE id = (select auth.uid())
-        AND role = 'admin'
-    )
-);
-
--- Subtitles table policies
--- Enrolled students, creators of the course, and admins can view subtitles
-CREATE POLICY "Subtitles are viewable by enrolled students, course creators, and admins."
-ON subtitles FOR SELECT
-TO authenticated
-USING (
-    EXISTS (
-        SELECT 1 FROM users u
-        LEFT JOIN enrollments e ON e.user_id = u.id 
-        LEFT JOIN sections s ON s.id = subtitles.section_id
-        WHERE u.id = (select auth.uid())
-        AND (
-            u.role = 'admin'
-            OR (u.role = 'creator' AND u.id = (SELECT creator_id FROM courses WHERE id = s.course_id))
-            OR (u.role = 'student' AND e.payment_status = 'paid' AND e.course_id = s.course_id)
-        )
-    )
-);
-
--- Only admins can create subtitles
-CREATE POLICY "Only admins can create subtitles."
-ON subtitles FOR INSERT
-TO authenticated
-WITH CHECK (
-    EXISTS (
-        SELECT 1 FROM users
-        WHERE id = (select auth.uid())
-        AND role = 'admin'
-    )
-);
-
--- Only admins can update subtitles
-CREATE POLICY "Only admins can update subtitles."
-ON subtitles FOR UPDATE
-TO authenticated
-USING (
-    EXISTS (
-        SELECT 1 FROM users
-        WHERE id = (select auth.uid())
-        AND role = 'admin'
-    )
-)
-WITH CHECK (
-    EXISTS (
-        SELECT 1 FROM users
-        WHERE id = (select auth.uid())
-        AND role = 'admin'
-    )
-);
-
--- Only admins can delete subtitles
-CREATE POLICY "Only admins can delete subtitles."
-ON subtitles FOR DELETE
 TO authenticated
 USING (
     EXISTS (

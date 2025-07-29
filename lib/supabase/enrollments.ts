@@ -1,123 +1,106 @@
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createBrowserClient } from '@supabase/ssr';
 import { Database } from '@/types/supabase';
-import { Course } from './types';
 
 /**
  * Check if a user is enrolled in a specific course
- * @param userId User ID to check enrollment for
- * @param courseId Course ID to check enrollment for
- * @returns Boolean indicating whether the user is enrolled
+ * @param userId The user ID to check enrollment for
+ * @param courseId The course ID to check enrollment for
+ * @returns Boolean indicating enrollment status and enrollment data if enrolled
  */
-export async function checkEnrollmentStatus(userId: string, courseId: string): Promise<boolean> {
+export async function checkEnrollmentStatus(userId?: string, courseId?: string) {
+  if (!userId || !courseId) {
+    return { isEnrolled: false, enrollment: null };
+  }
+
   try {
-    const supabase = createClientComponentClient<Database>();
+    const supabase = createBrowserClient<Database>(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+
     const { data, error } = await supabase
       .from('enrollments')
-      .select('id')
+      .select('*')
       .eq('user_id', userId)
       .eq('course_id', courseId)
       .eq('status', 'active')
-      .maybeSingle();
+      .single();
 
-    if (error) {
+    if (error && error.code !== 'PGRST116') {
+      // PGRST116 is the error for no rows returned
       console.error('Error checking enrollment status:', error);
-      return false;
+      throw error;
     }
 
-    // If data exists, user is enrolled
-    return !!data;
-  } catch (err) {
-    console.error('Failed to verify enrollment status:', err);
-    return false;
+    return {
+      isEnrolled: !!data,
+      enrollment: data
+    };
+  } catch (error) {
+    console.error('Failed to check enrollment:', error);
+    return { isEnrolled: false, enrollment: null };
   }
 }
 
 /**
- * Get all courses a user is enrolled in
- * @param userId User ID to get enrollments for
- * @returns Array of courses the user is enrolled in
- */
-export async function getUserEnrollments(userId: string): Promise<Course[]> {
-  try {
-    const supabase = createClientComponentClient<Database>();
-    const { data, error } = await supabase
-      .from('enrollments')
-      .select(`
-        course_id,
-        status,
-        courses:course_id (
-          id, 
-          title, 
-          description,
-          thumbnail_url,
-          price,
-          created_at,
-          updated_at
-        )
-      `)
-      .eq('user_id', userId)
-      .eq('status', 'active');
-
-    if (error) {
-      console.error('Error fetching user enrollments:', error);
-      return [];
-    }
-
-    // Extract and return course objects
-    return data
-      .filter(enrollment => enrollment.courses)
-      .map(enrollment => enrollment.courses as unknown as Course);
-  } catch (err) {
-    console.error('Failed to get user enrollments:', err);
-    return [];
-  }
-}
-
-/**
- * Verify if user can enroll in a course
- * Checks authentication, role permissions, and existing enrollment
- * @param userId User ID attempting to enroll
- * @param userRole User role (admin, creator, student)
- * @param courseId Course ID to enroll in
- * @returns Object with verification result and message
+ * Verify if a user is eligible to enroll in a course
  */
 export async function verifyEnrollmentEligibility(
-  userId: string | undefined,
-  userRole: string | undefined,
-  courseId: string
-): Promise<{ canEnroll: boolean; status: string; message: string }> {
-  // Check if user is authenticated
+  userId?: string,
+  userRole?: string,
+  courseId?: string
+) {
+  // No user ID means not authenticated
   if (!userId) {
     return {
+      status: 'not-enrolled',
+      message: 'Please log in to enroll in this course',
       canEnroll: false,
-      status: 'unauthenticated',
-      message: 'You need to sign in to enroll in this course'
+    };
+  }
+
+  // If no role, the user doesn't have proper permission
+  if (!userRole) {
+    return {
+      status: 'not-enrolled',
+      message: 'Your account does not have permission to enroll in courses',
+      canEnroll: false,
     };
   }
 
   // Check if user has appropriate role
-  if (!userRole || (userRole !== 'admin' && userRole !== 'creator' && userRole !== 'student')) {
+  if (userRole !== 'admin' && userRole !== 'creator' && userRole !== 'student') {
     return {
+      status: 'not-enrolled',
+      message: 'Your account type cannot enroll in courses',
       canEnroll: false,
-      status: 'unauthorized',
-      message: 'Your account does not have permission to enroll in courses'
     };
   }
 
-  // Check if user is already enrolled
-  const isEnrolled = await checkEnrollmentStatus(userId, courseId);
-  if (isEnrolled) {
+  // Check if the user is already enrolled
+  try {
+    const { isEnrolled } = await checkEnrollmentStatus(userId, courseId);
+    
+    if (isEnrolled) {
+      return {
+        status: 'enrolled',
+        message: 'You are enrolled in this course',
+        canEnroll: false,
+      };
+    }
+
+    // User can enroll
     return {
-      canEnroll: false,
-      status: 'enrolled',
-      message: "You're already enrolled in this course"
+      status: 'not-enrolled',
+      message: 'Click to enroll in this course',
+      canEnroll: true,
+    };
+  } catch (error) {
+    console.error('Error verifying enrollment eligibility:', error);
+    return {
+      status: 'not-enrolled',
+      message: 'An error occurred. Please try again.',
+      canEnroll: true,
     };
   }
-
-  // All checks passed, user can enroll
-  return {
-    canEnroll: true,
-    status: 'eligible',
-    message: 'You can enroll in this course'
-  };
 } 
