@@ -1,0 +1,25 @@
+# Task ID: 5
+# Title: Develop Paddle Webhook Handler
+# Status: pending
+# Dependencies: 1, 4
+# Priority: high
+# Description: Create webhook endpoint to process Paddle payment events, update enrollment records, and grant course access upon successful payment.
+# Details:
+1. Create `/api/webhooks/paddle` endpoint to receive Paddle webhooks
+2. Implement webhook signature verification for security
+3. Handle the following Paddle event types:
+   - payment_succeeded: Create enrollment record with 'active' status
+   - payment_refunded: Update enrollment status to 'refunded'
+   - payment_disputed: Update enrollment status to 'disputed'
+4. Create enrollment record in Supabase with user_id, course_id, and status
+5. Implement idempotency to prevent duplicate processing
+6. Add comprehensive error logging for webhook processing issues
+7. Create admin notification for failed webhook processing
+
+# Test Strategy:
+1. Unit tests for webhook signature verification
+2. Mock webhook payloads for different event types
+3. Integration tests with Supabase for enrollment record creation/updates
+4. Test idempotency with duplicate webhook events
+5. Verify proper error logging
+6. End-to-end tests with Paddle sandbox webhooks

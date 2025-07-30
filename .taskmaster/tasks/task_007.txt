@@ -1,0 +1,24 @@
+# Task ID: 7
+# Title: Implement Course Access Control
+# Status: pending
+# Dependencies: 1, 2, 5
+# Priority: high
+# Description: Develop the system to securely restrict course content to enrolled students and verify enrollment status before displaying content.
+# Details:
+1. Create enrollment verification middleware that:
+   - Checks if user is authenticated
+   - Verifies active enrollment for requested course
+   - Returns appropriate error for unauthorized access
+2. Implement `/api/courses/enrollment/:id` endpoint to check enrollment status
+3. Create client-side access control in course content pages
+4. Add redirect logic for unenrolled users attempting to access restricted content
+5. Implement caching for frequent enrollment checks to improve performance
+6. Create clear error messages for various access denial reasons
+
+# Test Strategy:
+1. Unit tests for enrollment verification middleware
+2. Integration tests with mock enrollment data
+3. Test access control with various user scenarios (enrolled, not enrolled, refunded)
+4. Verify proper error handling and messages
+5. Performance testing for cached vs. uncached enrollment checks
+6. Security testing to ensure content cannot be accessed without proper enrollment

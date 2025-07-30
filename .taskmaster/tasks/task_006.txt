@@ -1,0 +1,153 @@
+# Task ID: 6
+# Title: Create MyLearningPage Component
+# Status: pending
+# Dependencies: 1, 2
+# Priority: medium
+# Description: Develop the My Learning dashboard that displays all enrolled courses, with sorting and filtering capabilities.
+# Details:
+1. Create MyLearningPage React component with:
+   - Grid/list view of enrolled courses
+   - Course cards showing title, thumbnail, and progress
+   - Empty state for users with no enrollments
+   - Loading states during data fetching
+2. Implement data fetching from Supabase for enrolled courses
+3. Add sorting options (newest, alphabetical, progress)
+4. Implement filtering by course status (in-progress, completed)
+5. Create pagination or infinite scroll for many enrollments
+6. Add click handlers to navigate to course content
+7. Display visual progress indicators for each course
+
+# Test Strategy:
+1. Unit tests for component rendering
+2. Integration tests with mock enrollment data
+3. Test sorting and filtering functionality
+4. Verify correct navigation to course content
+5. Test pagination/infinite scroll
+6. Visual regression tests for layout
+7. Accessibility testing for keyboard navigation and screen readers
+
+# Subtasks:
+## 1. Develop UI Layout for MyLearningPage [done]
+### Dependencies: None
+### Description: Create the responsive UI layout for the My Learning dashboard with course cards and view options.
+### Details:
+Implement the following UI elements:
+- Header with title and view toggle (grid/list)
+- Course card component showing thumbnail, title, progress bar, and completion status
+- Empty state component with illustration and CTA for users with no enrollments
+- Loading skeleton states for initial load and data fetching
+- Responsive grid layout that adapts to different screen sizes (3 columns on desktop, 2 on tablet, 1 on mobile)
+- Basic styling using Tailwind CSS with consistent spacing and typography
+
+Data structures:
+- CourseCard props interface with: id, title, thumbnail, progress, lastAccessed, status
+- ViewType enum for grid/list toggle state
+<info added on 2025-07-28T18:47:44.743Z>
+UI Implementation Complete:
+
+- Created MyLearningPage component with responsive layout (3/2/1 columns)
+- Implemented view toggle between grid and list layouts
+- Added loading skeletons and empty state handling
+- Built component library:
+  • ViewToggle component
+  • CourseCard with grid/list layout modes
+  • EmptyState with illustration for users without courses
+  • LoadingSkeleton with animation
+  • LoadingSpinner for loading states
+- Enhanced navigation with "Mes formations" link in Header.tsx
+- Added authentication protection via withAuth HOC
+- Created placeholder assets (empty state SVG, course thumbnails)
+- Implemented dark mode support and accessibility features
+
+All components are fully styled with Tailwind CSS as specified.
+</info added on 2025-07-28T18:47:44.743Z>
+
+## 2. Implement Data Fetching from Supabase [done]
+### Dependencies: None
+### Description: Create data fetching logic to retrieve enrolled courses from Supabase with proper error handling and loading states.
+### Details:
+Implement the following functionality:
+- Create custom hook useEnrolledCourses() that fetches data from Supabase
+- Implement query to join enrollments table with courses table to get course details
+- Add authentication check to only fetch current user's enrollments
+- Implement error handling with user-friendly error messages
+- Add loading state management during data fetching
+- Create data transformation function to format API response into UI-ready format
+
+Data structures:
+- EnrollmentData interface with: id, userId, courseId, status, createdAt, updatedAt
+- CourseData interface with: id, title, description, thumbnail, modules, duration
+- EnrolledCourseData interface combining enrollment and course data with progress information
+<info added on 2025-07-28T19:00:25.801Z>
+The data fetching functionality has been successfully implemented with the following features:
+
+1. Created a new service file `lib/supabase/learning.ts` that:
+   - Defines the `EnrolledCourse` interface to extend the base `Course` type with progress information
+   - Implements `getEnrolledCourses()` function to fetch enrolled courses with filtering, sorting, and pagination
+   - Includes `getCourseProgress()` and `updateCourseProgress()` functions for tracking course progress
+   - Currently uses localStorage for progress tracking (with comments noting this would be replaced with a database implementation in production)
+   - Handles error states and edge cases properly
+
+2. Created a custom hook `useEnrolledCourses` in `app/my-learning/hooks/useEnrolledCourses.tsx` that:
+   - Manages loading, error and data states
+   - Integrates with the Authentication context to get the current user
+   - Provides parameters for sorting, filtering and pagination
+   - Properly handles errors and loading states
+   - Exposes a clean API with functions to refetch data and update parameters
+
+3. Updated the CourseCard component to:
+   - Use the EnrolledCourse type
+   - Handle thumbnail URLs properly with fallbacks
+   - Display progress information consistently
+
+4. Updated the MyLearningPage component to:
+   - Use the useEnrolledCourses hook for data fetching
+   - Display loading states with the LoadingSkeleton component
+   - Handle empty states with the EmptyState component
+   - Display error messages when fetching fails
+   - Render the list of enrolled courses dynamically
+   - Show the total count of enrolled courses in the header
+</info added on 2025-07-28T19:00:25.801Z>
+
+## 3. Add Sorting and Filtering Functionality [pending]
+### Dependencies: None
+### Description: Implement sorting and filtering options for the enrolled courses with UI controls and state management.
+### Details:
+Implement the following functionality:
+- Create SortControl component with dropdown for sort options (newest, alphabetical, progress)
+- Implement FilterControl component with toggle buttons for course status (all, in-progress, completed)
+- Add state management for sort and filter selections using React useState/useReducer
+- Create sort functions for each sort option (by date, alphabetical, by progress)
+- Implement filter functions to filter courses by completion status
+- Ensure sorting and filtering can be combined
+- Add URL query parameter sync to maintain state on page refresh
+
+User interactions:
+- Clicking sort dropdown changes the order of displayed courses immediately
+- Toggling filter buttons updates the visible courses based on selected status
+- Clear filters button resets all filtering options to default
+
+## 4. Implement Pagination for Course Listings [pending]
+### Dependencies: None
+### Description: Add pagination or infinite scroll functionality to handle large numbers of enrolled courses efficiently.
+### Details:
+Implement one of the following approaches:
+
+Option 1: Traditional Pagination
+- Create Pagination component with page numbers and next/previous buttons
+- Implement paginated data fetching from Supabase with limit and offset
+- Add state management for current page and items per page
+- Ensure URL query parameters sync with pagination state
+- Add smooth transitions between pages
+
+Option 2: Infinite Scroll
+- Implement intersection observer to detect when user scrolls near the bottom
+- Create loadMoreCourses function that fetches the next batch of courses
+- Add loading indicator at the bottom during new data fetching
+- Implement efficient rendering to prevent performance issues with large lists
+
+Performance considerations:
+- Implement virtualization for very large course lists
+- Ensure efficient re-rendering using React.memo or useMemo where appropriate
+- Add debouncing for scroll events if using infinite scroll
+

@@ -1,0 +1,43 @@
+# Task ID: 9
+# Title: Implement Course Navigation and Section Progression
+# Status: in-progress
+# Dependencies: 6, 7, 8
+# Priority: medium
+# Description: Develop the navigation system for course sections, allowing students to move between sections and track their progress through the course.
+# Details:
+1. Create CourseNavigation component with:
+   - Section list sidebar/menu
+   - Current section indicator
+   - Next/previous section buttons
+   - Section completion indicators
+2. Implement section navigation logic
+3. Create data structure for tracking section completion
+4. Add API endpoints to update section progress
+5. Implement auto-progression to next section after completion
+6. Add breadcrumb navigation for course hierarchy
+7. Store and retrieve last viewed section for resume functionality
+
+# Test Strategy:
+1. Unit tests for navigation components
+2. Integration tests for section progression logic
+3. Test progress tracking accuracy
+4. Verify proper storage and retrieval of progress data
+5. User interaction tests for navigation controls
+6. Visual regression tests for navigation UI
+7. End-to-end tests for complete course navigation flow
+
+# Subtasks:
+## 1. Implement Course Player Page for Enrolled Users [in-progress]
+### Dependencies: None
+### Description: Create a dedicated page at /my-learning/:courseId to display course video content for enrolled students using Mux Player
+### Details:
+1. Create a page component at /app/my-learning/[courseId]/page.tsx
+2. Create a layout with authentication protection
+3. Add functionality to fetch enrolled course data with playbackId
+4. Implement access control to verify enrollment status
+5. Integrate with existing VideoPlayerClient component
+6. Add loading and error states
+7. Create tests for the component
+8. Update CourseCard to link to the course player page
+9. Handle video progress tracking
+

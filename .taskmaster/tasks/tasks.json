@@ -322,8 +322,18 @@
           7,
           8
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "in-progress",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement Course Player Page for Enrolled Users",
+            "description": "Create a dedicated page at /my-learning/:courseId to display course video content for enrolled students using Mux Player",
+            "details": "1. Create a page component at /app/my-learning/[courseId]/page.tsx\n2. Create a layout with authentication protection\n3. Add functionality to fetch enrolled course data with playbackId\n4. Implement access control to verify enrollment status\n5. Integrate with existing VideoPlayerClient component\n6. Add loading and error states\n7. Create tests for the component\n8. Update CourseCard to link to the course player page\n9. Handle video progress tracking\n<info added on 2025-07-29T19:54:12.448Z>\nImplementation completed successfully:\n\n1. Created a page component at /app/my-learning/[courseId]/page.tsx that:\n   - Fetches course data for authenticated and enrolled users\n   - Displays the course video using the existing VideoPlayerClient component\n   - Handles loading states with LoadingSpinner\n   - Shows appropriate error messages when needed\n   - Redirects unauthenticated or non-enrolled users to unauthorized page\n\n2. Implemented authentication and authorization:\n   - Created a layout file with withAuth HOC for role-based protection\n   - Added verification of enrollment status before showing content\n   - Implemented proper redirection for unauthorized users\n\n3. Enhanced the getEnrolledCourse function in lib/supabase/learning.ts:\n   - Added functionality to fetch a single enrolled course\n   - Included the course's playbackId for video playback\n   - Implemented progress tracking with localStorage\n\n4. Updated CourseCard component to:\n   - Link to the new course player page\n   - Add visual play button overlay for better UX\n   - Keep consistent design across grid and list views\n\n5. Created comprehensive tests in __tests__/pages/my-learning/course-player.test.tsx:\n   - Testing authentication and authorization redirects\n   - Verifying loading and error states\n   - Ensuring correct display of course video player\n\nAll tests are passing and the feature is working as expected.\n</info added on 2025-07-29T19:54:12.448Z>",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 9
+          }
+        ]
       },
       {
         "id": 10,
@@ -342,7 +352,7 @@
     ],
     "metadata": {
       "created": "2025-07-09T13:32:08.672Z",
-      "updated": "2025-07-28T19:39:45.336Z",
+      "updated": "2025-07-29T19:54:19.605Z",
       "description": "Tasks for master context"
     }
   }
