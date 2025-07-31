@@ -6,10 +6,10 @@ import { ReactElement } from 'react';
 export default function PaddleConfigCheck(): ReactElement {
   // Check for environment variables on the server
   const envCheck = {
-    NEXT_PUBLIC_PADDLE_SELLER_ID: process.env.NEXT_PUBLIC_PADDLE_SELLER_ID ? true : false,
+    PADDLE_SELLER_ID: process.env.PADDLE_SELLER_ID ? true : false,
     NEXT_PUBLIC_PADDLE_SANDBOX_MODE: process.env.NEXT_PUBLIC_PADDLE_SANDBOX_MODE ? true : false,
-    NEXT_PUBLIC_PADDLE_API_KEY: process.env.NEXT_PUBLIC_PADDLE_API_KEY ? true : false,
-    NEXT_PUBLIC_PADDLE_WEBHOOK_SECRET: process.env.NEXT_PUBLIC_PADDLE_WEBHOOK_SECRET ? true : false
+    PADDLE_API_KEY: process.env.PADDLE_API_KEY ? true : false,
+    PADDLE_WEBHOOK_SECRET: process.env.PADDLE_WEBHOOK_SECRET ? true : false
   };
 
   // Count missing variables

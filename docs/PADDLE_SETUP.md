@@ -7,7 +7,7 @@ This document explains how to set up the Paddle V2 API integration for processin
 Add these to your `.env` file:
 
 ```
-NEXT_PUBLIC_PADDLE_SELLER_ID=your-paddle-vendor-id   # Required for checkout
+PADDLE_SELLER_ID=your-paddle-vendor-id               # Required for checkout
 NEXT_PUBLIC_PADDLE_SANDBOX_MODE=true                 # Set to false for production
 PADDLE_API_KEY=your-paddle-api-key                   # For server operations
 PADDLE_WEBHOOK_SECRET=your-paddle-webhook-secret     # For webhook verification
@@ -15,10 +15,10 @@ PADDLE_WEBHOOK_SECRET=your-paddle-webhook-secret     # For webhook verification
 
 ## Important Notes
 
-1. **NEXT_PUBLIC_PADDLE_SELLER_ID** must be set for the checkout to work. This is your Paddle Vendor ID (sometimes called Seller ID).
+1. **PADDLE_SELLER_ID** must be set for the checkout to work. This is your Paddle Vendor ID (sometimes called Seller ID).
 2. The `vendor` parameter in `Paddle.Setup()` expects a number, so your ID should be numeric.
 3. If you get the error: "You must specify your Paddle Vendor ID within the Paddle.Setup() method", check that:
-   - `NEXT_PUBLIC_PADDLE_SELLER_ID` is set in your `.env` file
+   - `PADDLE_SELLER_ID` is set in your `.env` file
    - The environment variable has a valid numeric value
    - Your Next.js server has been restarted after adding the environment variables
 
@@ -40,7 +40,7 @@ https://your-domain.com/api/webhooks/paddle
 
 ### "You must specify your Paddle Vendor ID" Error
 
-1. Make sure `NEXT_PUBLIC_PADDLE_SELLER_ID` is set in your `.env` file
+1. Make sure `PADDLE_SELLER_ID` is set in your `.env` file
 2. Restart your Next.js server to pick up the new environment variables
 3. Check that `loadPaddleJs()` correctly passes the vendor ID to `Paddle.Setup()`
 

@@ -11,5 +11,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return <RootLayoutClient>{children}</RootLayoutClient>;
+  return <RootLayoutClient>
+    {children}</RootLayoutClient>;
 }

@@ -9,7 +9,7 @@ This module provides integration with Paddle V2 Billing API for payment processi
 
 ```env
 PADDLE_API_KEY=your-paddle-api-key
-NEXT_PUBLIC_PADDLE_SELLER_ID=your-paddle-seller-id
+PADDLE_SELLER_ID=your-paddle-seller-id
 NEXT_PUBLIC_PADDLE_PUBLIC_KEY=your-paddle-public-key
 PADDLE_WEBHOOK_SECRET=your-paddle-webhook-secret
 NEXT_PUBLIC_PADDLE_SANDBOX_MODE=true  # Set to false in production

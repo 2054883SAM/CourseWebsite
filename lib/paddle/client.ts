@@ -17,9 +17,9 @@ class PaddleClient {
 
   constructor() {
     // Get environment variables
-    this.apiKey = process.env.NEXT_PUBLIC_PADDLE_API_KEY || '';
-    this.sellerId = process.env.NEXT_PUBLIC_PADDLE_SELLER_ID || '';
-    this.webhookSecret = process.env.NEXT_PUBLIC_PADDLE_WEBHOOK_SECRET || '';
+    this.apiKey = process.env.PADDLE_API_KEY || '';
+    this.sellerId = process.env.PADDLE_SELLER_ID || '';
+    this.webhookSecret = process.env.PADDLE_WEBHOOK_SECRET || '';
 
     // Check if sandbox mode is enabled
     this.sandboxMode = process.env.NEXT_PUBLIC_PADDLE_SANDBOX_MODE === 'true';
@@ -106,13 +106,13 @@ let paddleClientInstance: PaddleClient | null = null;
 
 // Validate required environment variables only when actually used
 function validatePaddleConfig(): void {
-  const PADDLE_API_KEY = process.env.NEXT_PUBLIC_PADDLE_API_KEY;
-  const PADDLE_SELLER_ID = process.env.NEXT_PUBLIC_PADDLE_SELLER_ID;
-  const PADDLE_WEBHOOK_SECRET = process.env.NEXT_PUBLIC_PADDLE_WEBHOOK_SECRET;
+  const PADDLE_API_KEY = process.env.PADDLE_API_KEY;
+  const PADDLE_SELLER_ID = process.env.PADDLE_SELLER_ID;
+  const PADDLE_WEBHOOK_SECRET = process.env.PADDLE_WEBHOOK_SECRET;
 
-  if (!PADDLE_API_KEY) throw new Error('Missing env.NEXT_PUBLIC_PADDLE_API_KEY');
-  if (!PADDLE_SELLER_ID) throw new Error('Missing env.NEXT_PUBLIC_PADDLE_SELLER_ID');
-  if (!PADDLE_WEBHOOK_SECRET) throw new Error('Missing env.NEXT_PUBLIC_PADDLE_WEBHOOK_SECRET');
+  if (!PADDLE_API_KEY) throw new Error('Missing env.PADDLE_API_KEY');
+  if (!PADDLE_SELLER_ID) throw new Error('Missing env.PADDLE_SELLER_ID');
+  if (!PADDLE_WEBHOOK_SECRET) throw new Error('Missing env.PADDLE_WEBHOOK_SECRET');
 }
 
 /**
@@ -120,8 +120,10 @@ function validatePaddleConfig(): void {
  * Only instantiates the client when needed
  */
 export function getPaddleClient(): PaddleClient {
-  // We can now use this on client-side since we're using NEXT_PUBLIC vars
-  // Remove the client-side check since we're explicitly using public env vars
+  // Server-side only since we're using private env vars
+  if (typeof window !== 'undefined') {
+    throw new Error('getPaddleClient should only be called on the server side');
+  }
 
   if (!paddleClientInstance) {
     // Validate config before instantiating
@@ -138,7 +140,7 @@ export function getPaddleClient(): PaddleClient {
  */
 export function getClientSafeConfig() {
   return {
-    sellerId: process.env.NEXT_PUBLIC_PADDLE_SELLER_ID || '',
+    sellerId: process.env.PADDLE_SELLER_ID || '',
     sandboxMode: process.env.NEXT_PUBLIC_PADDLE_SANDBOX_MODE === 'true',
     clientToken: process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN || '',
   };
@@ -160,7 +162,7 @@ export function loadPaddleJs() {
 
       // Debug: Log environment variables
       console.log('Paddle environment variables:');
-      console.log('- NEXT_PUBLIC_PADDLE_SELLER_ID:', process.env.NEXT_PUBLIC_PADDLE_SELLER_ID);
+      console.log('- PADDLE_SELLER_ID exists:', !!process.env.PADDLE_SELLER_ID);
       console.log(
         '- NEXT_PUBLIC_PADDLE_SANDBOX_MODE:',
         process.env.NEXT_PUBLIC_PADDLE_SANDBOX_MODE

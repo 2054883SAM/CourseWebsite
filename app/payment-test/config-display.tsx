@@ -4,10 +4,10 @@ import React from "react";
 
 // Types for our props
 type EnvStatus = {
-  NEXT_PUBLIC_PADDLE_SELLER_ID: boolean;
+  PADDLE_SELLER_ID: boolean;
   NEXT_PUBLIC_PADDLE_SANDBOX_MODE: boolean;
-  NEXT_PUBLIC_PADDLE_API_KEY: boolean;
-  NEXT_PUBLIC_PADDLE_WEBHOOK_SECRET: boolean;
+  PADDLE_API_KEY: boolean;
+  PADDLE_WEBHOOK_SECRET: boolean;
 };
 
 type ConfigDisplayProps = {
@@ -46,9 +46,9 @@ export function ConfigDisplay({ envStatus, missingCount }: ConfigDisplayProps) {
           </li>
         ))}
       </ul>
-      {!envStatus.NEXT_PUBLIC_PADDLE_SELLER_ID && (
+      {!envStatus.PADDLE_SELLER_ID && (
         <div className="mt-4 p-3 bg-red-50 text-red-700 text-sm rounded">
-          <p><strong>NEXT_PUBLIC_PADDLE_SELLER_ID is required</strong> and must be set in your .env file.</p>
+          <p><strong>PADDLE_SELLER_ID is required</strong> and must be set in your .env file.</p>
           <p className="mt-1">This is causing the error: &quot;You must specify your Paddle Vendor ID within the Paddle.Setup() method.&quot;</p>
         </div>
       )}
