@@ -14,6 +14,34 @@ interface VdoPlayerInstance {
   api: VdoPlayerApi;
 }
 
+// Database chapter type
+export interface DBChapter {
+  id: string;
+  title: string;
+  start_time: number; // in seconds
+  duration?: number; // in seconds, optional
+  description?: string;
+  thumbnail_url?: string;
+}
+
+// Chapter types for VdoCipher Player
+export interface VideoChapter {
+  id: string;
+  title: string;
+  startTime: number; // in seconds
+  duration?: number; // in seconds, optional
+  description?: string;
+  thumbnail?: string;
+}
+
+export interface ChapterListProps {
+  chapters: VideoChapter[];
+  currentTime: number;
+  onChapterClick: (chapter: VideoChapter) => void;
+  className?: string;
+  isLoading?: boolean;
+}
+
 declare global {
   interface Window {
     VdoPlayer: {

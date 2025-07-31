@@ -54,6 +54,7 @@ export interface Database {
           public_cible: string | null
           duree_estimee: string | null
           niveau_difficulte: 'debutant' | 'intermediaire' | 'avance' | null
+          chapters: Json | null
         }
         Insert: {
           id?: string
@@ -70,6 +71,7 @@ export interface Database {
           public_cible?: string | null
           duree_estimee?: string | null
           niveau_difficulte?: 'debutant' | 'intermediaire' | 'avance' | null
+          chapters?: Json | null
         }
         Update: {
           id?: string
@@ -86,6 +88,7 @@ export interface Database {
           public_cible?: string | null
           duree_estimee?: string | null
           niveau_difficulte?: 'debutant' | 'intermediaire' | 'avance' | null
+          chapters?: Json | null
         }
         Relationships: [
           {

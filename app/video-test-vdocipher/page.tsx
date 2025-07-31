@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { PageLayout, Container, Section } from '@/components/layout';
-import { VdoCipherPlayer } from '@/components/video';
+import { VdoCipherPlayer, VideoChapter } from '@/components/video';
 import ClientOnly from '@/components/video/ClientOnly';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -32,6 +32,24 @@ export default function VdoCipherTestPage() {
   // Video ID as specified in requirements
   const videoId = '0d08afbb3ebd7449eb6f9a61675d3923';
 
+  // Test chapters for the video player
+  const testChapters: VideoChapter[] = [
+    {
+      id: 'chapter-1',
+      title: 'Introduction and Overview',
+      startTime: 0,
+      duration: 15,
+      description: 'Welcome to VdoCipher and overview of DRM-protected video streaming features'
+    },
+    {
+      id: 'chapter-2',
+      title: 'Advanced Security Features',
+      startTime: 15,
+      duration: 39,
+      description: 'Deep dive into VdoCipher\'s security measures including watermarking and analytics'
+    }
+  ];
+
   // Event handlers for the player
   const handlePlay = () => {
     setIsPlaying(true);
@@ -48,6 +66,12 @@ export default function VdoCipherTestPage() {
   const handleEnded = () => {
     setIsPlaying(false);
     setVideoTime(0);
+  };
+
+  // Chapter seek handler
+  const handleChapterSeek = (chapter: VideoChapter, seekTime: number) => {
+    console.log(`Seeking to chapter: ${chapter.title} at ${seekTime}s`);
+    setVideoTime(seekTime);
   };
 
   // Format time for display
@@ -91,10 +115,12 @@ export default function VdoCipherTestPage() {
                       key={videoId}
                       videoId={videoId}
                       title="VdoCipher Test Video"
+                      chapters={testChapters}
                       onPlay={handlePlay}
                       onPause={handlePause}
                       onTimeUpdate={handleTimeUpdate}
                       onEnded={handleEnded}
+                      onChapterSeek={handleChapterSeek}
                       playerRef={playerRef}
                     />
                   </ClientOnly>

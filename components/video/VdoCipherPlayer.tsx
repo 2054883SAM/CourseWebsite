@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { VideoChapter } from '@/lib/types/vdocipher';
+import ChapterList from './ChapterList';
 
 export interface VdoCipherPlayerProps {
   videoId: string;
@@ -10,10 +12,12 @@ export interface VdoCipherPlayerProps {
   muted?: boolean;
   loop?: boolean;
   poster?: string;
+  chapters?: VideoChapter[];
   onPlay?: () => void;
   onPause?: () => void;
   onEnded?: () => void;
   onTimeUpdate?: (currentTime: number) => void;
+  onChapterSeek?: (chapter: VideoChapter, seekTime: number) => void;
   playerRef?: React.RefObject<any>;
 }
 
@@ -25,10 +29,12 @@ const VdoCipherPlayer: React.FC<VdoCipherPlayerProps> = ({
   muted = false,
   loop = false,
   poster,
+  chapters,
   onPlay,
   onPause,
   onEnded,
   onTimeUpdate,
+  onChapterSeek,
   playerRef: externalPlayerRef,
 }) => {
   // Create a container ref
@@ -38,6 +44,7 @@ const VdoCipherPlayer: React.FC<VdoCipherPlayerProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [otpData, setOtpData] = useState<{otp: string, playbackInfo: string} | null>(null);
+  const [currentTime, setCurrentTime] = useState<number>(0);
   const eventHandlersRef = useRef<{[key: string]: any}>({});
   const checkPlayerIntervalRef = useRef<number | null>(null);
   const initializedRef = useRef<boolean>(false);
@@ -76,6 +83,23 @@ const VdoCipherPlayer: React.FC<VdoCipherPlayerProps> = ({
       });
     }
     eventHandlersRef.current = {};
+  };
+
+  // Chapter seeking function
+  const handleChapterSeek = (chapter: VideoChapter) => {
+    if (playerInstanceRef.current?.video) {
+      try {
+        playerInstanceRef.current.video.currentTime = chapter.startTime;
+        setCurrentTime(chapter.startTime);
+        
+        // Call external callback if provided
+        if (onChapterSeek) {
+          onChapterSeek(chapter, chapter.startTime);
+        }
+      } catch (error) {
+        console.error('Error seeking to chapter:', error);
+      }
+    }
   };
 
   // Fetch OTP when videoId changes
@@ -224,11 +248,15 @@ const VdoCipherPlayer: React.FC<VdoCipherPlayerProps> = ({
           }
           
           // Handle timeupdate event
-          if (onTimeUpdate) {
-            const timeUpdateHandler = () => onTimeUpdate(player.video.currentTime);
-            player.video.addEventListener('timeupdate', timeUpdateHandler);
-            eventHandlersRef.current.timeupdate = timeUpdateHandler;
-          }
+          const timeUpdateHandler = () => {
+            const newTime = player.video.currentTime;
+            setCurrentTime(newTime);
+            if (onTimeUpdate) {
+              onTimeUpdate(newTime);
+            }
+          };
+          player.video.addEventListener('timeupdate', timeUpdateHandler);
+          eventHandlersRef.current.timeupdate = timeUpdateHandler;
         }
         
         setIsLoading(false);
@@ -256,7 +284,7 @@ const VdoCipherPlayer: React.FC<VdoCipherPlayerProps> = ({
         checkPlayerIntervalRef.current = null;
       }
     };
-  }, [otpData, externalPlayerRef, onPlay, onPause, onEnded, onTimeUpdate]);
+  }, [otpData, externalPlayerRef, onPlay, onPause, onEnded, onTimeUpdate, onChapterSeek]);
 
   // Effect for applying player settings when available
   useEffect(() => {
@@ -286,34 +314,50 @@ const VdoCipherPlayer: React.FC<VdoCipherPlayerProps> = ({
   }, [autoPlay, muted, loop]);
 
   return (
-    <div className="relative">
-      <div 
-        ref={containerRef} 
-        className={`w-full aspect-video ${className}`}
-        data-testid="vdo-player-container"
-      />
-      
-      {error && (
-        <div className="absolute inset-0 bg-black flex items-center justify-center">
-          <div className="text-center text-white p-5">
-            <h3 className="text-xl font-bold mb-2">Error loading video</h3>
-            <p className="text-gray-300 mb-4">{error.message}</p>
-            <button 
-              className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-700 transition-colors"
-              onClick={() => window.location.reload()}
-            >
-              Try Again
-            </button>
+    <div className="w-full">
+      {/* Video Player Container */}
+      <div className="relative">
+        <div 
+          ref={containerRef} 
+          className={`w-full aspect-video ${className}`}
+          data-testid="vdo-player-container"
+        />
+        
+        {error && (
+          <div className="absolute inset-0 bg-black flex items-center justify-center">
+            <div className="text-center text-white p-5">
+              <h3 className="text-xl font-bold mb-2">Error loading video</h3>
+              <p className="text-gray-300 mb-4">{error.message}</p>
+              <button 
+                className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-700 transition-colors"
+                onClick={() => window.location.reload()}
+              >
+                Try Again
+              </button>
+            </div>
           </div>
-        </div>
-      )}
-      
-      {isLoading && !error && (
-        <div className="absolute inset-0 bg-black flex items-center justify-center">
-          <div className="text-center text-white">
-            <div className="w-16 h-16 border-4 border-t-transparent border-blue-500 rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="font-medium">Loading video player...</p>
+        )}
+        
+        {isLoading && !error && (
+          <div className="absolute inset-0 bg-black flex items-center justify-center">
+            <div className="text-center text-white">
+              <div className="w-16 h-16 border-4 border-t-transparent border-blue-500 rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="font-medium">Loading video player...</p>
+            </div>
           </div>
+        )}
+      </div>
+
+      {/* Chapters Section */}
+      {chapters && chapters.length > 0 && (
+        <div className="mt-6" data-testid="chapters-section">
+          <ChapterList
+            chapters={chapters}
+            currentTime={currentTime}
+            onChapterClick={handleChapterSeek}
+            isLoading={isLoading}
+            className="w-full"
+          />
         </div>
       )}
     </div>
