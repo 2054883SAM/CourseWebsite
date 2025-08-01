@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { getEnrolledCourse } from '@/lib/supabase/learning';
-import VideoPlayerClient from '@/app/video-player/video-player-client';
+import VdoCipherPlayer from '@/components/video/VdoCipherPlayer';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 export default function CoursePlayerPage() {
@@ -38,6 +38,8 @@ export default function CoursePlayerPage() {
           router.replace('/unauthorized?requiredRole=student');
           return;
         }
+
+        console.log('result.data', result.data);
         
         setCourseData(result.data);
       } catch (e) {
@@ -76,12 +78,13 @@ export default function CoursePlayerPage() {
     return null;
   }
 
-  // Render the video player with the course data
+  // Render the VdoCipher video player with the course data
   return (
-    <VideoPlayerClient
-      playbackId={courseData.playbackId || ''}
-      courseId={courseData.id}
-      courseTitle={courseData.title}
+    <VdoCipherPlayer
+      videoId={courseData.playbackId || ''}
+      title={courseData.title}
+      chapters={courseData.chapters || []}
+      className="w-full"
     />
   );
 } 

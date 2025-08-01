@@ -29,7 +29,7 @@ const VdoCipherPlayer: React.FC<VdoCipherPlayerProps> = ({
   muted = false,
   loop = false,
   poster,
-  chapters,
+  chapters = [],
   onPlay,
   onPause,
   onEnded,
@@ -106,6 +106,8 @@ const VdoCipherPlayer: React.FC<VdoCipherPlayerProps> = ({
   useEffect(() => {
     // Reset initialization flag when video changes
     initializedRef.current = false;
+
+    console.log('videoId', videoId);
     
     const fetchOtp = async () => {
       try {

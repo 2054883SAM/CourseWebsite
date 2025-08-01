@@ -23,24 +23,23 @@ jest.mock('@/lib/supabase/learning', () => ({
 
 // Mock the LoadingSpinner component
 jest.mock('@/components/ui/LoadingSpinner', () => ({
-  __esModule: true,
-  default: () => <div data-testid="loading-spinner">Loading...</div>
+  LoadingSpinner: () => <div data-testid="loading-spinner">Loading...</div>
 }));
 
-// Mock the VideoPlayerClient component
-jest.mock('@/app/video-player/video-player-client', () => {
-  return function MockVideoPlayer({ 
-    playbackId, 
-    courseId, 
-    courseTitle 
+// Mock the VdoCipherPlayer component
+jest.mock('@/components/video/VdoCipherPlayer', () => {
+  return function MockVdoCipherPlayer({ 
+    videoId, 
+    title,
+    className 
   }: { 
-    playbackId: string;
-    courseId?: string;
-    courseTitle?: string;
+    videoId: string;
+    title?: string;
+    className?: string;
   }) {
     return (
-      <div data-testid="video-player" data-playback-id={playbackId} data-course-id={courseId}>
-        <h1>{courseTitle}</h1>
+      <div data-testid="vdo-cipher-player" data-video-id={videoId} className={className}>
+        <h1>{title}</h1>
       </div>
     );
   };
@@ -68,7 +67,7 @@ describe('CoursePlayerPage', () => {
     title: 'Test Course',
     description: 'Course description',
     thumbnail_url: '/thumbnail.jpg',
-    playbackId: 'playback123',
+    videoId: 'vdo_video123',
     progress: 50,
     enrollment: {
       id: 'enroll123',
@@ -135,7 +134,7 @@ describe('CoursePlayerPage', () => {
     expect(screen.getByText(/Loading your course content/i)).toBeInTheDocument();
   });
 
-  it('should render the video player when user is enrolled in the course', async () => {
+  it('should render the VdoCipherPlayer when user is enrolled in the course', async () => {
     await act(async () => {
       render(<CoursePlayerPage />);
     });
@@ -143,11 +142,10 @@ describe('CoursePlayerPage', () => {
     await waitFor(() => {
       // Should render the course title
       expect(screen.getByText('Test Course')).toBeInTheDocument();
-      // The VideoPlayerClient component is mocked, so we can check if it's called with the right props
-      const videoPlayer = screen.getByTestId('video-player');
+      // The VdoCipherPlayer component is mocked, so we can check if it's called with the right props
+      const videoPlayer = screen.getByTestId('vdo-cipher-player');
       expect(videoPlayer).toBeInTheDocument();
-      expect(videoPlayer.getAttribute('data-playback-id')).toBe('playback123');
-      expect(videoPlayer.getAttribute('data-course-id')).toBe('course123');
+      expect(videoPlayer.getAttribute('data-video-id')).toBe('vdo_video123');
     });
   });
 
@@ -163,6 +161,24 @@ describe('CoursePlayerPage', () => {
 
     await waitFor(() => {
       expect(screen.getByText(/Failed to fetch course data/i)).toBeInTheDocument();
+    });
+  });
+
+  it('should render VdoCipherPlayer with empty videoId when courseData.videoId is not provided', async () => {
+    const courseWithoutVideoId = { ...mockCourse, videoId: undefined };
+    (getEnrolledCourse as jest.Mock).mockResolvedValue({
+      data: courseWithoutVideoId,
+      error: null,
+    });
+
+    await act(async () => {
+      render(<CoursePlayerPage />);
+    });
+
+    await waitFor(() => {
+      const videoPlayer = screen.getByTestId('vdo-cipher-player');
+      expect(videoPlayer).toBeInTheDocument();
+      expect(videoPlayer.getAttribute('data-video-id')).toBe('');
     });
   });
 }); 

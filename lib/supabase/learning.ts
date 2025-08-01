@@ -14,6 +14,7 @@ export interface EnrolledCourse extends Course {
     enrolled_at: string;
   };
   playbackId?: string;
+  chapters?: number;
 }
 
 // Interface for the nested course data in the Supabase query response
@@ -26,6 +27,7 @@ interface CourseData {
   created_at: string;
   creator_id: string;
   playback_id?: string;
+  chapters?: JSON;
 }
 
 // Interface for the enrollment data with nested course
@@ -267,7 +269,8 @@ export async function getEnrolledCourse(
           price,
           created_at,
           creator_id,
-          playback_id
+          playback_id,
+          chapters
         )
       `)
       .eq('user_id', userId)
@@ -285,8 +288,8 @@ export async function getEnrolledCourse(
       return { data: null, error: 'Not enrolled in this course' };
     }
 
-    // Extract the course data from the response
-    const courseData = data.course as CourseData;
+    // Extract the course data from the response (Supabase may return it as an array)
+    const courseData = (Array.isArray(data.course) ? data.course[0] : data.course) as CourseData;
     
     // Get progress from localStorage or would be from database in production
     let progress = 0;
@@ -333,6 +336,7 @@ export async function getEnrolledCourse(
       creator_id: courseData.creator_id,
       progress: progress,
       lastAccessedAt: now,
+      chapters: courseData.chapters,
       enrollment: {
         id: data.id,
         status: data.status,
