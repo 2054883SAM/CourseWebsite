@@ -195,6 +195,54 @@ USING (
     )
 ); 
 
+-- Create courses_progress table
+CREATE TABLE courses_progress (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    course_id UUID NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+    progress NUMERIC NOT NULL DEFAULT 0 CHECK (progress >= 0 AND progress <= 100),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE (user_id, course_id)
+);
+
+-- Create index for better performance
+CREATE INDEX idx_courses_progress_user_id ON courses_progress(user_id);
+CREATE INDEX idx_courses_progress_course_id ON courses_progress(course_id);
+
+-- Enable RLS on courses_progress
+ALTER TABLE courses_progress ENABLE ROW LEVEL SECURITY;
+
+-- Policies for courses_progress
+-- Users can view their own progress
+CREATE POLICY "Users can view their own progress"
+ON courses_progress FOR SELECT
+TO authenticated
+USING (auth.uid() = user_id);
+
+-- Users can update their own progress
+CREATE POLICY "Users can update their own progress"
+ON courses_progress FOR INSERT
+TO authenticated
+WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own progress"
+ON courses_progress FOR UPDATE
+TO authenticated
+USING (auth.uid() = user_id)
+WITH CHECK (auth.uid() = user_id);
+
+-- Admins can manage all progress records
+CREATE POLICY "Admins can manage all progress"
+ON courses_progress FOR ALL
+TO authenticated
+USING (
+    EXISTS (
+        SELECT 1 FROM users
+        WHERE id = auth.uid()
+        AND role = 'admin'
+    )
+);
+
 -- Row Level Security
 ALTER TABLE enrollments ENABLE ROW LEVEL SECURITY;
 

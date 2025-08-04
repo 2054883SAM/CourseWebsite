@@ -21,7 +21,7 @@ export default function CoursePlayerPage() {
     async function fetchCourse() {
       // Wait for auth to be ready
       if (authLoading) return;
-      
+
       // Redirect if not authenticated
       if (!user) {
         router.replace('/unauthorized?requiredRole=student');
@@ -31,7 +31,7 @@ export default function CoursePlayerPage() {
       try {
         setLoading(true);
         const result = await getEnrolledCourse(user.id, courseId);
-        
+
         if (result.error || !result.data) {
           setError(result.error || 'Course not found');
           // Redirect to unauthorized page if not enrolled
@@ -40,7 +40,7 @@ export default function CoursePlayerPage() {
         }
 
         console.log('result.data', result.data);
-        
+
         setCourseData(result.data);
       } catch (e) {
         setError(e instanceof Error ? e.message : 'An error occurred');
@@ -83,8 +83,12 @@ export default function CoursePlayerPage() {
     <VdoCipherPlayer
       videoId={courseData.playbackId || ''}
       title={courseData.title}
+      watermark={user?.email}
       chapters={courseData.chapters || []}
       className="w-full"
+      userId={user?.id}
+      courseId={courseId}
+      duration={courseData.duration}
     />
   );
-} 
+}

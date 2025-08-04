@@ -80,7 +80,6 @@ export async function getEnrolledCourses(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
-    
 
     // Set up default params
     const {
@@ -128,12 +127,12 @@ export async function getEnrolledCourses(
         { count: 'exact' }
       )
       .eq('user_id', userId);
-      
+
     // Apply status filter only if not 'all'
     if (status !== 'all') {
       query = query.eq('status', status);
     }
-    
+
     // Execute the query
     const { data, error, count } = await query
       .order(orderBy, { ascending: sortOrder === 'asc' })
@@ -156,7 +155,7 @@ export async function getEnrolledCourses(
         status: row.status,
         enrolled_at: row.enrolled_at,
       };
-      
+
       // Make sure we correctly handle the course data
       const rawCourseData = Array.isArray(row.course) ? row.course[0] : row.course;
       // Explicitly cast to CourseData to satisfy TypeScript
@@ -168,9 +167,9 @@ export async function getEnrolledCourses(
         price: rawCourseData.price,
         created_at: rawCourseData.created_at,
         creator_id: rawCourseData.creator_id,
-        playback_id: rawCourseData.playback_id
+        playback_id: rawCourseData.playback_id,
       };
-      
+
       let progress = 0;
       let lastAccessedAt: string | undefined;
       try {
@@ -199,7 +198,7 @@ export async function getEnrolledCourses(
         progress: progress,
         lastAccessedAt: lastAccessedAt,
         playbackId: courseData.playback_id,
-        enrollment: enrollment
+        enrollment: enrollment,
       };
 
       return enrolledCourse;
@@ -257,7 +256,8 @@ export async function getEnrolledCourse(
     // Query for the specific course enrollment
     const { data, error } = await supabase
       .from('enrollments')
-      .select(`
+      .select(
+        `
         id,
         status,
         enrolled_at,
@@ -272,7 +272,8 @@ export async function getEnrolledCourse(
           playback_id,
           chapters
         )
-      `)
+      `
+      )
       .eq('user_id', userId)
       .eq('course_id', courseId)
       .eq('status', 'active')
@@ -290,7 +291,7 @@ export async function getEnrolledCourse(
 
     // Extract the course data from the response (Supabase may return it as an array)
     const courseData = (Array.isArray(data.course) ? data.course[0] : data.course) as CourseData;
-    
+
     // Get progress from localStorage or would be from database in production
     let progress = 0;
     let lastAccessedAt: string | undefined;
