@@ -181,60 +181,109 @@ export default function CreateVideoPage() {
     return 0;
   };
 
-  const uploadVideoToMux = async (file: File): Promise<string> => {
+  const uploadVideoToVdoCipher = async (file: File): Promise<string> => {
     try {
-      const response = await fetch('/api/upload-video', {
-        method: 'POST',
+      // Step 1: Obtain upload credentials
+      const credentialsResponse = await fetch('/api/upload-video/vdocipher-credentials', {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           title: formData.title,
-          description: formData.description,
+          folderId: 'root',
         }),
       });
 
-      if (!response.ok) {
-        throw new Error('Erreur lors de la création de l\'upload URL');
+      if (!credentialsResponse.ok) {
+        throw new Error('Erreur lors de l\'obtention des credentials d\'upload');
       }
 
-      const { uploadUrl, uploadId } = await response.json();
+      const { clientPayload, videoId } = await credentialsResponse.json();
       setVideoUploadProgress(25);
 
-      const uploadResponse = await fetch(uploadUrl, {
-        method: 'PUT',
-        body: file,
-        headers: {
-          'Content-Type': file.type,
-        },
+      // Step 2: Upload file to VdoCipher
+      const uploadFormData = new FormData();
+      uploadFormData.append('file', file);
+      uploadFormData.append('uploadCredentials', JSON.stringify(clientPayload));
+
+      const uploadResponse = await fetch('/api/upload-video/vdocipher-upload', {
+        method: 'POST',
+        body: uploadFormData,
       });
 
       if (!uploadResponse.ok) {
-        throw new Error('Erreur lors de l\'upload vers Mux');
+        throw new Error('Erreur lors de l\'upload vers VdoCipher');
       }
 
-      setVideoUploadProgress(75);
-      // Attendre un peu que l'upload soit traité
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Récupérer le playbackId après l'upload en utilisant l'uploadId
-      const playbackResponse = await fetch(`/api/upload-video?uploadId=${uploadId}`, {
-        method: 'GET',
-      });
+      setVideoUploadProgress(50);
 
-      if (!playbackResponse.ok) {
-        throw new Error('Erreur lors de la récupération du playbackId');
+      // Step 3: Check video status and wait for processing
+      let videoReady = false;
+      let attempts = 0;
+      const maxAttempts = 180; // Maximum 180 attempts (30 minutes of active checking)
+      const checkInterval = 10000; // 10 seconds between checks
+      const maxProcessingTime = 6 * 60 * 60 * 1000; // 6 hours max processing time
+      const startTime = Date.now();
+
+      console.log(`Début de la surveillance du traitement vidéo. Temps maximum: 6 heures`);
+
+      while (!videoReady && attempts < maxAttempts) {
+        attempts++;
+        const elapsedTime = Date.now() - startTime;
+        const elapsedHours = (elapsedTime / (1000 * 60 * 60)).toFixed(1);
+        
+        // Progress calculation: 50% to 90% over the first 30 minutes, then slower
+        let progressIncrement;
+        if (attempts <= 30) {
+          progressIncrement = (attempts / 30) * 30; // 0% to 30% in first 5 minutes
+        } else {
+          progressIncrement = 30 + Math.min(10, (attempts - 30) * 0.4); // Slower progress after
+        }
+        setVideoUploadProgress(50 + progressIncrement);
+
+        // Check if we've exceeded maximum processing time
+        if (elapsedTime > maxProcessingTime) {
+          console.warn(`Temps maximum de traitement dépassé (6 heures). Arrêt de la surveillance.`);
+          break;
+        }
+
+        await new Promise(resolve => setTimeout(resolve, checkInterval));
+
+        const statusResponse = await fetch(`/api/upload-video/vdocipher-status?videoId=${videoId}`, {
+          method: 'GET',
+        });
+
+        if (!statusResponse.ok) {
+          console.warn('Erreur lors de la vérification du statut:', await statusResponse.text());
+          continue;
+        }
+
+        const { isReady, status } = await statusResponse.json();
+        console.log(`Vérification du statut de la vidéo ${videoId}: ${status} (tentative ${attempts}, temps écoulé: ${elapsedHours}h)`);
+
+        if (isReady) {
+          videoReady = true;
+          console.log(`🎉 Vidéo prête après ${elapsedHours}h de traitement !`);
+        } else if (status === 'Error' || status === 'Failed') {
+          throw new Error('Le traitement de la vidéo a échoué');
+        }
+
+        // For very long uploads, reduce check frequency after 30 minutes
+        if (attempts > 30 && attempts % 6 === 0) { // Every minute after 30 attempts
+          console.log(`⏳ Traitement en cours depuis ${elapsedHours}h. Les grandes vidéos peuvent prendre plusieurs heures...`);
+        }
       }
 
-      const { playbackId } = await playbackResponse.json();
-      if (!playbackId) {
-        throw new Error('PlaybackId non disponible');
+      if (!videoReady) {
+        const elapsedHours = ((Date.now() - startTime) / (1000 * 60 * 60)).toFixed(1);
+        console.warn(`La vidéo est encore en cours de traitement après ${elapsedHours}h, mais le cours peut être créé. Le traitement continuera en arrière-plan.`);
       }
 
       setVideoUploadProgress(100);
-      return playbackId;
+      return videoId; // Return the videoId as playback_id
     } catch (error) {
-      console.error('Erreur upload vidéo:', error);
+      console.error('Erreur upload vidéo VdoCipher:', error);
       throw error;
     }
   };
@@ -280,7 +329,7 @@ export default function CreateVideoPage() {
       // Upload vidéo si un fichier est sélectionné
       if (selectedVideo) {
         setUploadProgress(60);
-        videoPlaybackId = await uploadVideoToMux(selectedVideo);
+        videoPlaybackId = await uploadVideoToVdoCipher(selectedVideo);
         setPlaybackId(videoPlaybackId);
         setUploadProgress(80);
       }
@@ -301,7 +350,7 @@ export default function CreateVideoPage() {
           public_cible: formData.publicCible || null,
           duree_estimee: formData.dureeEstimee || null,
           niveau_difficulte: formData.niveauDifficulte,
-          playback_id: videoPlaybackId, // Stocker le playbackId directement dans le cours
+          playback_id: videoPlaybackId, // Stocker le videoId VdoCipher comme playback_id
           chapters: chapters.length > 0 ? JSON.stringify(chapters) : null // Stocker les chapitres au format JSON
         })
         .select()
@@ -312,7 +361,7 @@ export default function CreateVideoPage() {
       }
 
       setUploadProgress(100);
-      success('Cours créé avec succès ! Votre vidéo est maintenant disponible.');
+      success('Cours créé avec succès ! Votre vidéo a été uploadée sur VdoCipher et sera bientôt disponible.');
       
       // Reset form
       setFormData({
