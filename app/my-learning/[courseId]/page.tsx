@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { getEnrolledCourse } from '@/lib/supabase/learning';
@@ -14,10 +14,14 @@ export default function CoursePlayerPage() {
   const [courseData, setCourseData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const hasFetchedRef = useRef(false);
 
   const courseId = params.courseId as string;
 
   useEffect(() => {
+    // Prevent fetching course data multiple times
+    if (hasFetchedRef.current || courseData) return;
+
     async function fetchCourse() {
       // Wait for auth to be ready
       if (authLoading) return;
@@ -30,6 +34,25 @@ export default function CoursePlayerPage() {
 
       try {
         setLoading(true);
+        
+        // Try to get data from session storage first
+        try {
+          const cachedData = sessionStorage.getItem(`course_${courseId}`);
+          if (cachedData) {
+            const parsedData = JSON.parse(cachedData);
+            console.log('Using cached course data');
+            setCourseData(parsedData);
+            hasFetchedRef.current = true;
+            setLoading(false);
+            return;
+          }
+        } catch (e) {
+          console.warn('Failed to read from session storage:', e);
+          // Continue with API fetch if session storage fails
+        }
+        
+        // If no cached data, fetch from API
+        console.log('Fetching course data from API');
         const result = await getEnrolledCourse(user.id, courseId);
 
         if (result.error || !result.data) {
@@ -39,8 +62,15 @@ export default function CoursePlayerPage() {
           return;
         }
 
-        console.log('result.data', result.data);
+        // Cache the result in session storage
+        try {
+          sessionStorage.setItem(`course_${courseId}`, JSON.stringify(result.data));
+        } catch (e) {
+          console.warn('Failed to cache course data:', e);
+        }
 
+        // Mark as fetched and update state
+        hasFetchedRef.current = true;
         setCourseData(result.data);
       } catch (e) {
         setError(e instanceof Error ? e.message : 'An error occurred');
@@ -50,7 +80,7 @@ export default function CoursePlayerPage() {
     }
 
     fetchCourse();
-  }, [courseId, user, authLoading, router]);
+  }, [courseId, user, authLoading, router, courseData]);
 
   if (loading || authLoading) {
     return (
@@ -80,9 +110,9 @@ export default function CoursePlayerPage() {
 
   // Render the VdoCipher video player with the course data
   return (
+    <div className="flex flex-col gap-4">
     <VdoCipherPlayer
       videoId={courseData.playbackId || ''}
-      title={courseData.title}
       watermark={user?.email}
       chapters={courseData.chapters || []}
       className="w-full"
@@ -90,5 +120,6 @@ export default function CoursePlayerPage() {
       courseId={courseId}
       duration={courseData.duration}
     />
+    </div>
   );
 }

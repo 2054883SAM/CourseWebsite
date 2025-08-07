@@ -5,6 +5,8 @@ import { PageLayout, Container, Section } from '@/components/layout';
 import { useAuth } from '@/lib/auth/hooks';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { Database } from '@/types/supabase';
+import { VideoChapter } from '@/lib/types/vdocipher';
+import Image from 'next/image';
 // import { useToast, ToastContainer } from '../../../components/ui/Toast';
 
 export default function CreateVideoPage() {
@@ -44,6 +46,16 @@ export default function CreateVideoPage() {
   const [selectedVideo, setSelectedVideo] = useState<File | null>(null);
   const [videoUploadProgress, setVideoUploadProgress] = useState(0);
   const [playbackId, setPlaybackId] = useState<string>('');
+  const [chapters, setChapters] = useState<VideoChapter[]>([]);
+  const [currentChapter, setCurrentChapter] = useState<Omit<VideoChapter, 'id'> & { startTimeFormatted: string, durationFormatted: string }>({
+    title: '',
+    startTime: 0,
+    startTimeFormatted: '00:00',
+    duration: undefined,
+    durationFormatted: '',
+    description: undefined,
+    thumbnail: undefined
+  });
 
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
@@ -76,6 +88,97 @@ export default function CreateVideoPage() {
       setSelectedVideo(file);
       console.log('Vidéo sélectionnée:', file.name, 'Taille:', file.size);
     }
+  };
+  
+  const handleChapterInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    
+    if (name === 'startTimeFormatted') {
+      // Handle time format input for startTime
+      setCurrentChapter(prev => ({
+        ...prev,
+        startTimeFormatted: value,
+        startTime: timeToSeconds(value)
+      }));
+    } else if (name === 'durationFormatted') {
+      // Handle time format input for duration
+      setCurrentChapter(prev => ({
+        ...prev,
+        durationFormatted: value,
+        duration: value ? timeToSeconds(value) : undefined
+      }));
+    } else {
+      // Handle other inputs normally
+      setCurrentChapter(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
+  };
+
+  const addChapter = () => {
+    if (!currentChapter.title) {
+      error('Le titre du chapitre est obligatoire');
+      return;
+    }
+    
+    const newChapter: VideoChapter = {
+      id: crypto.randomUUID(),
+      title: currentChapter.title,
+      startTime: currentChapter.startTime,
+      duration: currentChapter.duration,
+      description: currentChapter.description,
+      thumbnail: currentChapter.thumbnail
+    };
+    
+    setChapters(prevChapters => [...prevChapters, newChapter]);
+    
+    // Calculate next logical start time based on the end of this chapter
+    const nextStartTime = currentChapter.startTime + (currentChapter.duration || 300);
+    const nextStartTimeFormatted = formatTime(nextStartTime);
+    
+    setCurrentChapter({
+      title: '',
+      startTime: nextStartTime,
+      startTimeFormatted: nextStartTimeFormatted,
+      duration: undefined,
+      durationFormatted: '',
+      description: undefined,
+      thumbnail: undefined
+    });
+    console.log('Chapters:', chapters);
+  };
+
+  const removeChapter = (id: string) => {
+    setChapters(prevChapters => prevChapters.filter(chapter => chapter.id !== id));
+  };
+  
+  const formatTime = (seconds: number): string => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    
+    if (hours > 0) {
+      return `${hours}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+    }
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+  
+  const timeToSeconds = (timeString: string): number => {
+    // Handle HH:MM:SS or MM:SS format
+    const parts = timeString.split(':').map(part => parseInt(part, 10));
+    
+    if (parts.length === 3) {
+      // HH:MM:SS format
+      return parts[0] * 3600 + parts[1] * 60 + parts[2];
+    } else if (parts.length === 2) {
+      // MM:SS format
+      return parts[0] * 60 + parts[1];
+    } else if (parts.length === 1 && !isNaN(parts[0])) {
+      // Just seconds
+      return parts[0];
+    }
+    return 0;
   };
 
   const uploadVideoToMux = async (file: File): Promise<string> => {
@@ -198,7 +301,8 @@ export default function CreateVideoPage() {
           public_cible: formData.publicCible || null,
           duree_estimee: formData.dureeEstimee || null,
           niveau_difficulte: formData.niveauDifficulte,
-          playback_id: videoPlaybackId // Stocker le playbackId directement dans le cours
+          playback_id: videoPlaybackId, // Stocker le playbackId directement dans le cours
+          chapters: chapters.length > 0 ? JSON.stringify(chapters) : null // Stocker les chapitres au format JSON
         })
         .select()
         .single();
@@ -229,6 +333,16 @@ export default function CreateVideoPage() {
       setThumbnailPreview('');
       setPlaybackId('');
       setVideoUploadProgress(0);
+      setChapters([]);
+      setCurrentChapter({
+        title: '',
+        startTime: 0,
+        startTimeFormatted: '00:00',
+        duration: undefined,
+        durationFormatted: '',
+        description: undefined,
+        thumbnail: undefined
+      });
 
     } catch (err) {
       console.error('Erreur lors de la création du cours:', err);
@@ -459,7 +573,7 @@ export default function CreateVideoPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      URL de l'image
+                      URL de l&apos;image
                     </label>
                     <input
                       type="url"
@@ -486,7 +600,7 @@ export default function CreateVideoPage() {
 
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Description courte de l'image
+                      Description courte de l&apos;image
                     </label>
                     <input
                       type="text"
@@ -504,9 +618,11 @@ export default function CreateVideoPage() {
                         Aperçu
                       </label>
                       <div className="relative w-full max-w-md">
-                        <img
+                        <Image
                           src={thumbnailPreview}
                           alt="Aperçu de la thumbnail"
+                          width={400}
+                          height={200}
                           className="w-full h-48 object-cover rounded-xl border border-gray-300 dark:border-gray-600"
                         />
                       </div>
@@ -537,6 +653,154 @@ export default function CreateVideoPage() {
                     <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
                       Vidéo sélectionnée: {selectedVideo.name} ({(selectedVideo.size / 1024 / 1024).toFixed(2)} MB)
                     </p>
+                  )}
+                </div>
+              </div>
+              
+              {/* Chapters Section */}
+              <div className="bg-white rounded-2xl shadow-lg p-8 dark:bg-gray-800">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
+                  <span className="mr-3">📑</span>
+                  Description des chapitres
+                </h2>
+                
+                <div className="space-y-6">
+                  {/* Add Chapter Form */}
+                  <div className="p-6 border border-gray-200 rounded-xl dark:border-gray-700">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                      Ajouter un chapitre
+                    </h3>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          Titre du chapitre *
+                        </label>
+                        <input
+                          type="text"
+                          name="title"
+                          value={currentChapter.title}
+                          onChange={handleChapterInputChange}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all duration-200"
+                          placeholder="Ex: Introduction au cours"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          Temps de début (HH:MM:SS ou MM:SS) *
+                        </label>
+                        <input
+                          type="text"
+                          name="startTimeFormatted"
+                          value={currentChapter.startTimeFormatted}
+                          onChange={handleChapterInputChange}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all duration-200"
+                          placeholder="00:00"
+                          pattern="([0-9]+:)?[0-5]?[0-9]:[0-5][0-9]"
+                          title="Format: HH:MM:SS ou MM:SS (ex: 01:30:45 ou 05:20)"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          Durée (HH:MM:SS ou MM:SS, optionnel)
+                        </label>
+                        <input
+                          type="text"
+                          name="durationFormatted"
+                          value={currentChapter.durationFormatted}
+                          onChange={handleChapterInputChange}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all duration-200"
+                          placeholder="05:00"
+                          pattern="([0-9]+:)?[0-5]?[0-9]:[0-5][0-9]"
+                          title="Format: HH:MM:SS ou MM:SS (ex: 00:05:00 ou 05:00)"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          Description (optionnel)
+                        </label>
+                        <textarea
+                          name="description"
+                          value={currentChapter.description || ''}
+                          onChange={handleChapterInputChange}
+                          rows={2}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all duration-200"
+                          placeholder="Description brève du chapitre..."
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="mt-4 flex justify-end">
+                      <button
+                        type="button"
+                        onClick={addChapter}
+                        className="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200"
+                      >
+                        Ajouter le chapitre
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Chapter List */}
+                  {chapters.length > 0 && (
+                    <div className="mt-6">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                        Chapitres ({chapters.length})
+                      </h3>
+                      
+                      <div className="border rounded-xl overflow-hidden dark:border-gray-700">
+                        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                          <thead className="bg-gray-50 dark:bg-gray-800">
+                            <tr>
+                              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
+                                Titre
+                              </th>
+                              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
+                                Début
+                              </th>
+                              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
+                                Durée
+                              </th>
+                              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
+                                Description
+                              </th>
+                              <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
+                                Actions
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-900 dark:divide-gray-700">
+                            {chapters.map((chapter) => (
+                              <tr key={chapter.id}>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                                  {chapter.title}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                  {formatTime(chapter.startTime)}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                  {chapter.duration ? formatTime(chapter.duration) : '-'}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                  {chapter.description || '-'}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                  <button
+                                    onClick={() => removeChapter(chapter.id)}
+                                    className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                                  >
+                                    Supprimer
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
                   )}
                 </div>
               </div>
