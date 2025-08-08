@@ -26,7 +26,8 @@ CREATE TABLE courses (
     niveau_difficulte TEXT CHECK (niveau_difficulte IN ('debutant', 'intermediaire', 'avance')),
     paddle_price_id TEXT,
     playback_id TEXT,
-    duration NUMERIC
+    duration NUMERIC,
+    chapters JSONB DEFAULT '[]'::jsonb
 );
 
 CREATE TABLE enrollments (
@@ -254,3 +255,60 @@ CREATE POLICY "Users can view their own enrollments"
 CREATE POLICY "Admins can manage all enrollments" 
   ON enrollments FOR ALL 
   USING (EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin'));
+
+-- Storage bucket for course thumbnails
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('course-thumbnails', 'course-thumbnails', true)
+ON CONFLICT (id) DO UPDATE SET public = true;
+
+-- Ensure RLS is enabled on storage objects
+ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
+
+-- Storage policies for course-thumbnails bucket
+-- Allow creators and admins to upload course thumbnails
+CREATE POLICY "Allow creators and admins to upload course thumbnails" ON storage.objects
+FOR INSERT WITH CHECK (
+  bucket_id = 'course-thumbnails' 
+  AND auth.role() = 'authenticated'
+  AND EXISTS (
+    SELECT 1 FROM users 
+    WHERE id = auth.uid() 
+    AND role IN ('admin', 'creator')
+  )
+);
+
+-- Allow public read access to course thumbnails
+CREATE POLICY "Allow public read access to course thumbnails" ON storage.objects
+FOR SELECT USING (bucket_id = 'course-thumbnails');
+
+-- Allow creators and admins to update course thumbnails
+CREATE POLICY "Allow creators and admins to update course thumbnails" ON storage.objects
+FOR UPDATE USING (
+  bucket_id = 'course-thumbnails' 
+  AND auth.role() = 'authenticated'
+  AND EXISTS (
+    SELECT 1 FROM users 
+    WHERE id = auth.uid() 
+    AND role IN ('admin', 'creator')
+  )
+) WITH CHECK (
+  bucket_id = 'course-thumbnails' 
+  AND auth.role() = 'authenticated'
+  AND EXISTS (
+    SELECT 1 FROM users 
+    WHERE id = auth.uid() 
+    AND role IN ('admin', 'creator')
+  )
+);
+
+-- Allow creators and admins to delete course thumbnails
+CREATE POLICY "Allow creators and admins to delete course thumbnails" ON storage.objects
+FOR DELETE USING (
+  bucket_id = 'course-thumbnails' 
+  AND auth.role() = 'authenticated'
+  AND EXISTS (
+    SELECT 1 FROM users 
+    WHERE id = auth.uid() 
+    AND role IN ('admin', 'creator')
+  )
+);

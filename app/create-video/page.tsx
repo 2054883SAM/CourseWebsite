@@ -3,27 +3,20 @@
 import { useState, useRef } from 'react';
 import { PageLayout, Container, Section } from '@/components/layout';
 import { useAuth } from '@/lib/auth/hooks';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createBrowserClient } from '@supabase/ssr';
 import { Database } from '@/types/supabase';
 import { VideoChapter } from '@/lib/types/vdocipher';
 import Image from 'next/image';
 // import { useToast, ToastContainer } from '../../../components/ui/Toast';
 
 export default function CreateVideoPage() {
-  const { user, dbUser } = useAuth();
-  const supabase = createClientComponentClient<Database>();
-  // const { toasts, success, error, removeToast } = useToast();
+  const { user, dbUser, loading } = useAuth();
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
 
-  // Temporary toast replacements
-  const success = (message: string) => {
-    console.log('Success:', message);
-    alert(message);
-  };
-  const error = (message: string) => {
-    console.error('Error:', message);
-    alert('Erreur: ' + message);
-  };
-
+  // Initialize all state hooks first (React hooks must be called in the same order)
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -59,6 +52,72 @@ export default function CreateVideoPage() {
 
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
+
+  // Temporary toast replacements
+  const success = (message: string) => {
+    console.log('Success:', message);
+    alert(message);
+  };
+  const error = (message: string) => {
+    console.error('Error:', message);
+    alert('Erreur: ' + message);
+  };
+
+  // Check authorization - only admins and creators can create courses
+  if (loading) {
+    return (
+      <PageLayout>
+        <Section className="py-8">
+          <Container>
+            <div className="flex justify-center items-center min-h-[400px]">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
+            </div>
+          </Container>
+        </Section>
+      </PageLayout>
+    );
+  }
+
+  if (!user || !dbUser) {
+    return (
+      <PageLayout>
+        <Section className="py-8">
+          <Container>
+            <div className="text-center p-8">
+              <div className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                Non authentifié
+              </div>
+              <p className="text-gray-600 dark:text-gray-400">
+                Veuillez vous connecter pour créer un cours.
+              </p>
+            </div>
+          </Container>
+        </Section>
+      </PageLayout>
+    );
+  }
+
+  if (!['admin', 'creator'].includes(dbUser.role)) {
+    return (
+      <PageLayout>
+        <Section className="py-8">
+          <Container>
+            <div className="text-center p-8">
+              <div className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                Accès non autorisé
+              </div>
+              <p className="text-gray-600 dark:text-gray-400">
+                Seuls les administrateurs et les créateurs peuvent créer des cours.
+              </p>
+              <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
+                Votre rôle actuel: {dbUser.role}
+              </p>
+            </div>
+          </Container>
+        </Section>
+      </PageLayout>
+    );
+  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -183,26 +242,30 @@ export default function CreateVideoPage() {
 
   const uploadVideoToVdoCipher = async (file: File): Promise<string> => {
     try {
-      // Step 1: Obtain upload credentials
+      // STEP 1: Obtain upload credentials (align with test page behavior)
+      console.log('VDOCIPHER: Requesting upload credentials...');
+      setVideoUploadProgress(10);
+
       const credentialsResponse = await fetch('/api/upload-video/vdocipher-credentials', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title: formData.title,
+          title: formData.title?.trim() || 'Untitled video',
           folderId: 'root',
         }),
       });
 
       if (!credentialsResponse.ok) {
-        throw new Error('Erreur lors de l\'obtention des credentials d\'upload');
+        const errorText = await credentialsResponse.text();
+        throw new Error(`Credentials request failed: ${credentialsResponse.status} - ${errorText}`);
       }
 
       const { clientPayload, videoId } = await credentialsResponse.json();
+      console.log('VDOCIPHER: Upload credentials received', { videoId });
       setVideoUploadProgress(25);
 
-      // Step 2: Upload file to VdoCipher
+      // STEP 2: Upload file to VdoCipher
+      console.log('VDOCIPHER: Uploading file to VdoCipher...');
       const uploadFormData = new FormData();
       uploadFormData.append('file', file);
       uploadFormData.append('uploadCredentials', JSON.stringify(clientPayload));
@@ -213,98 +276,111 @@ export default function CreateVideoPage() {
       });
 
       if (!uploadResponse.ok) {
-        throw new Error('Erreur lors de l\'upload vers VdoCipher');
+        const errorText = await uploadResponse.text();
+        throw new Error(`Upload failed: ${uploadResponse.status} - ${errorText}`);
       }
 
+      // Even if the endpoint returns a body, we don't need it here; align with test page behavior
+      try {
+        await uploadResponse.json();
+      } catch (_) {
+        // Ignore non-JSON responses gracefully
+      }
+
+      console.log('VDOCIPHER: Upload completed');
       setVideoUploadProgress(50);
 
-      // Step 3: Check video status and wait for processing
+      // STEP 3: Monitor processing status (limit to ~10 minutes like test page)
+      console.log('VDOCIPHER: Monitoring processing status (up to ~10 minutes)...');
       let videoReady = false;
       let attempts = 0;
-      const maxAttempts = 180; // Maximum 180 attempts (30 minutes of active checking)
-      const checkInterval = 10000; // 10 seconds between checks
-      const maxProcessingTime = 6 * 60 * 60 * 1000; // 6 hours max processing time
+      const maxAttempts = 60; // 10 minutes @ 10s interval
+      const checkInterval = 10000; // 10 seconds
       const startTime = Date.now();
-
-      console.log(`Début de la surveillance du traitement vidéo. Temps maximum: 6 heures`);
 
       while (!videoReady && attempts < maxAttempts) {
         attempts++;
         const elapsedTime = Date.now() - startTime;
-        const elapsedHours = (elapsedTime / (1000 * 60 * 60)).toFixed(1);
-        
-        // Progress calculation: 50% to 90% over the first 30 minutes, then slower
-        let progressIncrement;
-        if (attempts <= 30) {
-          progressIncrement = (attempts / 30) * 30; // 0% to 30% in first 5 minutes
-        } else {
-          progressIncrement = 30 + Math.min(10, (attempts - 30) * 0.4); // Slower progress after
-        }
-        setVideoUploadProgress(50 + progressIncrement);
+        const elapsedMinutes = (elapsedTime / (1000 * 60)).toFixed(1);
 
-        // Check if we've exceeded maximum processing time
-        if (elapsedTime > maxProcessingTime) {
-          console.warn(`Temps maximum de traitement dépassé (6 heures). Arrêt de la surveillance.`);
-          break;
+        // Progress from 50% -> 90%
+        const progressPercent = 50 + (attempts / maxAttempts) * 40;
+        setVideoUploadProgress(progressPercent);
+
+        if (attempts > 1) {
+          await new Promise(resolve => setTimeout(resolve, checkInterval));
         }
 
-        await new Promise(resolve => setTimeout(resolve, checkInterval));
-
-        const statusResponse = await fetch(`/api/upload-video/vdocipher-status?videoId=${videoId}`, {
-          method: 'GET',
-        });
+        const statusResponse = await fetch(`/api/upload-video/vdocipher-status?videoId=${videoId}`, { method: 'GET' });
 
         if (!statusResponse.ok) {
-          console.warn('Erreur lors de la vérification du statut:', await statusResponse.text());
+          const errorText = await statusResponse.text();
+          console.warn('VDOCIPHER: Status check failed', { status: statusResponse.status, error: errorText });
           continue;
         }
 
-        const { isReady, status } = await statusResponse.json();
-        console.log(`Vérification du statut de la vidéo ${videoId}: ${status} (tentative ${attempts}, temps écoulé: ${elapsedHours}h)`);
+        const statusData = await statusResponse.json();
+        console.log('VDOCIPHER: Status check', { attempt: attempts, ...statusData, elapsedMinutes });
 
-        if (isReady) {
+        if (statusData.isReady) {
           videoReady = true;
-          console.log(`🎉 Vidéo prête après ${elapsedHours}h de traitement !`);
-        } else if (status === 'Error' || status === 'Failed') {
-          throw new Error('Le traitement de la vidéo a échoué');
-        }
-
-        // For very long uploads, reduce check frequency after 30 minutes
-        if (attempts > 30 && attempts % 6 === 0) { // Every minute after 30 attempts
-          console.log(`⏳ Traitement en cours depuis ${elapsedHours}h. Les grandes vidéos peuvent prendre plusieurs heures...`);
+          console.log(`VDOCIPHER: Video is ready after ${elapsedMinutes} minutes`);
+        } else if (statusData.status === 'Error' || statusData.status === 'Failed') {
+          throw new Error(`Video processing failed with status: ${statusData.status}`);
         }
       }
 
       if (!videoReady) {
-        const elapsedHours = ((Date.now() - startTime) / (1000 * 60 * 60)).toFixed(1);
-        console.warn(`La vidéo est encore en cours de traitement après ${elapsedHours}h, mais le cours peut être créé. Le traitement continuera en arrière-plan.`);
+        const elapsedMinutes = ((Date.now() - startTime) / (1000 * 60)).toFixed(1);
+        console.warn(`VDOCIPHER: Video still processing after ${elapsedMinutes} minutes. Proceeding with course creation; processing continues in background.`);
       }
 
       setVideoUploadProgress(100);
-      return videoId; // Return the videoId as playback_id
-    } catch (error) {
-      console.error('Erreur upload vidéo VdoCipher:', error);
-      throw error;
+      return videoId; // Use videoId as playback_id
+    } catch (err) {
+      console.error('VDOCIPHER: Upload error', err);
+      throw err;
     }
   };
 
   const uploadThumbnail = async (file: File): Promise<string> => {
+    console.log('Starting thumbnail upload for file:', file.name, 'Size:', file.size);
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      throw new Error('Le fichier doit être une image');
+    }
+
+    // Validate file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      throw new Error('L\'image doit faire moins de 5MB');
+    }
+
     const fileExt = file.name.split('.').pop();
     const fileName = `${Math.random()}.${fileExt}`;
     const filePath = `course-thumbnails/${fileName}`;
 
-    const { error: uploadError } = await supabase.storage
+    console.log('Uploading to path:', filePath);
+    console.log('User role:', dbUser?.role);
+    console.log('User ID:', user?.id);
+
+    const { data, error: uploadError } = await supabase.storage
       .from('course-thumbnails')
       .upload(filePath, file);
 
     if (uploadError) {
-      throw new Error('Erreur lors de l\'upload de la thumbnail');
+      console.error('Upload error details:', uploadError);
+      throw new Error(`Erreur lors de l'upload de la thumbnail: ${uploadError.message}`);
     }
+
+    console.log('Upload successful:', data);
 
     const { data: { publicUrl } } = supabase.storage
       .from('course-thumbnails')
       .getPublicUrl(filePath);
 
+    console.log('Generated public URL:', publicUrl);
     return publicUrl;
   };
 
@@ -318,6 +394,7 @@ export default function CreateVideoPage() {
     try {
       let thumbnailUrl = formData.thumbnailUrl;
       let videoPlaybackId = '';
+      let paddlePriceId: string | null = null;
 
       // Upload thumbnail si un fichier est sélectionné
       if (selectedThumbnail) {
@@ -332,6 +409,28 @@ export default function CreateVideoPage() {
         videoPlaybackId = await uploadVideoToVdoCipher(selectedVideo);
         setPlaybackId(videoPlaybackId);
         setUploadProgress(80);
+      }
+
+      // Create Paddle price (one-time) for this course price using server API
+      const priceFloat = parseFloat(formData.price);
+      if (!isNaN(priceFloat) && priceFloat > 0) {
+        setUploadProgress(85);
+        const amountCents = Math.round(priceFloat * 100);
+        const createPriceRes = await fetch('/api/paddle/create-price', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            amountCents,
+            currency: 'USD',
+            courseTitle: formData.title?.trim() || undefined,
+          }),
+        });
+        if (!createPriceRes.ok) {
+          const errText = await createPriceRes.text();
+          throw new Error(`Création du prix Paddle échouée: ${createPriceRes.status} - ${errText}`);
+        }
+        const { priceId } = await createPriceRes.json();
+        paddlePriceId = priceId || null;
       }
 
       // Créer le cours dans la base de données
@@ -351,7 +450,8 @@ export default function CreateVideoPage() {
           duree_estimee: formData.dureeEstimee || null,
           niveau_difficulte: formData.niveauDifficulte,
           playback_id: videoPlaybackId, // Stocker le videoId VdoCipher comme playback_id
-          chapters: chapters.length > 0 ? JSON.stringify(chapters) : null // Stocker les chapitres au format JSON
+          chapters: chapters.length > 0 ? JSON.stringify(chapters) : null, // Stocker les chapitres au format JSON
+          paddle_price_id: paddlePriceId,
         })
         .select()
         .single();

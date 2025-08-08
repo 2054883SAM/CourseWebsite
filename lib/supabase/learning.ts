@@ -1,6 +1,8 @@
 import { createBrowserClient } from '@supabase/ssr';
 import { Database } from '@/types/supabase';
 import { Course, Enrollment } from './types';
+import { convertAndValidateChapters, normalizeChaptersToVideo } from '@/lib/utils/chapters';
+import { VideoChapter } from '@/lib/types/vdocipher';
 
 /**
  * Course with additional learning progress data
@@ -14,7 +16,7 @@ export interface EnrolledCourse extends Course {
     enrolled_at: string;
   };
   playbackId?: string;
-  chapters?: number;
+  chapters?: VideoChapter[];
 }
 
 // Interface for the nested course data in the Supabase query response
@@ -27,7 +29,7 @@ interface CourseData {
   created_at: string;
   creator_id: string;
   playback_id?: string;
-  chapters?: JSON;
+  chapters?: unknown;
 }
 
 // Interface for the enrollment data with nested course
@@ -337,7 +339,8 @@ export async function getEnrolledCourse(
       creator_id: courseData.creator_id,
       progress: progress,
       lastAccessedAt: now,
-      chapters: courseData.chapters,
+      // Normalize chapters JSONB -> VideoChapter[] safely
+      chapters: normalizeChaptersToVideo((courseData as any).chapters),
       enrollment: {
         id: data.id,
         status: data.status,

@@ -54,16 +54,19 @@ export async function GET(req: Request) {
     }
 
     const videoData = await apiResponse.json();
+    const statusRaw = videoData.status ?? '';
+    const statusNormalized = String(statusRaw).toLowerCase();
     console.log('📊 [VdoCipher Status] VdoCipher API response:', {
       id: videoData.id,
       title: videoData.title,
-      status: videoData.status,
+      status: statusRaw,
       duration: videoData.length,
       uploadTime: videoData.uploadTime,
       hasPostImage: !!videoData.poster
     });
 
-    const isReady = videoData.status === 'VideoReady' || videoData.status === 'Ready';
+    // Treat 'VideoReady', 'Ready', and 'ready' (any casing) as ready
+    const isReady = statusNormalized === 'videoready' || statusNormalized === 'ready';
     console.log('📊 [VdoCipher Status] Video ready status:', isReady);
     
     // Return video status and details

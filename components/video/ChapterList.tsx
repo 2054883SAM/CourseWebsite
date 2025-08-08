@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { VideoChapter, ChapterListProps } from '@/lib/types/vdocipher';
+import { normalizeChaptersToVideo } from '@/lib/utils/chapters';
 
 /**
  * Formats time in seconds to MM:SS format
@@ -36,7 +37,9 @@ const ChapterList: React.FC<ChapterListProps> = ({
   className = '',
   isLoading = false
 }) => {
-  if (!chapters || chapters.length === 0) {
+  const safeChapters: VideoChapter[] = normalizeChaptersToVideo(chapters);
+
+  if (!safeChapters || safeChapters.length === 0) {
     return (
       <div className={`p-4 text-center text-gray-500 ${className}`}>
         <p>No chapters available</p>
@@ -44,7 +47,7 @@ const ChapterList: React.FC<ChapterListProps> = ({
     );
   }
 
-  const currentChapterId = getCurrentChapter(chapters, currentTime);
+  const currentChapterId = getCurrentChapter(safeChapters, currentTime);
 
   return (
     <div className={`bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg ${className}`}>
@@ -63,7 +66,7 @@ const ChapterList: React.FC<ChapterListProps> = ({
 
       {/* Chapters List */}
       <div className="divide-y divide-gray-200 dark:divide-gray-700">
-        {chapters.map((chapter, index) => {
+        {safeChapters.map((chapter, index) => {
           const isActive = chapter.id === currentChapterId;
           
           return (

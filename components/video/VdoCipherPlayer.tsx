@@ -5,6 +5,7 @@ import Script from 'next/script';
 
 import ChapterList from './ChapterList';
 import { VideoChapter } from '@/lib/types/vdocipher';
+import { normalizeChaptersToVideo } from '@/lib/utils/chapters';
 
 // No global types needed, we'll use type assertions
 
@@ -26,6 +27,7 @@ function VdoCipherPlayerComponent({ videoId, watermark, className, chapters = []
   const [embedUrl, setEmbedUrl] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const safeChapters: VideoChapter[] = normalizeChaptersToVideo(chapters);
 
   // This ensures the video is loaded ONCE and never reloaded unless the page refreshes
   useEffect(() => {
@@ -116,7 +118,7 @@ function VdoCipherPlayerComponent({ videoId, watermark, className, chapters = []
         const player = vdoPlayer.getInstance(iframeElement);
         
         // Fetch chapters metadata if not provided as props
-        if ((!chapters || chapters.length === 0) && player.api) {
+        if ((!safeChapters || safeChapters.length === 0) && player.api) {
           try {
             // Using getMetaData as per VdoCipher docs
             const metadata = await player.api.getMetaData();
@@ -144,9 +146,9 @@ function VdoCipherPlayerComponent({ videoId, watermark, className, chapters = []
               setCurrentTime(currentTime);
               
               // If we have chapters, find the current chapter based on time
-              if (chapters && chapters.length > 0) {
-                const currentChapter = chapters.find((chapter, index) => {
-                  const nextChapter = chapters[index + 1];
+               if (safeChapters && safeChapters.length > 0) {
+                 const currentChapter = safeChapters.find((chapter, index) => {
+                   const nextChapter = safeChapters[index + 1];
                   return chapter.startTime <= currentTime && 
                     (!nextChapter || currentTime < nextChapter.startTime);
                 });
@@ -186,7 +188,7 @@ function VdoCipherPlayerComponent({ videoId, watermark, className, chapters = []
         currentIframe.removeEventListener('load', handleIframeLoad);
       }
     };
-  }, [embedUrl, chapters, onChapterSeek]);
+  }, [embedUrl, chapters, onChapterSeek, safeChapters]);
 
   const handleChapterClick = (chapter: VideoChapter) => {
     setIsLoading(true);
@@ -260,10 +262,10 @@ function VdoCipherPlayerComponent({ videoId, watermark, className, chapters = []
           {playerContent}
         </div>
       </div>
-      {chapters && chapters.length > 0 && (
+      {safeChapters && safeChapters.length > 0 && (
         <div className="col-span-1">
           <ChapterList
-            chapters={chapters}
+            chapters={safeChapters}
             currentTime={currentTime}
             onChapterClick={handleChapterClick}
             isLoading={isLoading}
