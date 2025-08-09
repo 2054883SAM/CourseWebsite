@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import RootLayoutClient from './RootLayoutClient';
 
 export const metadata: Metadata = {
-  title: 'Course Website',
+  title: 'EzioAcademy',
   description: 'An online learning platform with video courses and interactive content',
 };
 

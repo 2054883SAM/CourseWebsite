@@ -1,6 +1,6 @@
 # Testing Documentation
 
-This document describes the available testing pages and utilities in the CourseWebsite application.
+This document describes the available testing pages and utilities in the EzioAcademy application.
 
 ## VdoCipher Upload Testing
 

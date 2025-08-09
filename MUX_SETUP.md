@@ -14,7 +14,7 @@
 
 ### Étape 2 : Créer un nouveau token
 1. Cliquez sur **"Generate new token"**
-2. Donnez un nom : `CourseWebsite Upload Token`
+2. Donnez un nom : `EzioAcademy Upload Token`
 3. Sélectionnez les permissions :
    - ✅ **Video:Read**
    - ✅ **Video:Write**

@@ -13,8 +13,8 @@ export function CourseGridView({ courses, searchQuery = '' }: CourseGridViewProp
   if (courses.length === 0) {
     return (
       <div className="text-center py-12">
-        <h3 className="text-xl font-medium text-gray-900">No courses found</h3>
-        <p className="mt-2 text-gray-600">
+        <h3 className="text-xl font-medium text-gray-900 dark:text-white">No courses found</h3>
+        <p className="mt-2 text-gray-600 dark:text-gray-400">
           {searchQuery ? 
             `No results match your search for "${searchQuery}". Try different keywords.` : 
             'Try adjusting your search or filter criteria.'
@@ -63,7 +63,7 @@ function CourseCard({ course, searchQuery = '', index }: CourseCardProps) {
             className="object-cover transition-transform duration-500 group-hover:scale-110"
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900 dark:to-purple-900 flex items-center justify-center">
+          <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 flex items-center justify-center">
             <div className="text-center">
               <span className="text-4xl text-gray-400 dark:text-gray-500">📚</span>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Aucune image</p>
@@ -77,7 +77,7 @@ function CourseCard({ course, searchQuery = '', index }: CourseCardProps) {
         {/* Badge de prix */}
         <div className="absolute top-4 right-4">
           {user ? (
-            <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg">
+            <div className="bg-gradient-to-r from-gray-600 to-gray-800 text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg">
               ${course.price.toFixed(2)}
             </div>
           ) : (
@@ -100,7 +100,7 @@ function CourseCard({ course, searchQuery = '', index }: CourseCardProps) {
       {/* Contenu de la carte */}
       <div className="p-6">
         <Link href={`/courses/${course.id}`} className="block">
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200 line-clamp-2">
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 group-hover:text-gold-600 dark:group-hover:text-gold-400 transition-colors duration-200 line-clamp-2">
             {searchQuery ? (
               <SearchHighlight text={course.title} query={searchQuery} />
             ) : (
@@ -132,31 +132,31 @@ function CourseCard({ course, searchQuery = '', index }: CourseCardProps) {
                 <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-700"></div>
               </div>
             ) : (
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900 dark:to-purple-900 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 flex items-center justify-center">
                 <span className="text-xs font-bold text-gray-600 dark:text-gray-300">
                   {course.creator?.name?.[0]?.toUpperCase() || 'C'}
                 </span>
               </div>
             )}
-                               <div>
-                     <p className="text-sm font-medium text-gray-900 dark:text-white">
-                       {course.creator?.name || 'Créateur'}
-                     </p>
-                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                       Créateur
-                     </p>
-                     {course.creator?.bio && (
-                       <p className="text-xs text-gray-600 dark:text-gray-500 mt-1 line-clamp-1">
-                         {course.creator.bio}
-                       </p>
-                     )}
-                   </div>
+            <div>
+              <p className="text-sm font-medium text-gray-900 dark:text-white">
+                {course.creator?.name || 'Créateur'}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Créateur
+              </p>
+              {course.creator?.bio && (
+                <p className="text-xs text-gray-600 dark:text-gray-500 mt-1 line-clamp-1">
+                  {course.creator.bio}
+                </p>
+              )}
+            </div>
           </div>
 
           {/* Bouton d'action */}
           <Link
             href={`/courses/${course.id}`}
-            className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-110 group-hover:shadow-xl"
+            className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-gray-600 to-gray-800 text-white shadow-lg hover:from-gray-700 hover:to-gray-900 transition-all duration-200 transform hover:scale-110 group-hover:shadow-xl"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />

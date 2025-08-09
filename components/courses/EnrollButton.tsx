@@ -58,11 +58,11 @@ export const EnrollButton: React.FC<EnrollButtonProps> = ({
   const [isHovered, setIsHovered] = useState(false);
   
   // Base button styles
-  const baseClasses = 'relative inline-flex items-center justify-center px-6 py-3 rounded-md font-medium transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500';
+  const baseClasses = 'relative inline-flex items-center justify-center px-6 py-3 rounded-md font-medium transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500';
   
   // Status-specific styles
   const statusClasses = {
-    'not-enrolled': 'bg-primary-600 hover:bg-primary-700 text-white',
+    'not-enrolled': 'bg-gradient-to-r from-gray-600 to-gray-800 hover:from-gray-700 hover:to-gray-900 text-white',
     'processing': 'bg-gray-400 text-white cursor-not-allowed opacity-80',
     'enrolled': 'bg-green-600 hover:bg-green-700 text-white',
   };

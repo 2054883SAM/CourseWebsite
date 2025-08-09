@@ -113,7 +113,7 @@ function CoursesPage() {
   if (error) {
     return (
       <PageLayout>
-        <Section className="bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-20">
+        <Section className="bg-gradient-gray py-20">
           <div className="container mx-auto px-4">
             <div className="text-center">
               <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20 mb-4">
@@ -132,7 +132,7 @@ function CoursesPage() {
                   setLoading(true);
                   fetchCourses(true);
                 }}
-                className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-full shadow-lg hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-300 transform hover:scale-105"
+                className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-gray-600 to-gray-800 text-white font-semibold rounded-full shadow-lg hover:from-gray-700 hover:to-gray-900 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:ring-offset-2 transition-all duration-300 transform hover:scale-105"
               >
                 🔄 Réessayer
               </button>
@@ -145,14 +145,14 @@ function CoursesPage() {
 
   return (
     <PageLayout>
-      <Section className="bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-20">
+      <Section className="bg-gradient-gray py-20">
         <div className="container mx-auto px-4">
           {/* Header avec animations */}
           <div className="text-center mb-16 animate-fade-in-up">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900 dark:to-purple-900 mb-6">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 mb-6">
               <span className="text-2xl">📚</span>
             </div>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white mb-4 bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent dark:from-white dark:via-blue-200 dark:to-purple-200">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white mb-4 bg-gradient-to-r from-gray-900 via-gold-600 to-gray-800 bg-clip-text text-transparent dark:from-white dark:via-gold-400 dark:to-gray-300">
               Catalogue de Cours
             </h1>
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
@@ -160,12 +160,12 @@ function CoursesPage() {
             </p>
           </div>
 
-                         {/* Barre de recherche améliorée */}
-               <div className="mb-12 animate-fade-in-up relative z-10" style={{ animationDelay: '0.2s' }}>
-                 <div className="max-w-3xl mx-auto">
-                   <SearchBar initialQuery={query} className="w-full" />
-                 </div>
-               </div>
+          {/* Barre de recherche améliorée */}
+          <div className="mb-12 animate-fade-in-up relative z-10" style={{ animationDelay: '0.2s' }}>
+            <div className="max-w-3xl mx-auto">
+              <SearchBar initialQuery={query} className="w-full" />
+            </div>
+          </div>
 
           {/* Statistiques et contrôles */}
           <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
@@ -177,7 +177,7 @@ function CoursesPage() {
                     <>
                       <span className="font-semibold text-gray-900 dark:text-white">{courses.length}</span>
                       {' '}cours trouvé{courses.length !== 1 && 's'} pour
-                      {' '}<span className="font-semibold text-blue-600 dark:text-blue-400">&ldquo;{query}&rdquo;</span>
+                      {' '}<span className="font-semibold text-gold-600 dark:text-gold-400">&ldquo;{query}&rdquo;</span>
                     </>
                   ) : (
                     <>
@@ -196,16 +196,16 @@ function CoursesPage() {
             </div>
           </div>
 
-                         {/* Contenu principal */}
-               <div className="animate-fade-in-up relative z-0" style={{ animationDelay: '0.6s' }}>
-                 <Suspense fallback={view === 'grid' ? <CourseGridSkeleton /> : <CourseListSkeleton />}>
-                   {view === 'grid' ? (
-                     <CourseGridView courses={courses} searchQuery={query} />
-                   ) : (
-                     <CourseListView courses={courses} searchQuery={query} />
-                   )}
-                 </Suspense>
-               </div>
+          {/* Contenu principal */}
+          <div className="animate-fade-in-up relative z-0" style={{ animationDelay: '0.6s' }}>
+            <Suspense fallback={view === 'grid' ? <CourseGridSkeleton /> : <CourseListSkeleton />}>
+              {view === 'grid' ? (
+                <CourseGridView courses={courses} searchQuery={query} />
+              ) : (
+                <CourseListView courses={courses} searchQuery={query} />
+              )}
+            </Suspense>
+          </div>
 
           {/* Message si aucun cours trouvé */}
           {courses.length === 0 && !loading && (
@@ -229,7 +229,7 @@ function CoursesPage() {
                     params.delete('query');
                     window.location.search = params.toString();
                   }}
-                  className="mt-6 inline-flex items-center px-6 py-3 bg-gradient-to-r from-gray-600 to-gray-700 text-white font-semibold rounded-full shadow-lg hover:from-gray-700 hover:to-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-300 transform hover:scale-105"
+                  className="mt-6 inline-flex items-center px-6 py-3 bg-gradient-to-r from-gray-600 to-gray-700 text-white font-semibold rounded-full shadow-lg hover:from-gray-700 hover:to-gray-800 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:ring-offset-2 transition-all duration-300 transform hover:scale-105"
                 >
                   ✨ Voir tous les cours
                 </button>

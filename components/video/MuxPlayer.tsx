@@ -75,7 +75,7 @@ const MuxPlayer: React.FC<MuxVideoPlayerProps> = ({
   // Custom metadata for tracking
   const metadata = {
     video_title: title,
-    player_name: 'Course Website Player',
+    player_name: 'EzioAcademy Player',
     ...props.metadata,
   };
 

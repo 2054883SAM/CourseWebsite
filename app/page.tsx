@@ -42,15 +42,15 @@ function Home() {
   return (
     <PageLayout>
       {/* Hero Section with Gradient Background */}
-      <Section className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-purple-50 py-20 text-center md:py-32 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <Section className="relative overflow-hidden bg-gradient-gray py-20 text-center md:py-32">
         {/* Background decoration */}
-        <div className="absolute -top-40 -right-40 h-80 w-80 rounded-full bg-gradient-to-r from-blue-400 to-purple-400 opacity-10 blur-3xl"></div>
-        <div className="absolute -bottom-40 -left-40 h-80 w-80 rounded-full bg-gradient-to-r from-purple-400 to-pink-400 opacity-10 blur-3xl"></div>
+        <div className="absolute -top-40 -right-40 h-80 w-80 rounded-full bg-gradient-to-r from-gold-400 to-gold-600 opacity-10 blur-3xl"></div>
+        <div className="absolute -bottom-40 -left-40 h-80 w-80 rounded-full bg-gradient-to-r from-gray-400 to-gray-600 opacity-10 blur-3xl"></div>
         
         <Container className="relative z-10">
           <div className="animate-fade-in-up">
-            <h1 className="mb-6 bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-4xl font-bold tracking-tight text-transparent sm:text-5xl md:text-6xl lg:text-7xl dark:from-white dark:via-blue-200 dark:to-purple-200">
-              {user ? `Bon retour, ${dbUser?.name}!` : 'Bienvenue sur Course Website'}
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white mb-4 bg-gradient-to-r from-gray-900 via-gold-600 to-gray-800 bg-clip-text text-transparent dark:from-white dark:via-gold-400 dark:to-gray-300">
+              {user ? `Bon retour, ${dbUser?.name}!` : 'Bienvenue sur EzioAcademy'}
             </h1>
             <p className="mx-auto mb-10 max-w-3xl text-xl text-gray-600 dark:text-gray-300">
               Une plateforme d'apprentissage en ligne avec des cours vidéo interactifs et des matériaux d'apprentissage complets.
@@ -58,15 +58,15 @@ function Home() {
             <div className="flex flex-col justify-center gap-4 sm:flex-row">
               <Link
                 href="/courses"
-                className="group relative inline-flex h-12 items-center justify-center overflow-hidden rounded-full bg-gradient-to-r from-blue-600 to-purple-600 px-8 text-base font-semibold text-white transition-all duration-300 hover:from-blue-700 hover:to-purple-700 hover:shadow-lg hover:shadow-blue-500/25 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className="group relative inline-flex h-12 items-center justify-center overflow-hidden rounded-full bg-gradient-to-r from-gray-600 to-gray-800 px-8 text-base font-semibold text-white transition-all duration-300 hover:from-gray-700 hover:to-gray-900 hover:shadow-lg hover:shadow-gray-500/25 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:ring-offset-2"
               >
-                <span className="relative z-10">Parcourir les cours</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-700 to-purple-700 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
+                <span className="relative z-10">Catalogue des cours</span>
+                <div className="absolute inset-0 bg-gradient-to-r from-gray-700 to-gray-900 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
               </Link>
               {!user ? (
                 <Link
                   href="/signin"
-                  className="inline-flex h-12 items-center justify-center rounded-full border-2 border-gray-300 px-8 text-base font-semibold text-gray-700 transition-all duration-300 hover:border-blue-500 hover:text-blue-600 hover:shadow-md dark:border-gray-600 dark:text-gray-300 dark:hover:border-blue-400 dark:hover:text-blue-400"
+                  className="inline-flex h-12 items-center justify-center rounded-full border-2 border-gray-300 px-8 text-base font-semibold text-gray-700 transition-all duration-300 hover:border-gold-500 hover:text-gold-600 hover:shadow-md dark:border-gray-600 dark:text-gray-300 dark:hover:border-gold-400 dark:hover:text-gold-400"
                 >
                   Se connecter
                 </Link>
@@ -116,24 +116,24 @@ function Home() {
                         className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                       />
                     ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900 dark:to-purple-900">
+                      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700">
                         <div className="text-4xl text-gray-400 dark:text-gray-500">📚</div>
                       </div>
                     )}
                   </div>
-                  <h3 className="mb-3 text-xl font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                  <h3 className="mb-3 text-xl font-bold text-gray-900 dark:text-white group-hover:text-gold-600 dark:group-hover:text-gold-400 transition-colors">
                     {course.title}
                   </h3>
                   <p className="mb-4 line-clamp-2 text-gray-600 dark:text-gray-300">
                     {course.description}
                   </p>
                   <div className="flex items-center justify-between">
-                    <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                    <span className="text-2xl font-bold text-gold-600 dark:text-gold-400">
                       ${course.price.toFixed(2)}
                     </span>
                     <Link
                       href={`/courses/${course.id}`}
-                      className="inline-flex h-10 items-center justify-center rounded-full bg-gradient-to-r from-blue-600 to-purple-600 px-6 text-sm font-semibold text-white transition-all duration-300 hover:from-blue-700 hover:to-purple-700 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                      className="inline-flex h-10 items-center justify-center rounded-full bg-gradient-to-r from-gray-600 to-gray-800 px-6 text-sm font-semibold text-white transition-all duration-300 hover:from-gray-700 hover:to-gray-900 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-gold-500 focus:ring-offset-2"
                     >
                       Voir le cours
                     </Link>
@@ -146,7 +146,7 @@ function Home() {
           <div className="text-center">
             <Link
               href="/courses"
-              className="inline-flex h-12 items-center justify-center rounded-full border-2 border-gray-300 px-8 text-base font-semibold text-gray-700 transition-all duration-300 hover:border-blue-500 hover:text-blue-600 hover:shadow-md dark:border-gray-600 dark:text-gray-300 dark:hover:border-blue-400 dark:hover:text-blue-400"
+              className="inline-flex h-12 items-center justify-center rounded-full border-2 border-gray-300 px-8 text-base font-semibold text-gray-700 transition-all duration-300 hover:border-gold-500 hover:text-gold-600 hover:shadow-md dark:border-gray-600 dark:text-gray-300 dark:hover:border-gold-400 dark:hover:text-gold-400"
             >
               Voir tous les cours
             </Link>
@@ -203,7 +203,7 @@ function Home() {
                 style={{ animationDelay: `${i * 100}ms` }}
               >
                 <div className="mb-4 text-4xl">{feature.icon}</div>
-                <h3 className="mb-3 text-xl font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                <h3 className="mb-3 text-xl font-bold text-gray-900 dark:text-white group-hover:text-gold-600 dark:group-hover:text-gold-400 transition-colors">
                   {feature.title}
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300">{feature.description}</p>
@@ -214,12 +214,12 @@ function Home() {
       </Section>
 
       {/* Call to Action Section */}
-      <Section className="py-16 bg-gradient-to-r from-blue-600 to-purple-600 text-center text-white">
+      <Section className="py-16 bg-gradient-to-r from-gray-600 to-gray-800 text-center text-white">
         <Container>
           <h2 className="mb-4 text-4xl font-bold">
             {user ? 'Continuez à apprendre' : 'Prêt à commencer à apprendre ?'}
           </h2>
-          <p className="mx-auto mb-8 max-w-3xl text-xl text-blue-100">
+          <p className="mx-auto mb-8 max-w-3xl text-xl text-gray-200">
             {user
               ? 'Découvrez nos derniers cours et continuez votre parcours d\'apprentissage.'
               : 'Rejoignez des milliers d\'étudiants qui apprennent déjà sur notre plateforme.'}
@@ -228,23 +228,23 @@ function Home() {
             {user ? (
               <Link
                 href="/courses"
-                className="inline-flex h-12 items-center justify-center rounded-full bg-white px-8 text-base font-semibold text-blue-600 transition-all duration-300 hover:bg-gray-100 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-600"
+                className="inline-flex h-12 items-center justify-center rounded-full bg-white px-8 text-base font-semibold text-gray-700 transition-all duration-300 hover:bg-gray-100 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-600"
               >
-                Parcourir les cours
+                Catalogue des cours
               </Link>
             ) : (
               <>
                 <Link
                   href="/signup"
-                  className="inline-flex h-12 items-center justify-center rounded-full bg-white px-8 text-base font-semibold text-blue-600 transition-all duration-300 hover:bg-gray-100 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-600"
+                  className="inline-flex h-12 items-center justify-center rounded-full bg-white px-8 text-base font-semibold text-gray-700 transition-all duration-300 hover:bg-gray-100 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-600"
                 >
                   S'inscrire maintenant
                 </Link>
                 <Link
                   href="/courses"
-                  className="inline-flex h-12 items-center justify-center rounded-full border-2 border-white px-8 text-base font-semibold text-white transition-all duration-300 hover:bg-white hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-600"
+                  className="inline-flex h-12 items-center justify-center rounded-full border-2 border-white px-8 text-base font-semibold text-white transition-all duration-300 hover:bg-white hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-600"
                 >
-                  Parcourir les cours
+                  Catalogue des cours
                 </Link>
               </>
             )}

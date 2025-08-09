@@ -13,8 +13,8 @@ export function CourseListView({ courses, searchQuery = '' }: CourseListViewProp
   if (courses.length === 0) {
     return (
       <div className="text-center py-12">
-        <h3 className="text-xl font-medium text-gray-900">No courses found</h3>
-        <p className="mt-2 text-gray-600">
+        <h3 className="text-xl font-medium text-gray-900 dark:text-white">No courses found</h3>
+        <p className="mt-2 text-gray-600 dark:text-gray-400">
           {searchQuery ? 
             `No results match your search for "${searchQuery}". Try different keywords.` : 
             'Try adjusting your search or filter criteria.'
@@ -42,7 +42,7 @@ function CourseListItem({ course, searchQuery = '' }: CourseListItemProps) {
   const { user } = useAuth();
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
       <div className="flex flex-col sm:flex-row">
         <div className="relative w-full sm:w-64 h-48 sm:h-auto flex-shrink-0">
           {course.thumbnail_url ? (
@@ -53,12 +53,12 @@ function CourseListItem({ course, searchQuery = '' }: CourseListItemProps) {
               className="object-cover"
             />
           ) : (
-            <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-              <span className="text-gray-400">No image</span>
+            <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+              <span className="text-gray-400 dark:text-gray-500">No image</span>
             </div>
           )}
           {user ? (
-            <div className="absolute bottom-0 right-0 bg-blue-600 text-white px-2 py-1 text-sm font-semibold">
+            <div className="absolute bottom-0 right-0 bg-gradient-to-r from-gray-600 to-gray-800 text-white px-2 py-1 text-sm font-semibold">
               ${course.price.toFixed(2)}
             </div>
           ) : (
@@ -71,7 +71,7 @@ function CourseListItem({ course, searchQuery = '' }: CourseListItemProps) {
         <div className="p-4 sm:p-5 flex-1">
           <Link href={`/courses/${course.id}`} className="block">
             <div className="flex flex-col sm:flex-row justify-between items-start gap-2">
-              <h3 className="text-lg font-semibold text-gray-800 mb-1 group-hover:text-blue-600">
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-1 group-hover:text-gold-600 dark:group-hover:text-gold-400">
                 {searchQuery ? (
                   <SearchHighlight text={course.title} query={searchQuery} />
                 ) : (
@@ -80,7 +80,7 @@ function CourseListItem({ course, searchQuery = '' }: CourseListItemProps) {
               </h3>
             </div>
 
-            <p className="text-gray-600 mb-4">
+            <p className="text-gray-600 dark:text-gray-300 mb-4">
               {searchQuery ? (
                 <SearchHighlight text={course.description} query={searchQuery} />
               ) : (
@@ -100,15 +100,15 @@ function CourseListItem({ course, searchQuery = '' }: CourseListItemProps) {
                   className="rounded-full mr-2"
                 />
               ) : (
-                <div className="w-6 h-6 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center mr-2">
+                <div className="w-6 h-6 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 text-gray-600 dark:text-gray-300 rounded-full flex items-center justify-center mr-2">
                   {course.creator?.name.charAt(0) || 'U'}
                 </div>
               )}
-              <span className="text-sm text-gray-700">{course.creator?.name || 'Unknown Creator'}</span>
+              <span className="text-sm text-gray-700 dark:text-gray-300">{course.creator?.name || 'Unknown Creator'}</span>
             </div>
 
             {user && (
-              <div className="flex items-center text-gray-600">
+              <div className="flex items-center text-gray-600 dark:text-gray-400">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-5 w-5 mr-1"
@@ -132,7 +132,7 @@ function CourseListItem({ course, searchQuery = '' }: CourseListItemProps) {
             {!user && (
               <button 
                 onClick={() => window.location.href = '/signin'} 
-                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                className="text-sm text-gold-600 hover:text-gold-800 dark:text-gold-400 dark:hover:text-gold-300 font-medium"
               >
                 Sign in to see full details
               </button>

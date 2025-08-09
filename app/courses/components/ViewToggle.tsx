@@ -23,13 +23,13 @@ export function ViewToggle({ currentView }: ViewToggleProps) {
   };
 
   return (
-    <div className="inline-flex bg-white border rounded-lg p-1 shadow-sm">
+    <div className="inline-flex bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-1 shadow-sm">
       <button
         onClick={() => toggleView('grid')}
-        className={`p-2 rounded-md flex items-center ${
+        className={`p-2 rounded-md flex items-center transition-all duration-200 ${
           currentView === 'grid'
-            ? 'bg-blue-500 text-white'
-            : 'text-gray-600 hover:bg-gray-100'
+            ? 'bg-gradient-to-r from-gray-600 to-gray-800 text-white'
+            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
         }`}
         aria-label="Grid view"
       >
@@ -38,10 +38,10 @@ export function ViewToggle({ currentView }: ViewToggleProps) {
       
       <button
         onClick={() => toggleView('list')}
-        className={`p-2 rounded-md flex items-center ${
+        className={`p-2 rounded-md flex items-center transition-all duration-200 ${
           currentView === 'list'
-            ? 'bg-blue-500 text-white'
-            : 'text-gray-600 hover:bg-gray-100'
+            ? 'bg-gradient-to-r from-gray-600 to-gray-800 text-white'
+            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
         }`}
         aria-label="List view"
       >

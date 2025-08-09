@@ -2,8 +2,8 @@ import { ResetPassword } from '@/components/auth/ResetPassword';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Reset Password - Course Website',
-  description: 'Reset your password to regain access to your account',
+  title: 'Reset Password - EzioAcademy',
+  description: 'Reset your password to access your account',
 };
 
 export default function ResetPasswordPage() {

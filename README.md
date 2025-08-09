@@ -1,4 +1,4 @@
-# Course Website
+# EzioAcademy
 
 A modern online course platform built with Next.js, TypeScript, Tailwind CSS, and Supabase.
 
@@ -24,7 +24,7 @@ A modern online course platform built with Next.js, TypeScript, Tailwind CSS, an
 1. Clone the repository:
    ```bash
    git clone <your-repo-url>
-   cd coursewebsite
+   cd ezioacademy
    ```
 
 2. Install dependencies:
@@ -54,7 +54,7 @@ A modern online course platform built with Next.js, TypeScript, Tailwind CSS, an
 ## Project Structure
 
 ```
-coursewebsite/
+ezioacademy/
 ├── app/              # Next.js app directory
 ├── components/       # React components
 ├── lib/             # Utility functions and configurations

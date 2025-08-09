@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document outlines the accessibility improvements made to the Course Website platform to ensure compliance with WCAG 2.1 AA standards. The improvements focus on keyboard navigation, screen reader compatibility, proper ARIA attributes, and visual contrast.
+This document outlines the accessibility improvements made to the EzioAcademy platform to ensure compliance with WCAG 2.1 AA standards. The improvements focus on keyboard navigation, screen reader compatibility, proper ARIA attributes, and visual contrast.
 
 ## Implemented Accessibility Features
 
