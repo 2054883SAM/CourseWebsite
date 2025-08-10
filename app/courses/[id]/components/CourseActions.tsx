@@ -11,7 +11,7 @@ import { initiateCheckout } from '@/lib/supabase/checkout';
 interface CourseActionsProps {
   course: Course;
   sections: Section[];
-  initialEnrollmentStatus?: 'enrolled' | 'not-enrolled';
+  initialEnrollmentStatus?: 'enrolled' | 'not-enrolled' | 'processing';
 }
 
 export function CourseActions({ course, sections, initialEnrollmentStatus = 'not-enrolled' }: CourseActionsProps) {
@@ -25,10 +25,13 @@ export function CourseActions({ course, sections, initialEnrollmentStatus = 'not
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [paddleLoaded, setPaddleLoaded] = useState(false);
 
-  // Set initial tooltip message based on enrollment status
+  // Sync status and tooltip with parent-provided enrollment status
   useEffect(() => {
+    setEnrollmentStatus(initialEnrollmentStatus);
     if (initialEnrollmentStatus === 'enrolled') {
       setTooltipMessage('Click to watch this course');
+    } else if (initialEnrollmentStatus === 'processing') {
+      setTooltipMessage('Processing your enrollment...');
     } else {
       setTooltipMessage('Click to enroll in this course');
     }
@@ -276,7 +279,7 @@ export function CourseActions({ course, sections, initialEnrollmentStatus = 'not
     // If user is already enrolled, navigate to the course content
     if (enrollmentStatus === 'enrolled') {
       // Navigate to the course content page
-      router.push(`/my-learning/${course.id}`);
+      router.push(`/learning/${course.id}`);
       return;
     }
 
@@ -454,8 +457,8 @@ export function CourseActions({ course, sections, initialEnrollmentStatus = 'not
         <EnrollButton
           status={enrollmentStatus}
           onClick={handleEnrollClick}
-          disabled={authLoading || enrollmentStatus === 'processing' || !paddleLoaded}
-          tooltipText={!paddleLoaded ? 'Payment system is loading...' : tooltipMessage}
+          disabled={authLoading || enrollmentStatus === 'processing'}
+          tooltipText={enrollmentStatus === 'enrolled' ? 'Go to course' : (!paddleLoaded ? 'Payment system is loading...' : tooltipMessage)}
           enrolledText="Watch Course"
           className="w-full"
         />

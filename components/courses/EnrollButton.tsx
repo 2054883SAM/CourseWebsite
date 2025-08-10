@@ -78,7 +78,7 @@ export const EnrollButton: React.FC<EnrollButtonProps> = ({
   const buttonClasses = `${baseClasses} ${statusClasses[status]} ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`;
 
   const handleClick = () => {
-    if (disabled || status === 'processing' || status === 'enrolled') return;
+    if (disabled || status === 'processing') return;
     onClick?.();
   };
 

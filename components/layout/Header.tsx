@@ -11,6 +11,7 @@ import { DropdownMenu } from './DropdownMenu';
 import { DropdownMenuItem } from './DropdownMenuItem';
 import { useAuth } from '@/lib/auth/AuthContext';
 import CreateVideoButton from '@/app/video-player/CreateVideoButton';
+import { useRouter } from 'next/navigation';
 
 const navigation = [
   { name: 'Accueil', href: '/' },
@@ -20,6 +21,7 @@ const navigation = [
 
 export function Header() {
   const { user, dbUser, signOut } = useAuth();
+  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
@@ -191,7 +193,13 @@ export function Header() {
                     <span className="mr-2">⚙️</span>
                     Paramètres
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={signOut}>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      signOut().then(() => {
+                        router.push('/signin');
+                      });
+                    }}
+                  >
                     <span className="mr-2">🚪</span>
                     Se déconnecter
                   </DropdownMenuItem>
@@ -389,8 +397,11 @@ export function Header() {
             <div className="mt-8">
               <button
                 onClick={() => {
-                  signOut();
-                  setMobileMenuOpen(false);
+                  signOut()
+                    .then(() => {
+                      setMobileMenuOpen(false);
+                      router.push('/signin');
+                    });
                 }}
                 className="flex h-12 w-full items-center justify-center rounded-full border-2 border-red-300 px-4 text-sm font-semibold text-red-600 transition-all duration-300 hover:border-red-500 hover:bg-red-50 dark:border-red-600 dark:text-red-400 dark:hover:border-red-500 dark:hover:bg-red-900/20"
               >

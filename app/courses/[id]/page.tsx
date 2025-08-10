@@ -38,6 +38,7 @@ function CourseDetailPage({ params }: PageProps) {
   const [relatedCourses, setRelatedCourses] = useState<Course[]>([]);
   const [lastFetchTime, setLastFetchTime] = useState(0);
   const [isEnrolled, setIsEnrolled] = useState(false);
+  const [isCheckingEnrollment, setIsCheckingEnrollment] = useState(false);
 
   // Add requireAuth constant since we know this page doesn't require auth
   const requireAuth = false;
@@ -47,15 +48,19 @@ function CourseDetailPage({ params }: PageProps) {
     const checkEnrollment = async () => {
       if (!user?.id || !id) {
         setIsEnrolled(false);
+        setIsCheckingEnrollment(false);
         return;
       }
 
       try {
+        setIsCheckingEnrollment(true);
         const { isEnrolled } = await checkEnrollmentStatus(user.id, id);
         setIsEnrolled(isEnrolled);
       } catch (error) {
         console.error('Error checking enrollment:', error);
         setIsEnrolled(false);
+      } finally {
+        setIsCheckingEnrollment(false);
       }
     };
 
@@ -218,7 +223,7 @@ function CourseDetailPage({ params }: PageProps) {
                 <CourseActions 
                   course={course} 
                   sections={sections} 
-                  initialEnrollmentStatus={isEnrolled ? 'enrolled' : 'not-enrolled'} 
+                  initialEnrollmentStatus={isCheckingEnrollment ? 'processing' : (isEnrolled ? 'enrolled' : 'not-enrolled')} 
                 />
               </div>
             </div>
