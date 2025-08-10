@@ -143,6 +143,10 @@ function CoursesPage() {
     );
   }
 
+  const handleCourseDeleted = (deletedId: string) => {
+    setCourses((prev) => prev.filter((c) => c.id !== deletedId));
+  };
+
   return (
     <PageLayout>
       <Section className="bg-gradient-gray py-20">
@@ -200,9 +204,9 @@ function CoursesPage() {
           <div className="animate-fade-in-up relative z-0" style={{ animationDelay: '0.6s' }}>
             <Suspense fallback={view === 'grid' ? <CourseGridSkeleton /> : <CourseListSkeleton />}>
               {view === 'grid' ? (
-                <CourseGridView courses={courses} searchQuery={query} />
+                <CourseGridView courses={courses} searchQuery={query} onCourseDeleted={handleCourseDeleted} />
               ) : (
-                <CourseListView courses={courses} searchQuery={query} />
+                <CourseListView courses={courses} searchQuery={query} onCourseDeleted={handleCourseDeleted} />
               )}
             </Suspense>
           </div>

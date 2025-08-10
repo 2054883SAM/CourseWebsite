@@ -7,9 +7,10 @@ import { useAuth } from '@/lib/auth/AuthContext';
 interface CourseListViewProps {
   courses: Course[];
   searchQuery?: string;
+  onCourseDeleted?: (id: string) => void;
 }
 
-export function CourseListView({ courses, searchQuery = '' }: CourseListViewProps) {
+export function CourseListView({ courses, searchQuery = '', onCourseDeleted }: CourseListViewProps) {
   if (courses.length === 0) {
     return (
       <div className="text-center py-12">
@@ -27,7 +28,7 @@ export function CourseListView({ courses, searchQuery = '' }: CourseListViewProp
   return (
     <div className="space-y-4">
       {courses.map((course) => (
-        <CourseListItem key={course.id} course={course} searchQuery={searchQuery} />
+        <CourseListItem key={course.id} course={course} searchQuery={searchQuery} onDeleted={onCourseDeleted} />
       ))}
     </div>
   );
@@ -36,10 +37,27 @@ export function CourseListView({ courses, searchQuery = '' }: CourseListViewProp
 interface CourseListItemProps {
   course: Course;
   searchQuery?: string;
+  onDeleted?: (id: string) => void;
 }
 
-function CourseListItem({ course, searchQuery = '' }: CourseListItemProps) {
-  const { user } = useAuth();
+function CourseListItem({ course, searchQuery = '', onDeleted }: CourseListItemProps) {
+  const { dbUser } = useAuth();
+
+  const handleDelete = async () => {
+    if (!confirm('Supprimer ce cours ? Cette action est irréversible.')) return;
+    const res = await fetch(`/api/courses/${course.id}/delete`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ courseId: course.id }),
+    });
+    if (res.ok) {
+      onDeleted?.(course.id);
+    } else {
+      const { error } = await res.json().catch(() => ({ error: 'Delete failed' }));
+      alert(error || 'Delete failed');
+    }
+  };
 
   return (
     <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
@@ -57,7 +75,7 @@ function CourseListItem({ course, searchQuery = '' }: CourseListItemProps) {
               <span className="text-gray-400 dark:text-gray-500">No image</span>
             </div>
           )}
-          {user ? (
+          {dbUser ? (
             <div className="absolute bottom-0 right-0 bg-gradient-to-r from-gray-600 to-gray-800 text-white px-2 py-1 text-sm font-semibold">
               ${course.price.toFixed(2)}
             </div>
@@ -107,7 +125,7 @@ function CourseListItem({ course, searchQuery = '' }: CourseListItemProps) {
               <span className="text-sm text-gray-700 dark:text-gray-300">{course.creator?.name || 'Unknown Creator'}</span>
             </div>
 
-            {user && (
+            {dbUser && (
               <div className="flex items-center text-gray-600 dark:text-gray-400">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -129,12 +147,25 @@ function CourseListItem({ course, searchQuery = '' }: CourseListItemProps) {
               </div>
             )}
 
-            {!user && (
+            {!dbUser && (
               <button 
                 onClick={() => window.location.href = '/signin'} 
                 className="text-sm text-gold-600 hover:text-gold-800 dark:text-gold-400 dark:hover:text-gold-300 font-medium"
               >
                 Sign in to see full details
+              </button>
+            )}
+
+            {dbUser?.role === 'admin' && (
+              <button
+                onClick={handleDelete}
+                title="Supprimer"
+                className="inline-flex items-center justify-center px-3 py-2 rounded-md bg-red-600 text-white shadow hover:bg-red-700 transition"
+              >
+                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6m-7 0V5a2 2 0 012-2h2a2 2 0 012 2v2m-7 0h8" />
+                </svg>
+                Supprimer
               </button>
             )}
           </div>

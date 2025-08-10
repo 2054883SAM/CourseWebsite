@@ -7,9 +7,10 @@ import { useAuth } from '@/lib/auth/AuthContext';
 interface CourseGridViewProps {
   courses: Course[];
   searchQuery?: string;
+  onCourseDeleted?: (id: string) => void;
 }
 
-export function CourseGridView({ courses, searchQuery = '' }: CourseGridViewProps) {
+export function CourseGridView({ courses, searchQuery = '', onCourseDeleted }: CourseGridViewProps) {
   if (courses.length === 0) {
     return (
       <div className="text-center py-12">
@@ -32,6 +33,7 @@ export function CourseGridView({ courses, searchQuery = '' }: CourseGridViewProp
           course={course} 
           searchQuery={searchQuery} 
           index={index}
+          onDeleted={onCourseDeleted}
         />
       ))}
     </div>
@@ -42,10 +44,27 @@ interface CourseCardProps {
   course: Course;
   searchQuery?: string;
   index: number;
+  onDeleted?: (id: string) => void;
 }
 
-function CourseCard({ course, searchQuery = '', index }: CourseCardProps) {
-  const { user } = useAuth();
+function CourseCard({ course, searchQuery = '', index, onDeleted }: CourseCardProps) {
+  const { dbUser } = useAuth();
+
+  const handleDelete = async () => {
+    if (!confirm('Supprimer ce cours ? Cette action est irréversible.')) return;
+    const res = await fetch(`/api/courses/${course.id}/delete`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ courseId: course.id }),
+    });
+    if (res.ok) {
+      onDeleted?.(course.id);
+    } else {
+      const { error } = await res.json().catch(() => ({ error: 'Delete failed' }));
+      alert(error || 'Delete failed');
+    }
+  };
 
   return (
     <div 
@@ -76,7 +95,7 @@ function CourseCard({ course, searchQuery = '', index }: CourseCardProps) {
         
         {/* Badge de prix */}
         <div className="absolute top-4 right-4">
-          {user ? (
+          {(dbUser) ? (
             <div className="bg-gradient-to-r from-gray-600 to-gray-800 text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg">
               ${course.price.toFixed(2)}
             </div>
@@ -154,14 +173,27 @@ function CourseCard({ course, searchQuery = '', index }: CourseCardProps) {
           </div>
 
           {/* Bouton d'action */}
-          <Link
+          <div className="flex items-center space-x-2">
+            {dbUser?.role === 'admin' && (
+              <button
+                onClick={handleDelete}
+                title="Supprimer"
+                className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-red-600 text-white shadow-lg hover:bg-red-700 transition-all duration-200 transform hover:scale-110 group-hover:shadow-xl"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6m-7 0V5a2 2 0 012-2h2a2 2 0 012 2v2m-7 0h8" />
+                </svg>
+              </button>
+            )}
+            <Link
             href={`/courses/${course.id}`}
             className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-gray-600 to-gray-800 text-white shadow-lg hover:from-gray-700 hover:to-gray-900 transition-all duration-200 transform hover:scale-110 group-hover:shadow-xl"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
-          </Link>
+            </Link>
+          </div>
         </div>
 
         {/* Informations supplémentaires */}

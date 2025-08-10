@@ -4,13 +4,14 @@ import { useState, useRef } from 'react';
 import { PageLayout, Container, Section } from '@/components/layout';
 import { useAuth } from '@/lib/auth/hooks';
 import { createBrowserClient } from '@supabase/ssr';
-import { Database } from '@/types/supabase';
+import { useRouter } from 'next/navigation';
 import { VideoChapter } from '@/lib/types/vdocipher';
 import Image from 'next/image';
 // import { useToast, ToastContainer } from '../../../components/ui/Toast';
 
 export default function CreateVideoPage() {
   const { user, dbUser, loading } = useAuth();
+  const router = useRouter();
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -389,6 +390,10 @@ export default function CreateVideoPage() {
     if (!user) return;
 
     setIsSubmitting(true);
+    // Ensure the user sees the progress bar by scrolling to the top smoothly
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
     setUploadProgress(0);
 
     try {
@@ -462,6 +467,8 @@ export default function CreateVideoPage() {
 
       setUploadProgress(100);
       success('Cours créé avec succès ! Votre vidéo a été uploadée sur VdoCipher et sera bientôt disponible.');
+      // Redirect to courses page after successful creation
+      router.push('/courses');
       
       // Reset form
       setFormData({

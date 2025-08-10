@@ -98,8 +98,8 @@ export function Header() {
   const getNavItems = () => {
     const baseItems = [...navigation];
     
-    // Add "My Learning" only for authenticated users
-    if (user) {
+    // Add "My Learning" only for authenticated non-admin users
+    if (user && dbUser?.role !== 'admin') {
       baseItems.splice(2, 0, { name: 'Mes formations', href: '/my-learning' });
     }
     
@@ -208,7 +208,7 @@ export function Header() {
                     href="/signup"
                     className="inline-flex h-10 items-center justify-center rounded-full bg-black text-white hover:bg-gray-800 border border-gold-500 hover:border-gold-400 px-6 text-sm font-semibold transition-all duration-300 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-gold-500 focus:ring-offset-2"
                   >
-                    S'inscrire
+                    S&apos;inscrire
                   </Link>
                 </div>
               )}
@@ -382,7 +382,7 @@ export function Header() {
                 className="flex h-12 w-full items-center justify-center rounded-full border-2 border-gold-300 px-4 text-sm font-semibold text-gray-700 transition-all duration-300 hover:border-gold-500 hover:text-gold-600 dark:border-gold-600 dark:text-gray-300 dark:hover:border-gold-400 dark:hover:text-gold-400"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                S'inscrire
+                S&apos;inscrire
               </Link>
             </div>
           ) : (
