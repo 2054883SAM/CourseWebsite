@@ -157,20 +157,35 @@ function CourseListItem({ course, searchQuery = '', onDeleted }: CourseListItemP
             )}
 
             {dbUser?.role === 'admin' && (
-              <button
-                onClick={handleDelete}
-                title="Supprimer"
-                className="inline-flex items-center justify-center px-3 py-2 rounded-md bg-red-600 text-white shadow hover:bg-red-700 transition"
-              >
-                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6m-7 0V5a2 2 0 012-2h2a2 2 0 012 2v2m-7 0h8" />
-                </svg>
-                Supprimer
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleDelete}
+                  title="Supprimer"
+                  className="inline-flex items-center justify-center px-3 py-2 rounded-md bg-red-600 text-white shadow hover:bg-red-700 transition"
+                >
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6m-7 0V5a 2 2 0 012-2h2a2 2 0 012 2v2m-7 0h8" />
+                  </svg>
+                  Supprimer
+                </button>
+              </div>
             )}
           </div>
         </div>
       </div>
+      {dbUser?.role === 'admin' && (
+        <div className="p-4 border-t border-gray-100 dark:border-gray-700">
+          <Link
+            href={`/courses/${course.id}/edit`}
+            className="w-full inline-flex items-center justify-center px-4 py-2 rounded-lg bg-gold-600 text-white font-semibold shadow hover:bg-gold-700 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:ring-offset-2"
+          >
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536M4 13.5V19h5.5l9.621-9.621a1.5 1.5 0 000-2.121l-3.379-3.379a1.5 1.5 0 00-2.121 0L4 13.5z" />
+            </svg>
+            Modifier
+          </Link>
+        </div>
+      )}
     </div>
   );
 } 
