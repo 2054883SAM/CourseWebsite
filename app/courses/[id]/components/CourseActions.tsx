@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Course, Section } from '@/lib/supabase/types';
 import EnrollButton from '@/components/courses/EnrollButton';
 import { useState, useEffect } from 'react';
-import { verifyEnrollmentEligibility } from '@/lib/supabase/enrollments';
+import { verifyEnrollmentEligibility, checkEnrollmentStatus } from '@/lib/supabase/enrollments';
 import { initiateCheckout } from '@/lib/supabase/checkout';
 
 interface CourseActionsProps {
@@ -211,10 +211,28 @@ export function CourseActions({ course, sections, initialEnrollmentStatus = 'not
 
       const data = await response.json();
 
-          if (!response.ok) {
-      console.error('API response error:', response.status, data);
-      throw new Error(data.error || 'Failed to create enrollment record');
-    }
+      // If API responded with non-2xx, double-check for idempotent success cases
+      if (!response.ok) {
+        console.warn('API response not OK. Inspecting payload for success-like states:', response.status, data);
+        if (data?.success || data?.alreadyEnrolled) {
+          console.log('Treating non-OK response as success due to payload flags');
+          return true;
+        }
+
+        // As a safety net, verify enrollment status directly before surfacing an error
+        try {
+          const { isEnrolled } = await checkEnrollmentStatus(user?.id, course.id);
+          if (isEnrolled) {
+            console.log('Enrollment verified despite non-OK response. Treating as success.');
+            return true;
+          }
+        } catch (verifyErr) {
+          console.warn('Failed to verify enrollment after non-OK response:', verifyErr);
+        }
+
+        console.error('API response error:', response.status, data);
+        throw new Error(data?.error || 'Failed to create enrollment record');
+      }
 
       console.log('Enrollment record created successfully:', data);
       
@@ -225,10 +243,30 @@ export function CourseActions({ course, sections, initialEnrollmentStatus = 'not
         }
         return true;
       } else {
-        throw new Error(data.error || 'Unknown error during enrollment');
+        // As a final safeguard, verify actual enrollment before throwing
+        try {
+          const { isEnrolled } = await checkEnrollmentStatus(user?.id, course.id);
+          if (isEnrolled) {
+            console.log('Post-success-flag missing, but enrollment verified. Treating as success.');
+            return true;
+          }
+        } catch (verifyErr) {
+          console.warn('Verification after ambiguous response failed:', verifyErr);
+        }
+        throw new Error(data?.error || 'Unknown error during enrollment');
       }
     } catch (error: any) {
       console.error('Error creating enrollment record:', error);
+      // Before surfacing error, verify enrollment status in case backend succeeded but returned an error
+      try {
+        const { isEnrolled } = await checkEnrollmentStatus(user?.id, course.id);
+        if (isEnrolled) {
+          console.log('Enrollment exists despite caught error. Treating as success.');
+          return true;
+        }
+      } catch (verifyErr) {
+        console.warn('Verification after catch failed:', verifyErr);
+      }
       setErrorMessage(`Enrollment failed: ${error.message}. Please contact support.`);
       return false;
     }

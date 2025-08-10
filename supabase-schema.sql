@@ -213,32 +213,64 @@ CREATE INDEX idx_courses_progress_course_id ON courses_progress(course_id);
 -- Enable RLS on courses_progress
 ALTER TABLE courses_progress ENABLE ROW LEVEL SECURITY;
 
--- Policies for courses_progress
+-- Policies for courses_progress (use unique names per action)
 -- Users can view their own progress
-CREATE POLICY "Users can view their own progress"
+CREATE POLICY "courses_progress_select_own"
 ON courses_progress FOR SELECT
 TO authenticated
 USING (auth.uid() = user_id);
 
--- Users can update their own progress
-CREATE POLICY "Users can update their own progress"
+-- Users can insert their own progress
+CREATE POLICY "courses_progress_insert_own"
 ON courses_progress FOR INSERT
 TO authenticated
-WITH CHECK (auth.uid() = user_id);
+WITH CHECK (
+  auth.uid() = user_id
+  AND EXISTS (
+    SELECT 1 FROM public.enrollments e
+    WHERE e.user_id = auth.uid()
+      AND e.course_id = courses_progress.course_id
+      AND e.status = 'active'
+  )
+);
 
-CREATE POLICY "Users can update their own progress"
+-- Users can update their own progress
+CREATE POLICY "courses_progress_update_own"
 ON courses_progress FOR UPDATE
 TO authenticated
-USING (auth.uid() = user_id)
-WITH CHECK (auth.uid() = user_id);
+USING (
+  auth.uid() = user_id
+  AND EXISTS (
+    SELECT 1 FROM public.enrollments e
+    WHERE e.user_id = auth.uid()
+      AND e.course_id = courses_progress.course_id
+      AND e.status = 'active'
+  )
+)
+WITH CHECK (
+  auth.uid() = user_id
+  AND EXISTS (
+    SELECT 1 FROM public.enrollments e
+    WHERE e.user_id = auth.uid()
+      AND e.course_id = courses_progress.course_id
+      AND e.status = 'active'
+  )
+);
 
 -- Admins can manage all progress records
-CREATE POLICY "Admins can manage all progress"
+CREATE POLICY "courses_progress_admin_all"
 ON courses_progress FOR ALL
 TO authenticated
 USING (
     EXISTS (
-        SELECT 1 FROM users
+        SELECT 1 FROM public.users
+        WHERE id = auth.uid()
+        AND role = 'admin'
+    )
+)
+WITH CHECK (
+    EXISTS (
+        SELECT 1 FROM public.users
         WHERE id = auth.uid()
         AND role = 'admin'
     )

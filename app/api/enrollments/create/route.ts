@@ -77,6 +77,20 @@ export async function POST(req: NextRequest) {
     });
 
     if (insertError) {
+      // Handle unique constraint violation gracefully (idempotent success)
+      const isUniqueViolation =
+        insertError.code === '23505' ||
+        insertError.message?.includes('enrollments_user_id_course_id_key');
+
+      if (isUniqueViolation) {
+        console.log('API: Enrollment already exists (unique violation). Treating as success');
+        return NextResponse.json({
+          success: true,
+          message: 'User already enrolled in this course',
+          alreadyEnrolled: true,
+        });
+      }
+
       console.error('API: Error creating enrollment:', insertError);
       return NextResponse.json({ error: 'Failed to create enrollment record' }, { status: 500 });
     }

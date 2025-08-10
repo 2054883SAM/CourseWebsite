@@ -149,6 +149,39 @@ export async function getEnrolledCourses(
       return { data: [], error: null, count: count ?? 0 };
     }
 
+    // Build a map of persisted progress per course for this user
+    let courseIdToProgress: Record<string, { progress: number; updated_at?: string }> = {};
+    try {
+      const courseIds = data
+        .map((row: any) => (Array.isArray(row.course) ? row.course[0]?.id : row.course?.id))
+        .filter(Boolean);
+      if (courseIds.length > 0) {
+        const { data: progressRows, error: progressError } = await supabase
+          .from('courses_progress')
+          .select('course_id, progress, updated_at')
+          .eq('user_id', userId)
+          .in('course_id', courseIds as string[]);
+
+        if (!progressError && progressRows) {
+          courseIdToProgress = progressRows.reduce(
+            (
+              acc: Record<string, { progress: number; updated_at?: string }>,
+              row: any
+            ) => {
+              acc[row.course_id] = {
+                progress: Number(row.progress ?? 0),
+                updated_at: row.updated_at,
+              };
+              return acc;
+            },
+            {}
+          );
+        }
+      }
+    } catch (e) {
+      console.warn('Could not fetch persistent course progress:', e);
+    }
+
     // Map into your EnrolledCourse shape
     const enrolledCourses: EnrolledCourse[] = data.map((row: any) => {
       // Cast the row data to our expected structure
@@ -172,20 +205,23 @@ export async function getEnrolledCourses(
         playback_id: rawCourseData.playback_id,
       };
 
-      let progress = 0;
-      let lastAccessedAt: string | undefined;
-      try {
-        if (typeof window !== 'undefined') {
-          const key = `course-progress-${courseData.id}`;
-          const saved = localStorage.getItem(key);
-          if (saved) {
-            const obj = JSON.parse(saved);
-            progress = obj.progress ?? 0;
-            lastAccessedAt = obj.lastUpdated;
+      // Prefer persisted DB progress; fallback to localStorage
+      let progress = courseIdToProgress[courseData.id]?.progress ?? 0;
+      let lastAccessedAt: string | undefined = courseIdToProgress[courseData.id]?.updated_at;
+      if (progress === 0 || lastAccessedAt === undefined) {
+        try {
+          if (typeof window !== 'undefined') {
+            const key = `course-progress-${courseData.id}`;
+            const saved = localStorage.getItem(key);
+            if (saved) {
+              const obj = JSON.parse(saved);
+              progress = obj.progress ?? progress;
+              lastAccessedAt = lastAccessedAt ?? obj.lastUpdated;
+            }
           }
+        } catch (e) {
+          console.warn('Could not read local progress:', e);
         }
-      } catch (e) {
-        console.warn('Could not read progress:', e);
       }
 
       // Create the enrolled course object with the correct types
@@ -294,38 +330,58 @@ export async function getEnrolledCourse(
     // Extract the course data from the response (Supabase may return it as an array)
     const courseData = (Array.isArray(data.course) ? data.course[0] : data.course) as CourseData;
 
-    // Get progress from localStorage or would be from database in production
+    // Fetch persisted progress, fallback to localStorage
     let progress = 0;
     let lastAccessedAt: string | undefined;
     try {
-      if (typeof window !== 'undefined') {
-        const key = `course-progress-${courseData.id}`;
-        const saved = localStorage.getItem(key);
-        if (saved) {
-          const obj = JSON.parse(saved);
-          progress = obj.progress ?? 0;
-          lastAccessedAt = obj.lastUpdated;
-        }
+      const { data: progressRow, error: progressError } = await supabase
+        .from('courses_progress')
+        .select('progress, updated_at')
+        .eq('user_id', userId)
+        .eq('course_id', courseData.id)
+        .maybeSingle();
+
+      if (!progressError && progressRow) {
+        progress = Number(progressRow.progress ?? 0);
+        lastAccessedAt = progressRow.updated_at ?? undefined;
       }
     } catch (e) {
-      console.warn('Could not read progress:', e);
+      console.warn('Could not fetch persisted progress:', e);
+    }
+    if (lastAccessedAt === undefined) {
+      try {
+        if (typeof window !== 'undefined') {
+          const key = `course-progress-${courseData.id}`;
+          const saved = localStorage.getItem(key);
+          if (saved) {
+            const obj = JSON.parse(saved);
+            progress = obj.progress ?? progress;
+            lastAccessedAt = obj.lastUpdated ?? lastAccessedAt;
+          }
+        }
+      } catch (e) {
+        console.warn('Could not read local progress:', e);
+      }
     }
 
-    // Update last accessed timestamp
+    // Preserve last accessed timestamp from DB if available; otherwise update local storage now
     const now = new Date().toISOString();
-    try {
-      if (typeof window !== 'undefined') {
-        const key = `course-progress-${courseData.id}`;
-        localStorage.setItem(
-          key,
-          JSON.stringify({
-            progress: progress,
-            lastUpdated: now,
-          })
-        );
+    if (!lastAccessedAt) {
+      try {
+        if (typeof window !== 'undefined') {
+          const key = `course-progress-${courseData.id}`;
+          localStorage.setItem(
+            key,
+            JSON.stringify({
+              progress: progress,
+              lastUpdated: now,
+            })
+          );
+          lastAccessedAt = now;
+        }
+      } catch (e) {
+        console.warn('Could not update last accessed timestamp:', e);
       }
-    } catch (e) {
-      console.warn('Could not update last accessed timestamp:', e);
     }
 
     // Create the enrolled course object with the correct types
@@ -338,7 +394,7 @@ export async function getEnrolledCourse(
       created_at: courseData.created_at,
       creator_id: courseData.creator_id,
       progress: progress,
-      lastAccessedAt: now,
+      lastAccessedAt: lastAccessedAt ?? now,
       // Normalize chapters JSONB -> VideoChapter[] safely
       chapters: normalizeChaptersToVideo((courseData as any).chapters),
       enrollment: {

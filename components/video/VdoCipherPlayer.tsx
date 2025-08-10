@@ -28,6 +28,9 @@ function VdoCipherPlayerComponent({ videoId, watermark, className, chapters = []
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const safeChapters: VideoChapter[] = normalizeChaptersToVideo(chapters);
+  const lastProgressUpdateMsRef = useRef<number>(0);
+  const lastProgressValueRef = useRef<number>(-1);
+  const hasStartedPlayingRef = useRef<boolean>(false);
 
   // This ensures the video is loaded ONCE and never reloaded unless the page refreshes
   useEffect(() => {
@@ -116,6 +119,18 @@ function VdoCipherPlayerComponent({ videoId, watermark, className, chapters = []
         const iframeElement = iframeRef.current; // Store reference for cleanup function
         const vdoPlayer = (window as any).VdoPlayer;
         const player = vdoPlayer.getInstance(iframeElement);
+
+        // Only start persisting after the user clicks Play
+        try {
+          if (player?.video) {
+            const handlePlay = () => {
+              hasStartedPlayingRef.current = true;
+            };
+            player.video.addEventListener('play', handlePlay);
+          }
+        } catch (e) {
+          console.warn('Could not attach play listener:', e);
+        }
         
         // Fetch chapters metadata if not provided as props
         if ((!safeChapters || safeChapters.length === 0) && player.api) {
@@ -135,6 +150,30 @@ function VdoCipherPlayerComponent({ videoId, watermark, className, chapters = []
         // Set up time tracking
         let timeUpdateInterval: NodeJS.Timeout | null = null;
         
+        // Helper to persist progress to API with throttling
+        const persistProgress = async (progressPercentage: number) => {
+          if (!userId || !courseId) return;
+          const now = Date.now();
+          if (now - lastProgressUpdateMsRef.current < 5000) return; // throttle to every 5s
+          if (lastProgressValueRef.current === progressPercentage) return; // avoid duplicate writes
+
+          lastProgressUpdateMsRef.current = now;
+          lastProgressValueRef.current = progressPercentage;
+
+          try {
+            const response = await fetch('/api/courses/progress/update', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ userId, courseId, progress: progressPercentage }),
+            });
+            if (!response.ok) {
+              console.error('Failed to update progress:', await response.text());
+            }
+          } catch (e) {
+            console.error('Error updating progress:', e);
+          }
+        };
+
         // Use the API to regularly check current time
         timeUpdateInterval = setInterval(() => {
           if (iframeElement && (window as any).VdoPlayer) {
@@ -142,19 +181,25 @@ function VdoCipherPlayerComponent({ videoId, watermark, className, chapters = []
               const vdoPlayer = (window as any).VdoPlayer;
               const player = vdoPlayer.getInstance(iframeElement);
               const currentTime = player.video.currentTime;
-              
+              const durationSec = player.video?.duration || duration || 0;
+
               setCurrentTime(currentTime);
-              
+
+              if (durationSec > 0 && userId && courseId && hasStartedPlayingRef.current) {
+                const percent = Math.min(Math.round((currentTime / durationSec) * 100), 100);
+                void persistProgress(percent);
+              }
+
               // If we have chapters, find the current chapter based on time
-               if (safeChapters && safeChapters.length > 0) {
-                 const currentChapter = safeChapters.find((chapter, index) => {
-                   const nextChapter = safeChapters[index + 1];
-                  return chapter.startTime <= currentTime && 
-                    (!nextChapter || currentTime < nextChapter.startTime);
+              if (safeChapters && safeChapters.length > 0) {
+                const currentChapter = safeChapters.find((chapter, index) => {
+                  const nextChapter = safeChapters[index + 1];
+                  return (
+                    chapter.startTime <= currentTime &&
+                    (!nextChapter || currentTime < nextChapter.startTime)
+                  );
                 });
-                
-                // If needed, we could trigger onChapterSeek when current chapter changes
-                // This would allow for highlighting the active chapter
+                // Optional: highlight currentChapter if needed
               }
             } catch (e) {
               console.error('Error getting currentTime from VdoPlayer API:', e);
