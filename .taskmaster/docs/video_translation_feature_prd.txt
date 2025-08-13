@@ -1,0 +1,272 @@
+<context>
+# Overview  
+This feature enhances the course platform by automatically generating subtitles for educational videos in multiple languages (French, English, and Spanish). It solves accessibility problems for hearing-impaired students and expands the potential audience by offering content in multiple languages. The feature targets both course creators who want to reach a wider audience and international students who may prefer content in their native language.
+
+# Core Features  
+1. Automatic Video Transcription
+   - What it does: Generates accurate French transcriptions from uploaded course videos
+   - Why it's important: Creates the foundation for multilingual subtitles and improves accessibility
+   - How it works: Uses OpenAI's Whisper API to convert speech to text with precise timestamps
+
+2. Subtitle Translation
+   - What it does: Translates French subtitles to English and Spanish while preserving timing
+   - Why it's important: Makes content accessible to non-French speakers without manual translation work
+   - How it works: Uses DeepL API to translate VTT content while maintaining timestamp markers
+
+3. Secure Storage Integration
+   - What it does: Stores subtitle files in Supabase with appropriate access controls
+   - Why it's important: Ensures subtitles are only accessible to authorized users
+   - How it works: Implements Row Level Security policies in Supabase storage
+
+4. Video Player Integration
+   - What it does: Makes subtitles available in the VdoCipher video player
+   - Why it's important: Provides seamless viewing experience with multi-language subtitle selection
+   - How it works: Uploads subtitles to VdoCipher and associates them with the video playback ID
+
+# User Experience  
+## User Personas
+1. Course Creator
+   - Uploads video content when creating courses
+   - Receives notification when subtitle processing is complete
+   - Can manually trigger regeneration if needed
+
+2. International Student
+   - Views courses with subtitle language preference
+   - Can toggle between languages during video playback
+   - Experiences improved comprehension through native language subtitles
+
+## Key User Flows
+1. Creator Video Upload Flow
+   - Creator uploads video when creating a course
+   - System automatically begins processing subtitles
+   - Creator can continue course creation without waiting
+   - Creator receives notification when subtitles are ready
+
+2. Student Video Viewing Flow
+   - Student selects a course video to watch
+   - Video player loads with subtitle options
+   - Student can select preferred language from dropdown
+   - Subtitles display synchronously with video content
+
+## UI/UX Considerations
+- Minimal changes to existing upload interface
+- Clear subtitle status indicators during processing
+- Intuitive language selection in video player
+- Responsive subtitle display across devices
+</context>
+<PRD>
+# Technical Architecture  
+## System Components
+1. **Subtitle Generation Service**
+   - Extracts audio from uploaded videos
+   - Interfaces with Whisper API for French transcription
+   - Generates properly formatted VTT files
+
+2. **Translation Service**
+   - Interfaces with DeepL API
+   - Preserves timestamp markers during translation
+   - Generates English and Spanish VTT files
+
+3. **Storage System**
+   - Supabase "translations" bucket with RLS policies
+   - Organized file structure by courseId and videoId
+   - Secure access control based on user roles
+
+4. **VdoCipher Integration**
+   - API connection for subtitle uploads
+   - Association with video playback IDs
+   - Subtitle configuration for player display
+
+## Data Models
+```sql
+-- Subtitle tracking in courses table
+ALTER TABLE courses 
+ADD COLUMN has_subtitles BOOLEAN DEFAULT false,
+ADD COLUMN subtitle_languages JSONB DEFAULT '{"fr": false, "en": false, "es": false}';
+
+-- Subtitle processing tracking table
+CREATE TABLE subtitle_processing (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  course_id UUID REFERENCES courses(id) NOT NULL,
+  video_id VARCHAR NOT NULL,
+  status VARCHAR NOT NULL,
+  progress JSONB DEFAULT '{"fr": "pending", "en": "pending", "es": "pending"}',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+```
+
+## APIs and Integrations
+1. **Internal API Endpoints**
+   - `/api/upload-video/generate-subtitles`: Triggers subtitle generation
+   - `/api/upload-video/subtitle-status`: Checks processing status
+
+2. **External API Integrations**
+   - Whisper API (OpenAI): Speech-to-text transcription
+   - DeepL API: Translation services
+   - VdoCipher API: Video and subtitle management
+
+## Storage Structure
+```
+translations/
+  ├── {courseId}/
+  │   ├── {videoId}/
+  │   │   ├── fr.vtt  (French - original)
+  │   │   ├── en.vtt  (English)
+  │   │   └── es.vtt  (Spanish)
+```
+
+## RLS Policies
+```sql
+-- Enable RLS
+ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
+
+-- Admins have full access
+CREATE POLICY "Admins have full access to translations"
+ON storage.objects FOR ALL
+USING (bucket_id = 'translations' AND auth.role() = 'admin');
+
+-- Creators can access their own course translations
+CREATE POLICY "Creators can access their own course translations"
+ON storage.objects FOR SELECT
+USING (
+  bucket_id = 'translations' AND
+  auth.role() = 'creator' AND
+  (storage.foldername(name))[1] IN (
+    SELECT id::text FROM courses WHERE creator_id = auth.uid()
+  )
+);
+
+-- Students can access translations for enrolled courses
+CREATE POLICY "Students can access translations for enrolled courses"
+ON storage.objects FOR SELECT
+USING (
+  bucket_id = 'translations' AND
+  auth.role() = 'student' AND
+  (storage.foldername(name))[1] IN (
+    SELECT course_id::text FROM enrollments WHERE user_id = auth.uid()
+  )
+);
+```
+
+# Development Roadmap  
+## Phase 1: Foundation and French Transcription
+- Set up Whisper API integration
+- Create audio extraction service
+- Implement French transcription generation
+- Build VTT formatting utility
+- Create database schema updates
+- Develop initial API endpoints
+- Implement basic status tracking
+
+## Phase 2: Translation Integration
+- Set up DeepL API integration
+- Develop VTT parsing/preservation logic
+- Build translation processing queue
+- Implement English and Spanish translation
+- Create error handling and retry mechanisms
+- Add detailed status tracking
+
+## Phase 3: Storage and Security
+- Create Supabase "translations" bucket
+- Implement file organization structure
+- Set up RLS policies
+- Build secure file access mechanisms
+- Test security with different user roles
+- Develop utilities for subtitle management
+
+## Phase 4: VdoCipher Integration
+- Create VdoCipher subtitle upload service
+- Implement subtitle association with videos
+- Build status tracking for VdoCipher operations
+- Test subtitle display in VdoCipher player
+- Handle edge cases and error conditions
+
+## Phase 5: UI Integration
+- Update video upload workflow
+- Add subtitle processing indicators
+- Implement subtitle language selection in player
+- Create subtitle regeneration controls for admins
+- Develop user notifications for completion
+- Comprehensive testing across devices
+
+# Logical Dependency Chain
+1. **Foundation Layer**
+   - Database schema updates must be implemented first
+   - Supabase storage bucket and RLS policies
+   - API endpoint structure and authentication
+
+2. **Core Processing**
+   - Audio extraction from video
+   - French transcription using Whisper
+   - VTT file generation
+
+3. **Enhancement Layer**
+   - Translation service using DeepL
+   - Processing queue for background operations
+   - Status tracking and notifications
+
+4. **Integration Layer**
+   - Supabase storage integration
+   - VdoCipher subtitle upload and association
+   - Video player configuration
+
+5. **User Experience Layer**
+   - Status indicators in UI
+   - Language selection controls
+   - Admin management tools
+
+# Risks and Mitigations  
+## Technical Challenges
+- **Risk**: Whisper API might not provide accurate transcriptions for all accents/languages
+  **Mitigation**: Implement quality checking and manual override options for creators
+
+- **Risk**: Timestamp preservation during translation could be complex
+  **Mitigation**: Develop robust parsing logic and thorough testing with various video formats
+
+- **Risk**: API rate limits or service unavailability
+  **Mitigation**: Implement queuing, retry mechanisms, and fallback options
+
+## Performance Concerns
+- **Risk**: Processing long videos could be time-consuming
+  **Mitigation**: Process asynchronously with background jobs and status updates
+
+- **Risk**: Storage costs could increase significantly
+  **Mitigation**: Implement compression and consider retention policies for unused subtitles
+
+## User Experience
+- **Risk**: Subtitle quality might not meet user expectations
+  **Mitigation**: Allow creators to edit/upload custom subtitles as an alternative
+
+- **Risk**: Synchronization issues between video and subtitles
+  **Mitigation**: Thorough testing and calibration tools for timing adjustments
+
+# Appendix  
+## VTT File Format Example
+```
+WEBVTT
+
+1
+00:00:00.500 --> 00:00:02.000
+Bienvenue dans ce cours.
+
+2
+00:00:02.500 --> 00:00:04.300
+Aujourd'hui, nous allons explorer...
+```
+
+## API Configuration Requirements
+- Whisper API: Need model selection and language settings
+- DeepL API: Account with sufficient translation quota
+- VdoCipher API: Proper authentication and access rights
+
+## Performance Benchmarks
+- Expected processing time: ~1x video duration for transcription
+- Translation: ~1-2 minutes per 5000 characters
+- Total end-to-end processing: ~1.5x video duration + 5 minutes
+
+## Resource Estimation
+- Storage requirements: ~1MB per hour of video per language
+- API costs (estimated):
+  - Whisper: $0.006 per minute of audio
+  - DeepL: ~$20 per million characters

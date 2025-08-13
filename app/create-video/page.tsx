@@ -25,6 +25,7 @@ export default function CreateVideoPage() {
     isFeatured: false,
     thumbnailUrl: '',
     thumbnailDescription: '',
+    primary_language: 'fr' as 'fr' | 'en' | 'es',
     // Nouveaux champs
     ceQueVousAllezApprendre: '',
     prerequis: '',
@@ -38,6 +39,9 @@ export default function CreateVideoPage() {
   const [selectedThumbnail, setSelectedThumbnail] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string>('');
   const [selectedVideo, setSelectedVideo] = useState<File | null>(null);
+  
+
+  // Removed FFmpeg conversion. Deepgram supports common video containers (MP4/MOV) directly.
   const [videoUploadProgress, setVideoUploadProgress] = useState(0);
   const [playbackId, setPlaybackId] = useState<string>('');
   const [chapters, setChapters] = useState<VideoChapter[]>([]);
@@ -149,6 +153,8 @@ export default function CreateVideoPage() {
       console.log('Vidéo sélectionnée:', file.name, 'Taille:', file.size);
     }
   };
+
+  // Removed video->audio conversion. We will send the original video file to Deepgram.
   
   const handleChapterInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -336,6 +342,54 @@ export default function CreateVideoPage() {
         console.warn(`VDOCIPHER: Video still processing after ${elapsedMinutes} minutes. Proceeding with course creation; processing continues in background.`);
       }
 
+      // Final step: Generate and upload captions
+      try {
+        console.log('CAPTIONS: Start generation/upload', {
+          step: 'client-start',
+          primary_language: formData.primary_language,
+          videoId,
+          hasSelectedVideo: !!selectedVideo,
+        });
+        if (!selectedVideo) {
+          console.warn('CAPTIONS: No selected video available for file transcription. Skipping.');
+          throw new Error('No selected video available');
+        }
+        // Send the original video file directly (Deepgram will extract audio)
+        const form = new FormData();
+        form.append('file', selectedVideo);
+        form.append('format', 'vtt');
+        form.append('language', formData.primary_language);
+        console.log('CAPTIONS: Calling deepgram-captions route with multipart form');
+        const capRes = await fetch('/api/upload-video/deepgram-captions', {
+          method: 'POST',
+          body: form,
+        });
+        console.log('CAPTIONS: deepgram-captions response status', capRes.status);
+        if (!capRes.ok) {
+          const t = await capRes.text();
+          console.warn('CAPTIONS: Deepgram generation failed', { status: capRes.status, body: t });
+        } else {
+          const json = await capRes.json();
+          const captions = json?.captions;
+          console.log('CAPTIONS: Generated. Uploading to VdoCipher...', { captionsLength: captions?.length });
+          console.log('CAPTIONS: Calling vdocipher-upload-caption route');
+          const upRes = await fetch('/api/upload-video/vdocipher-upload-caption', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ videoId, captions, language: formData.primary_language }),
+          });
+          console.log('CAPTIONS: vdocipher-upload-caption response status', upRes.status);
+          if (!upRes.ok) {
+            const t = await upRes.text();
+            console.warn('CAPTIONS: VdoCipher upload failed', { status: upRes.status, body: t });
+          } else {
+            console.log('CAPTIONS: Uploaded to VdoCipher successfully');
+          }
+        }
+      } catch (capErr) {
+        console.warn('CAPTIONS: Caption flow error', capErr);
+      }
+
       setVideoUploadProgress(100);
       return videoId; // Use videoId as playback_id
     } catch (err) {
@@ -478,6 +532,7 @@ export default function CreateVideoPage() {
         isFeatured: false,
         thumbnailUrl: '',
         thumbnailDescription: '',
+        primary_language: 'fr',
         ceQueVousAllezApprendre: '',
         prerequis: '',
         publicCible: '',
@@ -618,6 +673,22 @@ export default function CreateVideoPage() {
                       className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all duration-200"
                       placeholder="29.99"
                     />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Langue principale du cours
+                    </label>
+                    <select
+                      name="primary_language"
+                      value={formData.primary_language}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all duration-200"
+                    >
+                      <option value="fr">Français</option>
+                      <option value="en">Anglais</option>
+                      <option value="es">Espagnol</option>
+                    </select>
                   </div>
 
                   <div>

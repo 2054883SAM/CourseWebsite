@@ -13,6 +13,7 @@ export default function TestVdoCipherUploadPage() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [logs, setLogs] = useState<string[]>([]);
   const [result, setResult] = useState<any>(null);
+  const [captionResult, setCaptionResult] = useState<any>(null);
   
   const videoInputRef = useRef<HTMLInputElement>(null);
 
@@ -217,6 +218,56 @@ export default function TestVdoCipherUploadPage() {
     }
   };
 
+  // Step 4/5: Generate captions via Deepgram and upload to VdoCipher for the last uploaded video
+  const generateAndUploadCaptions = async () => {
+    try {
+      setCaptionResult(null);
+      addLog('=== STARTING CAPTION GENERATION ===');
+      if (!result?.videoId) {
+        addLog('ERROR: No videoId available from previous upload');
+        return;
+      }
+
+      // For testing: we need a URL accessible by Deepgram. If your upload is not publicly accessible,
+      // use a sample audio file from Deepgram docs.
+      const sampleUrl = 'https://static.deepgram.com/examples/deep-learning-podcast-clip.wav';
+      addLog('CAPTIONS: Requesting Deepgram transcription (webvtt)...');
+
+      const capRes = await fetch('/api/upload-video/deepgram-captions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: sampleUrl, format: 'vtt' }),
+      });
+
+      if (!capRes.ok) {
+        const t = await capRes.text();
+        throw new Error(`Deepgram captions failed: ${capRes.status} - ${t}`);
+      }
+
+      const { captions } = await capRes.json();
+      addLog('CAPTIONS: Deepgram captions generated. Uploading to VdoCipher...');
+
+      const upRes = await fetch('/api/upload-video/vdocipher-upload-caption', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ videoId: result.videoId, captions, language: 'en' }),
+      });
+
+      if (!upRes.ok) {
+        const t = await upRes.text();
+        throw new Error(`VdoCipher caption upload failed: ${upRes.status} - ${t}`);
+      }
+
+      const upData = await upRes.json();
+      setCaptionResult({ success: true, ...upData });
+      addLog('=== CAPTION UPLOAD COMPLETED ===', upData);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Unknown error';
+      setCaptionResult({ success: false, error: msg });
+      addLog('❌ ERROR: Caption flow failed', { error: msg });
+    }
+  };
+
   const clearLogs = () => {
     setLogs([]);
     setResult(null);
@@ -332,6 +383,14 @@ export default function TestVdoCipherUploadPage() {
                     ) : (
                       '🚀 Start VdoCipher Upload Test'
                     )}
+                  </button>
+                  
+                  <button
+                    onClick={generateAndUploadCaptions}
+                    disabled={isUploading || !result?.videoId}
+                    className="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 transition-all duration-200"
+                  >
+                    Generate & Upload Captions (VTT)
                   </button>
                   
                   <button
