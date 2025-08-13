@@ -276,6 +276,15 @@ export function CourseActions({ course, sections, initialEnrollmentStatus = 'not
   };
 
   const handleEnrollClick = async () => {
+    // Prevent enrollment when using mock data or invalid course id (not a UUID)
+    const usingMock = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
+    const looksLikeUuid = typeof course.id === 'string' && /^[0-9a-fA-F-]{36}$/.test(course.id);
+    if (usingMock || !looksLikeUuid) {
+      setErrorMessage('Enrollment is disabled in mock mode or for invalid course id.');
+      setTooltipMessage('Mock data mode detected');
+      return;
+    }
+
     // If user is already enrolled, navigate to the course content
     if (enrollmentStatus === 'enrolled') {
       // Navigate to the course content page

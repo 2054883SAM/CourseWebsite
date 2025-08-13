@@ -33,6 +33,21 @@ export async function POST(req: NextRequest) {
     // Get the user ID from the session
     const userId = sessionData.session.user.id;
 
+    // Validate that the course exists to avoid FK violations
+    const { data: courseExists, error: courseCheckError } = await supabase
+      .from('courses')
+      .select('id')
+      .eq('id', courseId)
+      .single();
+
+    if (courseCheckError || !courseExists) {
+      console.error('API: Invalid courseId provided for enrollment:', courseId, courseCheckError);
+      return NextResponse.json(
+        { error: 'Invalid courseId. Course does not exist.' },
+        { status: 400 }
+      );
+    }
+
     // Check if enrollment already exists
     const { data: existingEnrollment } = await supabase
       .from('enrollments')

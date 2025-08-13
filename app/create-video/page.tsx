@@ -342,54 +342,6 @@ export default function CreateVideoPage() {
         console.warn(`VDOCIPHER: Video still processing after ${elapsedMinutes} minutes. Proceeding with course creation; processing continues in background.`);
       }
 
-      // Final step: Generate and upload captions
-      try {
-        console.log('CAPTIONS: Start generation/upload', {
-          step: 'client-start',
-          primary_language: formData.primary_language,
-          videoId,
-          hasSelectedVideo: !!selectedVideo,
-        });
-        if (!selectedVideo) {
-          console.warn('CAPTIONS: No selected video available for file transcription. Skipping.');
-          throw new Error('No selected video available');
-        }
-        // Send the original video file directly (Deepgram will extract audio)
-        const form = new FormData();
-        form.append('file', selectedVideo);
-        form.append('format', 'vtt');
-        form.append('language', formData.primary_language);
-        console.log('CAPTIONS: Calling deepgram-captions route with multipart form');
-        const capRes = await fetch('/api/upload-video/deepgram-captions', {
-          method: 'POST',
-          body: form,
-        });
-        console.log('CAPTIONS: deepgram-captions response status', capRes.status);
-        if (!capRes.ok) {
-          const t = await capRes.text();
-          console.warn('CAPTIONS: Deepgram generation failed', { status: capRes.status, body: t });
-        } else {
-          const json = await capRes.json();
-          const captions = json?.captions;
-          console.log('CAPTIONS: Generated. Uploading to VdoCipher...', { captionsLength: captions?.length });
-          console.log('CAPTIONS: Calling vdocipher-upload-caption route');
-          const upRes = await fetch('/api/upload-video/vdocipher-upload-caption', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ videoId, captions, language: formData.primary_language }),
-          });
-          console.log('CAPTIONS: vdocipher-upload-caption response status', upRes.status);
-          if (!upRes.ok) {
-            const t = await upRes.text();
-            console.warn('CAPTIONS: VdoCipher upload failed', { status: upRes.status, body: t });
-          } else {
-            console.log('CAPTIONS: Uploaded to VdoCipher successfully');
-          }
-        }
-      } catch (capErr) {
-        console.warn('CAPTIONS: Caption flow error', capErr);
-      }
-
       setVideoUploadProgress(100);
       return videoId; // Use videoId as playback_id
     } catch (err) {
@@ -468,6 +420,23 @@ export default function CreateVideoPage() {
         videoPlaybackId = await uploadVideoToVdoCipher(selectedVideo);
         setPlaybackId(videoPlaybackId);
         setUploadProgress(80);
+
+        // Generate captions via server (Deepgram) and store .vtt in Supabase 'translations/<courseId>'
+        try {
+          console.log('CAPTIONS: Start generation/upload to Supabase storage via API', {
+            step: 'client-start',
+            primary_language: formData.primary_language,
+            videoId: videoPlaybackId,
+            hasSelectedVideo: !!selectedVideo,
+          });
+          if (!selectedVideo) {
+            console.warn('CAPTIONS: No selected video available for file transcription. Skipping.');
+            throw new Error('No selected video available');
+          }
+          // We don't yet have the courseId until after insertion; call Deepgram after inserting course
+        } catch (capErr) {
+          console.warn('CAPTIONS: Pre-course caption flow note', capErr);
+        }
       }
 
       // Create Paddle price (one-time) for this course price using server API
@@ -517,6 +486,53 @@ export default function CreateVideoPage() {
 
       if (courseError) {
         throw new Error('Erreur lors de la création du cours');
+      }
+
+      // Now that we have course.id, call captions API to generate and store VTT in translations/<courseId>/captions.vtt
+      if (selectedVideo && course?.id) {
+        try {
+          const form = new FormData();
+          form.append('file', selectedVideo);
+          form.append('format', 'vtt');
+          form.append('language', formData.primary_language);
+          form.append('courseId', String(course.id));
+          form.append('videoId', videoPlaybackId);
+          const capRes = await fetch('/api/upload-video/deepgram-captions', {
+            method: 'POST',
+            body: form,
+          });
+          if (!capRes.ok) {
+            const t = await capRes.text();
+            console.warn('CAPTIONS: Deepgram/store failed', { status: capRes.status, body: t });
+          } else {
+            const json = await capRes.json();
+            console.log('CAPTIONS: Stored', json?.storedPath);
+          }
+
+          // FINAL STEP: Translate VTT to the other two languages and upload to VdoCipher as captions
+          try {
+            const translateRes = await fetch('/api/upload-video/translate-and-upload', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                courseId: course.id,
+                videoId: videoPlaybackId,
+                sourceLanguage: formData.primary_language,
+              }),
+            });
+            if (!translateRes.ok) {
+              const body = await translateRes.text();
+              console.warn('CAPTIONS: Translate/upload failed', { status: translateRes.status, body });
+            } else {
+              const data = await translateRes.json();
+              console.log('CAPTIONS: Translate/upload success', data);
+            }
+          } catch (trErr) {
+            console.warn('CAPTIONS: Error in translate/upload step', trErr);
+          }
+        } catch (e) {
+          console.warn('CAPTIONS: Error generating/storing captions', e);
+        }
       }
 
       setUploadProgress(100);

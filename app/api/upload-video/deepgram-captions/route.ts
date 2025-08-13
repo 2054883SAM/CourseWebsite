@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
 import { getDeepgramClient } from '@/lib/deepgram/client';
-// Server now requires MP3 input. Client converts video → mp3 before calling this route.
+import { createRouteHandlerClient } from '@/lib/supabase/server';
 
 /**
  * POST /api/upload-video/deepgram-captions
  * Accepts multipart/form-data only:
- * - { file: File (audio/mp3), format?: 'vtt'|'srt', language?: 'en'|'fr'|'es' }
+  * - { file: File (audio/video e.g. mp4/mov), format?: 'vtt'|'srt', language?: 'en'|'fr'|'es', courseId?: string, videoId?: string }
  * Returns: { captions: string, format: 'vtt' | 'srt' }
  */
 export async function POST(req: Request) {
@@ -31,6 +31,8 @@ export async function POST(req: Request) {
     const file = form.get('file') as File | null;
     const formatField = (form.get('format') as string) || 'vtt';
     const langField = (form.get('language') as string) || undefined;
+    const courseId = (form.get('courseId') as string) || undefined;
+    const videoId = (form.get('videoId') as string) || undefined;
     format = (formatField === 'srt' ? 'srt' : 'vtt');
     language = langField;
     console.log('[Deepgram Captions] multipart inputs:', {
@@ -39,6 +41,8 @@ export async function POST(req: Request) {
       fileSize: file ? `${file.size} bytes` : 'n/a',
       format,
       language,
+      courseId,
+      videoId,
     });
     if (!file) {
       return NextResponse.json({ error: 'Missing file' }, { status: 400 });
@@ -101,7 +105,57 @@ export async function POST(req: Request) {
     }
     console.log('[Deepgram Captions] Captions length:', captions?.length);
 
-    return NextResponse.json({ captions, format }, { status: 200 });
+    // If VTT and courseId provided, store file in Supabase Storage bucket 'translations' under <courseId>/captions.vtt
+    let storedPath: string | undefined;
+    if (captions && format === 'vtt' && courseId) {
+      try {
+        const supabase = await createRouteHandlerClient();
+        const filePath = `${courseId}/captions.vtt`;
+        const body = new Blob([captions], { type: 'text/vtt' });
+        const { error: uploadError } = await supabase.storage
+          .from('translations')
+          .upload(filePath, body, { upsert: true, contentType: 'text/vtt' });
+        if (uploadError) {
+          console.warn('[Deepgram Captions] Storage upload failed:', uploadError.message);
+        } else {
+          storedPath = filePath;
+          console.log('[Deepgram Captions] Stored captions at', filePath);
+        }
+      } catch (storageErr) {
+        console.warn('[Deepgram Captions] Error storing captions to Supabase:', storageErr);
+      }
+    }
+
+    // If we have a videoId and VTT captions (and a language), publish original to VdoCipher
+    if (captions && format === 'vtt' && language && videoId) {
+      try {
+        const API_SECRET = process.env.VDO_API_SECRET;
+        if (!API_SECRET) {
+          console.error('[Deepgram Captions] Missing VDO_API_SECRET; skipping VdoCipher upload');
+        } else {
+          const fd = new FormData();
+          const fileObj = new File([captions], 'captions.vtt', { type: 'text/vtt' });
+          fd.append('file', fileObj);
+          const url = `https://dev.vdocipher.com/api/videos/${encodeURIComponent(videoId)}/files?language=${encodeURIComponent(language)}`;
+          console.log('[Deepgram Captions] Uploading original captions to VdoCipher', { url });
+          const vdoRes = await fetch(url, {
+            method: 'POST',
+            headers: { Authorization: `Apisecret ${API_SECRET}` },
+            body: fd,
+          });
+          if (!vdoRes.ok) {
+            const txt = await vdoRes.text();
+            console.warn('[Deepgram Captions] VdoCipher upload failed', vdoRes.status, txt);
+          } else {
+            console.log('[Deepgram Captions] VdoCipher upload success');
+          }
+        }
+      } catch (vdoErr) {
+        console.warn('[Deepgram Captions] Error uploading original captions to VdoCipher:', vdoErr);
+      }
+    }
+
+    return NextResponse.json({ captions, format, storedPath }, { status: 200 });
   } catch (err) {
     console.error('[Deepgram Captions] Unexpected error:', err);
     return NextResponse.json({ error: err instanceof Error ? err.message : 'Unknown error' }, { status: 500 });
