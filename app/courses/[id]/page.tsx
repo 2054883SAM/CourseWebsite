@@ -8,14 +8,13 @@ import { Section } from '@/components/layout/Section';
 import { Breadcrumbs } from '../components/Breadcrumbs';
 import { CourseHeader } from './components/CourseHeader';
 import { CourseOverview } from './components/CourseOverview';
-import { CourseCurriculum } from './components/CourseCurriculum';
 import { InstructorInfo } from './components/InstructorInfo';
 import { RelatedCourses } from './components/RelatedCourses';
 import { CourseDetailSkeleton } from './components/CourseDetailSkeleton';
 import { CourseActions } from './components/CourseActions';
-import { getCourseById, getCourseSections, getCourses, shouldUseMockData, mockData } from '@/lib/supabase';
+import { getCourseById, getCourses, shouldUseMockData, mockData } from '@/lib/supabase';
 import { withAuth } from '@/components/auth/withAuth';
-import { Course, Section as CourseSection } from '@/lib/supabase/types';
+import { Course } from '@/lib/supabase/types';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { checkEnrollmentStatus } from '@/lib/supabase/enrollments';
 
@@ -34,7 +33,6 @@ function CourseDetailPage({ params }: PageProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [course, setCourse] = useState<Course | null>(null);
-  const [sections, setSections] = useState<CourseSection[]>([]);
   const [relatedCourses, setRelatedCourses] = useState<Course[]>([]);
   const [lastFetchTime, setLastFetchTime] = useState(0);
   const [isEnrolled, setIsEnrolled] = useState(false);
@@ -87,17 +85,6 @@ function CourseDetailPage({ params }: PageProps) {
       if (!mounted) return;
       setCourse(courseData);
 
-      // Get sections data
-      const sectionsData = shouldUseMockData()
-        ? mockData.mockSections.filter(s => s.course_id === id)
-        : await getCourseSections(id);
-
-      if (!mounted) return;
-
-      // Sort sections by order
-      const sortedSections = [...sectionsData].sort((a, b) => a.order - b.order);
-      setSections(sortedSections);
-
       // Get related courses
       const relatedCoursesData = shouldUseMockData()
         ? mockData.mockCourses
@@ -118,7 +105,6 @@ function CourseDetailPage({ params }: PageProps) {
 
       setError('Failed to load course. Please try again.');
       setCourse(null);
-      setSections([]);
       setRelatedCourses([]);
     } finally {
       if (mounted) setLoading(false);
@@ -207,10 +193,7 @@ function CourseDetailPage({ params }: PageProps) {
                 {/* Course Overview */}
                 <CourseOverview course={course} />
                 
-                {/* Course Curriculum */}
-                <div className="mt-8">
-                  <CourseCurriculum sections={sections} />
-                </div>
+                {/* Course Curriculum removed (no sections) */}
                 
                 {/* Instructor Info */}
                 <div className="mt-8">
@@ -222,7 +205,6 @@ function CourseDetailPage({ params }: PageProps) {
               <div className="lg:col-span-1">
                 <CourseActions 
                   course={course} 
-                  sections={sections} 
                   initialEnrollmentStatus={isCheckingEnrollment ? 'processing' : (isEnrolled ? 'enrolled' : 'not-enrolled')} 
                 />
               </div>

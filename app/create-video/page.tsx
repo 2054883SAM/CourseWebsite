@@ -39,11 +39,15 @@ export default function CreateVideoPage() {
   const [selectedThumbnail, setSelectedThumbnail] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string>('');
   const [selectedVideo, setSelectedVideo] = useState<File | null>(null);
+  const [videoDurationSeconds, setVideoDurationSeconds] = useState<number | null>(null);
+  const [vdoCipherDurationSeconds, setVdoCipherDurationSeconds] = useState<number | null>(null);
   
 
   // Removed FFmpeg conversion. Deepgram supports common video containers (MP4/MOV) directly.
   const [videoUploadProgress, setVideoUploadProgress] = useState(0);
   const [playbackId, setPlaybackId] = useState<string>('');
+  const [translationProgress, setTranslationProgress] = useState(0);
+  const translationProgressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [chapters, setChapters] = useState<VideoChapter[]>([]);
   const [currentChapter, setCurrentChapter] = useState<Omit<VideoChapter, 'id'> & { startTimeFormatted: string, durationFormatted: string }>({
     title: '',
@@ -151,6 +155,26 @@ export default function CreateVideoPage() {
     if (file) {
       setSelectedVideo(file);
       console.log('Vidéo sélectionnée:', file.name, 'Taille:', file.size);
+
+      // Try to read duration from the local file metadata
+      try {
+        const url = URL.createObjectURL(file);
+        const videoEl = document.createElement('video');
+        videoEl.preload = 'metadata';
+        videoEl.onloadedmetadata = () => {
+          const durationSec = videoEl.duration;
+          if (!isNaN(durationSec) && isFinite(durationSec) && durationSec > 0) {
+            setVideoDurationSeconds(Math.round(durationSec));
+          }
+          URL.revokeObjectURL(url);
+        };
+        videoEl.onerror = () => {
+          URL.revokeObjectURL(url);
+        };
+        videoEl.src = url;
+      } catch (_) {
+        // Ignore failures to read metadata
+      }
     }
   };
 
@@ -335,6 +359,11 @@ export default function CreateVideoPage() {
         } else if (statusData.status === 'Error' || statusData.status === 'Failed') {
           throw new Error(`Video processing failed with status: ${statusData.status}`);
         }
+
+        // Capture duration from VdoCipher status if available
+        if (typeof statusData.duration === 'number' && statusData.duration > 0) {
+          setVdoCipherDurationSeconds(statusData.duration);
+        }
       }
 
       if (!videoReady) {
@@ -461,30 +490,58 @@ export default function CreateVideoPage() {
         paddlePriceId = priceId || null;
       }
 
+      // Compute course duration in minutes (prefer local file metadata, fallback to VdoCipher)
+      let durationMinutes: number | null = null;
+      const durationSecondsCandidate = videoDurationSeconds ?? vdoCipherDurationSeconds ?? null;
+      if (durationSecondsCandidate && durationSecondsCandidate > 0) {
+        durationMinutes = Math.max(1, Math.round(durationSecondsCandidate / 60));
+      }
+
       // Créer le cours dans la base de données
-      const { data: course, error: courseError } = await supabase
+      const courseInsertPayload: Record<string, any> = {
+        title: formData.title,
+        description: formData.description,
+        price: parseFloat(formData.price) || 0,
+        thumbnail_url: thumbnailUrl || null,
+        thumbnail_description: formData.thumbnailDescription || null,
+        creator_id: user.id,
+        is_featured: formData.isFeatured,
+        ce_que_vous_allez_apprendre: formData.ceQueVousAllezApprendre || null,
+        prerequis: formData.prerequis || null,
+        public_cible: formData.publicCible || null,
+        niveau_difficulte: formData.niveauDifficulte,
+        playback_id: videoPlaybackId, // Stocker le videoId VdoCipher comme playback_id
+        chapters: chapters.length > 0 ? JSON.stringify(chapters) : null, // Stocker les chapitres au format JSON
+        paddle_price_id: paddlePriceId,
+      };
+      if (durationMinutes != null) {
+        courseInsertPayload.duration = durationMinutes;
+      }
+
+      let { data: course, error: courseError } = await supabase
         .from('courses')
-        .insert({
-          title: formData.title,
-          description: formData.description,
-          price: parseFloat(formData.price) || 0,
-          thumbnail_url: thumbnailUrl || null,
-          thumbnail_description: formData.thumbnailDescription || null,
-          creator_id: user.id,
-          is_featured: formData.isFeatured,
-          ce_que_vous_allez_apprendre: formData.ceQueVousAllezApprendre || null,
-          prerequis: formData.prerequis || null,
-          public_cible: formData.publicCible || null,
-          duree_estimee: formData.dureeEstimee || null,
-          niveau_difficulte: formData.niveauDifficulte,
-          playback_id: videoPlaybackId, // Stocker le videoId VdoCipher comme playback_id
-          chapters: chapters.length > 0 ? JSON.stringify(chapters) : null, // Stocker les chapitres au format JSON
-          paddle_price_id: paddlePriceId,
-        })
+        .insert(courseInsertPayload)
         .select()
         .single();
 
+      // If the DB doesn't have the duration column yet, retry without it
+      if (courseError && durationMinutes != null &&
+          typeof courseError.message === 'string' &&
+          (courseError.message.includes('duration') || courseError.message.includes('42703'))) {
+        console.warn('Insert failed due to duration column. Retrying without duration field.', courseError);
+        const retryPayload = { ...courseInsertPayload };
+        delete (retryPayload as any).duration;
+        const retry = await supabase
+          .from('courses')
+          .insert(retryPayload)
+          .select()
+          .single();
+        course = retry.data;
+        courseError = retry.error;
+      }
+
       if (courseError) {
+        console.error('Course insert error details:', courseError);
         throw new Error('Erreur lors de la création du cours');
       }
 
@@ -511,6 +568,15 @@ export default function CreateVideoPage() {
 
           // FINAL STEP: Translate VTT to the other two languages and upload to VdoCipher as captions
           try {
+            // Start translation progress indicator
+            setTranslationProgress(5);
+            if (translationProgressIntervalRef.current) {
+              clearInterval(translationProgressIntervalRef.current as unknown as number);
+            }
+            translationProgressIntervalRef.current = setInterval(() => {
+              setTranslationProgress(prev => (prev < 95 ? prev + 2 : prev));
+            }, 1000);
+
             const translateRes = await fetch('/api/upload-video/translate-and-upload', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -526,9 +592,18 @@ export default function CreateVideoPage() {
             } else {
               const data = await translateRes.json();
               console.log('CAPTIONS: Translate/upload success', data);
+              setTranslationProgress(100);
+            }
+            if (translationProgressIntervalRef.current) {
+              clearInterval(translationProgressIntervalRef.current as unknown as number);
+              translationProgressIntervalRef.current = null;
             }
           } catch (trErr) {
             console.warn('CAPTIONS: Error in translate/upload step', trErr);
+            if (translationProgressIntervalRef.current) {
+              clearInterval(translationProgressIntervalRef.current as unknown as number);
+              translationProgressIntervalRef.current = null;
+            }
           }
         } catch (e) {
           console.warn('CAPTIONS: Error generating/storing captions', e);
@@ -560,6 +635,9 @@ export default function CreateVideoPage() {
       setThumbnailPreview('');
       setPlaybackId('');
       setVideoUploadProgress(0);
+      setVideoDurationSeconds(null);
+      setVdoCipherDurationSeconds(null);
+      setTranslationProgress(0);
       setChapters([]);
       setCurrentChapter({
         title: '',
@@ -631,6 +709,24 @@ export default function CreateVideoPage() {
                     </div>
                   </div>
                 )}
+                {translationProgress > 0 && translationProgress < 100 && (
+                  <div className="mt-4">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs text-gray-600 dark:text-gray-400">
+                        Traduction des sous-titres...
+                      </span>
+                      <span className="text-xs text-purple-600 dark:text-purple-400">
+                        {translationProgress}%
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-1 dark:bg-gray-700">
+                      <div 
+                        className="bg-purple-500 h-1 rounded-full transition-all duration-300"
+                        style={{ width: `${translationProgress}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -693,7 +789,7 @@ export default function CreateVideoPage() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Langue principale du cours
+                      Langue principale du cours *
                     </label>
                     <select
                       name="primary_language"
@@ -789,20 +885,6 @@ export default function CreateVideoPage() {
                       placeholder="À qui s'adresse ce cours ?"
                     />
                   </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Durée estimée
-                    </label>
-                    <input
-                      type="text"
-                      name="dureeEstimee"
-                      value={formData.dureeEstimee}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all duration-200"
-                      placeholder="Ex: 2 heures, 30 minutes"
-                    />
-                  </div>
                 </div>
               </div>
 
@@ -838,20 +920,6 @@ export default function CreateVideoPage() {
                       onChange={handleThumbnailChange}
                       accept="image/*"
                       className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all duration-200"
-                    />
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Description courte de l&apos;image
-                    </label>
-                    <input
-                      type="text"
-                      name="thumbnailDescription"
-                      value={formData.thumbnailDescription}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all duration-200"
-                      placeholder="Description de l'image pour l'accessibilité"
                     />
                   </div>
 

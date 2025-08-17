@@ -2,19 +2,18 @@
 
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useRouter } from 'next/navigation';
-import { Course, Section } from '@/lib/supabase/types';
+import { Course } from '@/lib/supabase/types';
 import EnrollButton from '@/components/courses/EnrollButton';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { verifyEnrollmentEligibility, checkEnrollmentStatus } from '@/lib/supabase/enrollments';
 import { initiateCheckout } from '@/lib/supabase/checkout';
 
 interface CourseActionsProps {
   course: Course;
-  sections: Section[];
   initialEnrollmentStatus?: 'enrolled' | 'not-enrolled' | 'processing';
 }
 
-export function CourseActions({ course, sections, initialEnrollmentStatus = 'not-enrolled' }: CourseActionsProps) {
+export function CourseActions({ course, initialEnrollmentStatus = 'not-enrolled' }: CourseActionsProps) {
   const { user, dbUser, loading: authLoading } = useAuth();
   const router = useRouter();
   const [enrollmentStatus, setEnrollmentStatus] = useState<
@@ -24,6 +23,9 @@ export function CourseActions({ course, sections, initialEnrollmentStatus = 'not
   const [tooltipMessage, setTooltipMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [paddleLoaded, setPaddleLoaded] = useState(false);
+  const [showEnrollmentProgress, setShowEnrollmentProgress] = useState(false);
+  const [showEnrollmentSuccess, setShowEnrollmentSuccess] = useState(false);
+  const finalizingRef = useRef(false);
 
   // Sync status and tooltip with parent-provided enrollment status
   useEffect(() => {
@@ -112,27 +114,59 @@ export function CourseActions({ course, sections, initialEnrollmentStatus = 'not
                 data?.id || 
                 `paddle_${Date.now()}`;
               console.log('Transaction ID from event:', transactionId);
-              
-              // Create enrollment record
-              createEnrollmentRecord(transactionId).then(success => {
-                if (success) {
-                  // Update UI to reflect successful enrollment
-                  setEnrollmentStatus('enrolled');
-                  setTooltipMessage("You're enrolled in this course");
-                  
-                  // Refresh the page to show enrolled content
-                  setTimeout(() => {
-                    router.refresh();
-                  }, 1000);
+
+              // Prevent duplicate handling
+              if (finalizingRef.current) {
+                return;
+              }
+              finalizingRef.current = true;
+              setEnrollmentStatus('processing');
+              setTooltipMessage('Finalizing your enrollment...');
+
+              // After 2s, close checkout and begin enrollment record creation with a progress UI
+              setTimeout(() => {
+                try {
+                  if (typeof window !== 'undefined' && window.Paddle?.Checkout?.close) {
+                    window.Paddle.Checkout.close();
+                  }
+                } catch (e) {
+                  console.warn('Failed to programmatically close Paddle checkout:', e);
                 }
-              }).catch(error => {
-                console.error('Error creating enrollment from event:', error);
-              });
+                setShowEnrollmentProgress(true);
+
+                createEnrollmentRecord(transactionId)
+                  .then(success => {
+                    setShowEnrollmentProgress(false);
+                    if (success) {
+                      setEnrollmentStatus('enrolled');
+                      setTooltipMessage("You're enrolled in this course");
+                      setShowEnrollmentSuccess(true);
+                    } else {
+                      setEnrollmentStatus('not-enrolled');
+                      setErrorMessage('We could not finalize your enrollment. Please try again.');
+                      setTooltipMessage('Click to try enrolling again');
+                    }
+                  })
+                  .catch(error => {
+                    console.error('Error creating enrollment from event:', error);
+                    setShowEnrollmentProgress(false);
+                    setEnrollmentStatus('not-enrolled');
+                    setErrorMessage('An error occurred while finalizing your enrollment.');
+                    setTooltipMessage('Click to try enrolling again');
+                  })
+                  .finally(() => {
+                    finalizingRef.current = false;
+                  });
+              }, 2000);
             }
             
             // Handle checkout:closed event
             if (data.name === 'checkout.closed') {
               console.log('Checkout closed event received');
+              // If we closed it programmatically to finalize enrollment, don't override state
+              if (finalizingRef.current || showEnrollmentProgress) {
+                return;
+              }
               setEnrollmentStatus('not-enrolled');
               setTooltipMessage('Click to try enrolling again');
             }
@@ -431,10 +465,10 @@ export function CourseActions({ course, sections, initialEnrollmentStatus = 'not
     }
   };
 
-  // Calculate total duration from sections
-  const totalDuration = Math.round(
-    sections.reduce((total, section) => total + (section.duration || 0), 0) / 60
-  );
+  // Derive total duration from course if available (fallback 0)
+  const totalDuration = typeof (course as any).duration === 'number'
+    ? Math.round(((course as any).duration as number))
+    : 0;
 
   // Don't show anything until enrollment is checked to prevent UI flickering
   if (!isEnrollmentChecked && !authLoading) {
@@ -468,16 +502,12 @@ export function CourseActions({ course, sections, initialEnrollmentStatus = 'not
           onClick={handleEnrollClick}
           disabled={authLoading || enrollmentStatus === 'processing'}
           tooltipText={enrollmentStatus === 'enrolled' ? 'Go to course' : (!paddleLoaded ? 'Payment system is loading...' : tooltipMessage)}
-          enrolledText="Watch Course"
+          enrolledText="Watch now"
           className="w-full"
         />
       </div>
 
       <div className="space-y-4 text-sm">
-        <div className="flex justify-between">
-          <span className="text-gray-600">Sections totales :</span>
-          <span className="font-semibold">{sections.length}</span>
-        </div>
         <div className="flex justify-between">
           <span className="text-gray-600">Durée totale :</span>
           <span className="font-semibold">{totalDuration} min</span>
@@ -493,6 +523,50 @@ export function CourseActions({ course, sections, initialEnrollmentStatus = 'not
           </div>
         )}
       </div>
+
+      {/* Enrollment progress overlay */}
+      {showEnrollmentProgress && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+            <div className="mb-4 text-lg font-semibold">Finalizing your enrollment…</div>
+            <p className="mb-4 text-sm text-gray-600">This usually takes just a moment.</p>
+            <div className="h-2 w-full overflow-hidden rounded bg-gray-200">
+              <div className="h-2 w-1/2 animate-pulse rounded bg-blue-600"></div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Enrollment success dialog */}
+      {showEnrollmentSuccess && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+            <div className="mb-2 text-lg font-semibold">You are enrolled! 🎉</div>
+            <p className="mb-6 text-sm text-gray-700">You now have access to {course.title}. Start learning right away.</p>
+            <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+              <button
+                onClick={() => {
+                  setShowEnrollmentSuccess(false);
+                  router.push(`/learning/${course.id}`);
+                }}
+                className="w-full rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 sm:w-auto"
+              >
+                Start learning
+              </button>
+              <button
+                onClick={() => {
+                  setShowEnrollmentSuccess(false);
+                  // Keep user on the page but refresh to reflect access
+                  router.refresh();
+                }}
+                className="w-full rounded border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50 sm:w-auto"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

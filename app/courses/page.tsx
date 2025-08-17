@@ -13,6 +13,7 @@ import { Section } from '@/components/layout/Section';
 import { withAuth } from '@/components/auth/withAuth';
 import { Course } from '@/lib/supabase/types';
 import { useSearchParams } from 'next/navigation';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 type SearchParams = {
   view?: 'grid' | 'list';
@@ -31,6 +32,10 @@ function CoursesPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [lastFetchTime, setLastFetchTime] = useState(0);
+
+  // Deletion lifecycle state
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<{ status: number; message: string } | null>(null);
 
   // Add requireAuth constant since we know this page doesn't require auth
   const requireAuth = false;
@@ -147,6 +152,20 @@ function CoursesPage() {
     setCourses((prev) => prev.filter((c) => c.id !== deletedId));
   };
 
+  const handleDeleteStart = () => {
+    setDeleteError(null);
+    setIsDeleting(true);
+  };
+
+  const handleDeleteEnd = () => {
+    setIsDeleting(false);
+  };
+
+  const handleDeleteError = (status: number, message: string) => {
+    setIsDeleting(false);
+    setDeleteError({ status, message });
+  };
+
   return (
     <PageLayout>
       <Section className="bg-gradient-gray py-20">
@@ -204,9 +223,23 @@ function CoursesPage() {
           <div className="animate-fade-in-up relative z-0" style={{ animationDelay: '0.6s' }}>
             <Suspense fallback={view === 'grid' ? <CourseGridSkeleton /> : <CourseListSkeleton />}>
               {view === 'grid' ? (
-                <CourseGridView courses={courses} searchQuery={query} onCourseDeleted={handleCourseDeleted} />
+                <CourseGridView 
+                  courses={courses} 
+                  searchQuery={query} 
+                  onCourseDeleted={handleCourseDeleted}
+                  onDeleteStart={handleDeleteStart}
+                  onDeleteEnd={handleDeleteEnd}
+                  onDeleteError={handleDeleteError}
+                />
               ) : (
-                <CourseListView courses={courses} searchQuery={query} onCourseDeleted={handleCourseDeleted} />
+                <CourseListView 
+                  courses={courses} 
+                  searchQuery={query} 
+                  onCourseDeleted={handleCourseDeleted}
+                  onDeleteStart={handleDeleteStart}
+                  onDeleteEnd={handleDeleteEnd}
+                  onDeleteError={handleDeleteError}
+                />
               )}
             </Suspense>
           </div>
@@ -242,6 +275,69 @@ function CoursesPage() {
           )}
         </div>
       </Section>
+
+      {/* Deletion loading overlay */}
+      {isDeleting && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-4 p-6 rounded-xl bg-white/90 dark:bg-gray-800/90 shadow-xl">
+            <LoadingSpinner size="large" color="blue" />
+            {/* Spinning bar */}
+            <div className="w-56 h-2 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
+              <div className="h-full rounded-full bg-gradient-to-r from-gray-300 via-gray-500 to-gray-300 loading-bar"></div>
+            </div>
+            <p className="text-sm text-gray-700 dark:text-gray-300">Suppression du cours en cours…</p>
+            <style jsx>{`
+              @keyframes indeterminate {
+                0% { transform: translateX(-100%); }
+                50% { transform: translateX(0%); }
+                100% { transform: translateX(100%); }
+              }
+              .loading-bar {
+                width: 40%;
+                animation: indeterminate 1.1s ease-in-out infinite;
+              }
+            `}</style>
+          </div>
+        </div>
+      )}
+
+      {/* Deletion error friendly modal */}
+      {deleteError && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="max-w-md w-full mx-4 rounded-2xl bg-white dark:bg-gray-800 p-6 shadow-2xl text-center">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20 mb-4">
+              <svg className="h-8 w-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Impossible de supprimer le cours</h3>
+            <p className="text-gray-600 dark:text-gray-300 mb-3">
+              {deleteError.status >= 500 || deleteError.status === -1 ? 'Une erreur serveur est survenue.' : 'Une erreur est survenue.'}
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-6">
+              {deleteError.status > 0 ? `Code ${deleteError.status}` : 'Code inconnu'} · {deleteError.message}
+            </p>
+            <div className="flex items-center justify-center gap-3">
+              <button
+                onClick={() => setDeleteError(null)}
+                className="px-5 py-2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+              >
+                Fermer
+              </button>
+              <button
+                onClick={() => {
+                  setDeleteError(null);
+                  setLoading(true);
+                  fetchCourses(true);
+                }}
+                className="px-5 py-2 rounded-full bg-gradient-to-r from-gray-600 to-gray-800 text-white font-semibold shadow hover:from-gray-700 hover:to-gray-900 transition"
+              >
+                Rafraîchir la liste
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </PageLayout>
   );
 }

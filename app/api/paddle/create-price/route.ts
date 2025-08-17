@@ -76,6 +76,11 @@ export async function POST(req: NextRequest) {
         amount: String(amountCents),
         currency_code: currency,
       },
+      // Enforce one-time purchase quantity to exactly 1 (disables +/- in checkout)
+      quantity: {
+        minimum: 1,
+        maximum: 1,
+      },
       // Omit billing_cycle for one-time price
       tax_mode: 'account_setting',
     } as const;

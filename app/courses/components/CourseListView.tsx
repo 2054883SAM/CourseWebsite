@@ -8,9 +8,12 @@ interface CourseListViewProps {
   courses: Course[];
   searchQuery?: string;
   onCourseDeleted?: (id: string) => void;
+  onDeleteStart?: () => void;
+  onDeleteEnd?: () => void;
+  onDeleteError?: (status: number, message: string) => void;
 }
 
-export function CourseListView({ courses, searchQuery = '', onCourseDeleted }: CourseListViewProps) {
+export function CourseListView({ courses, searchQuery = '', onCourseDeleted, onDeleteStart, onDeleteEnd, onDeleteError }: CourseListViewProps) {
   if (courses.length === 0) {
     return (
       <div className="text-center py-12">
@@ -28,7 +31,15 @@ export function CourseListView({ courses, searchQuery = '', onCourseDeleted }: C
   return (
     <div className="space-y-4">
       {courses.map((course) => (
-        <CourseListItem key={course.id} course={course} searchQuery={searchQuery} onDeleted={onCourseDeleted} />
+        <CourseListItem 
+          key={course.id} 
+          course={course} 
+          searchQuery={searchQuery} 
+          onDeleted={onCourseDeleted}
+          onDeleteStart={onDeleteStart}
+          onDeleteEnd={onDeleteEnd}
+          onDeleteError={onDeleteError}
+        />
       ))}
     </div>
   );
@@ -38,24 +49,34 @@ interface CourseListItemProps {
   course: Course;
   searchQuery?: string;
   onDeleted?: (id: string) => void;
+  onDeleteStart?: () => void;
+  onDeleteEnd?: () => void;
+  onDeleteError?: (status: number, message: string) => void;
 }
 
-function CourseListItem({ course, searchQuery = '', onDeleted }: CourseListItemProps) {
+function CourseListItem({ course, searchQuery = '', onDeleted, onDeleteStart, onDeleteEnd, onDeleteError }: CourseListItemProps) {
   const { dbUser } = useAuth();
 
   const handleDelete = async () => {
     if (!confirm('Supprimer ce cours ? Cette action est irréversible.')) return;
-    const res = await fetch(`/api/courses/${course.id}/delete`, {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ courseId: course.id }),
-    });
-    if (res.ok) {
-      onDeleted?.(course.id);
-    } else {
-      const { error } = await res.json().catch(() => ({ error: 'Delete failed' }));
-      alert(error || 'Delete failed');
+    try {
+      onDeleteStart?.();
+      const res = await fetch(`/api/courses/${course.id}/delete`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ courseId: course.id }),
+      });
+      if (res.ok) {
+        onDeleted?.(course.id);
+      } else {
+        const { error } = await res.json().catch(() => ({ error: 'Delete failed' }));
+        onDeleteError?.(res.status, error || 'Delete failed');
+      }
+    } catch (e: any) {
+      onDeleteError?.(-1, e?.message || 'Delete failed');
+    } finally {
+      onDeleteEnd?.();
     }
   };
 
