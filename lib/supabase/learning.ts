@@ -25,7 +25,6 @@ interface CourseData {
   title: string;
   description: string;
   thumbnail_url: string;
-  price: number;
   created_at: string;
   creator_id: string;
   playback_id?: string;
@@ -120,7 +119,6 @@ export async function getEnrolledCourses(
           title,
           description,
           thumbnail_url,
-          price,
           created_at,
           creator_id,
           playback_id
@@ -199,7 +197,6 @@ export async function getEnrolledCourses(
         title: rawCourseData.title,
         description: rawCourseData.description,
         thumbnail_url: rawCourseData.thumbnail_url,
-        price: rawCourseData.price,
         created_at: rawCourseData.created_at,
         creator_id: rawCourseData.creator_id,
         playback_id: rawCourseData.playback_id,
@@ -230,7 +227,6 @@ export async function getEnrolledCourses(
         title: courseData.title,
         description: courseData.description,
         thumbnail_url: courseData.thumbnail_url,
-        price: courseData.price,
         created_at: courseData.created_at,
         creator_id: courseData.creator_id,
         progress: progress,
@@ -304,7 +300,6 @@ export async function getEnrolledCourse(
           title,
           description,
           thumbnail_url,
-          price,
           created_at,
           creator_id,
           playback_id,

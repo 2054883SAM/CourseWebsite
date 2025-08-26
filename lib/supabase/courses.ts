@@ -19,8 +19,6 @@ export async function getCourses(params?: CourseSearchParams): Promise<Course[]>
     const {
       query = '',
       creator_id,
-      min_price,
-      max_price,
       sort_by = 'created_at',
       sort_order = 'desc',
       page = 1,
@@ -42,13 +40,7 @@ export async function getCourses(params?: CourseSearchParams): Promise<Course[]>
       queryBuilder = queryBuilder.eq('creator_id', creator_id);
     }
 
-    if (min_price !== undefined) {
-      queryBuilder = queryBuilder.gte('price', min_price);
-    }
-
-    if (max_price !== undefined) {
-      queryBuilder = queryBuilder.lte('price', max_price);
-    }
+    // Price fields removed from schema; skip price filters
 
     // Apply sorting, pagination
     queryBuilder = queryBuilder

@@ -53,7 +53,7 @@ export async function getCourseCreators(): Promise<User[]> {
     const { data, error } = await supabase
       .from('users')
       .select('*')
-      .eq('role', 'creator');
+      .eq('role', 'teacher');
 
     if (error) throw error;
     return data as User[];
@@ -150,7 +150,7 @@ export async function updateEnrollmentStatus(
 /**
  * Check if a user has a specific role
  */
-export async function checkUserRole(userId: string, role: 'admin' | 'creator' | 'student'): Promise<boolean> {
+export async function checkUserRole(userId: string, role: 'admin' | 'teacher' | 'student'): Promise<boolean> {
   try {
     const { data, error } = await supabase
       .from('users')
@@ -171,7 +171,7 @@ export async function checkUserRole(userId: string, role: 'admin' | 'creator' | 
  */
 export async function updateUserRole(
   userId: string, 
-  newRole: 'admin' | 'creator' | 'student'
+  newRole: 'admin' | 'teacher' | 'student'
 ): Promise<User | null> {
   try {
     // First verify the current user is an admin
@@ -198,7 +198,7 @@ export async function updateUserRole(
 /**
  * Get all users with a specific role
  */
-export async function getUsersByRole(role: 'admin' | 'creator' | 'student'): Promise<User[]> {
+export async function getUsersByRole(role: 'admin' | 'teacher' | 'student'): Promise<User[]> {
   try {
     const { data, error } = await supabase
       .from('users')
@@ -224,7 +224,7 @@ export async function isAdmin(userId: string): Promise<boolean> {
  * Check if a user is a course creator
  */
 export async function isCreator(userId: string): Promise<boolean> {
-  return checkUserRole(userId, 'creator');
+  return checkUserRole(userId, 'teacher');
 }
 
 /**

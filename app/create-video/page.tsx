@@ -21,7 +21,6 @@ export default function CreateVideoPage() {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    price: '',
     isFeatured: false,
     thumbnailUrl: '',
     thumbnailDescription: '',
@@ -106,7 +105,7 @@ export default function CreateVideoPage() {
     );
   }
 
-  if (!['admin', 'creator'].includes(dbUser.role)) {
+  if (!['admin', 'teacher'].includes(dbUser.role)) {
     return (
       <PageLayout>
         <Section className="py-8">
@@ -116,7 +115,7 @@ export default function CreateVideoPage() {
                 Accès non autorisé
               </div>
               <p className="text-gray-600 dark:text-gray-400">
-                Seuls les administrateurs et les créateurs peuvent créer des cours.
+                Seuls les administrateurs et les enseignants peuvent créer des cours.
               </p>
               <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
                 Votre rôle actuel: {dbUser.role}
@@ -468,27 +467,7 @@ export default function CreateVideoPage() {
         }
       }
 
-      // Create Paddle price (one-time) for this course price using server API
-      const priceFloat = parseFloat(formData.price);
-      if (!isNaN(priceFloat) && priceFloat > 0) {
-        setUploadProgress(85);
-        const amountCents = Math.round(priceFloat * 100);
-        const createPriceRes = await fetch('/api/paddle/create-price', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            amountCents,
-            currency: 'USD',
-            courseTitle: formData.title?.trim() || undefined,
-          }),
-        });
-        if (!createPriceRes.ok) {
-          const errText = await createPriceRes.text();
-          throw new Error(`Création du prix Paddle échouée: ${createPriceRes.status} - ${errText}`);
-        }
-        const { priceId } = await createPriceRes.json();
-        paddlePriceId = priceId || null;
-      }
+      // No per-course Paddle pricing anymore
 
       // Compute course duration in minutes (prefer local file metadata, fallback to VdoCipher)
       let durationMinutes: number | null = null;
@@ -501,7 +480,6 @@ export default function CreateVideoPage() {
       const courseInsertPayload: Record<string, any> = {
         title: formData.title,
         description: formData.description,
-        price: parseFloat(formData.price) || 0,
         thumbnail_url: thumbnailUrl || null,
         thumbnail_description: formData.thumbnailDescription || null,
         creator_id: user.id,
@@ -512,7 +490,6 @@ export default function CreateVideoPage() {
         niveau_difficulte: formData.niveauDifficulte,
         playback_id: videoPlaybackId, // Stocker le videoId VdoCipher comme playback_id
         chapters: chapters.length > 0 ? JSON.stringify(chapters) : null, // Stocker les chapitres au format JSON
-        paddle_price_id: paddlePriceId,
       };
       if (durationMinutes != null) {
         courseInsertPayload.duration = durationMinutes;
@@ -619,7 +596,6 @@ export default function CreateVideoPage() {
       setFormData({
         title: '',
         description: '',
-        price: '',
         isFeatured: false,
         thumbnailUrl: '',
         thumbnailDescription: '',
@@ -770,22 +746,7 @@ export default function CreateVideoPage() {
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Prix (en dollars) *
-                    </label>
-                    <input
-                      type="number"
-                      name="price"
-                      value={formData.price}
-                      onChange={handleInputChange}
-                      required
-                      min="0"
-                      step="0.01"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all duration-200"
-                      placeholder="29.99"
-                    />
-                  </div>
+                  {/* Price field removed from schema */}
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">

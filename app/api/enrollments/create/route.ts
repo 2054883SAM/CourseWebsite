@@ -4,17 +4,17 @@ import { createRouteHandlerClient } from '@/lib/supabase/server';
 export async function POST(req: NextRequest) {
   try {
     // Parse the request body
-    const { courseId, paddleTransactionId } = await req.json();
+    const { courseId } = await req.json();
 
-    if (!courseId || !paddleTransactionId) {
+    if (!courseId) {
       return NextResponse.json(
-        { error: 'Missing required fields: courseId and paddleTransactionId' },
+        { error: 'Missing required field: courseId' },
         { status: 400 }
       );
     }
 
     console.log('API: Creating enrollment record for course:', courseId);
-    console.log('API: Paddle transaction ID:', paddleTransactionId);
+    // Note: payment provider transaction tracking removed from schema
 
     // Create a Supabase client with the proper route handler
     const supabase = await createRouteHandlerClient();
@@ -32,6 +32,24 @@ export async function POST(req: NextRequest) {
 
     // Get the user ID from the session
     const userId = sessionData.session.user.id;
+
+    // Fetch user membership (and role if needed)
+    const { data: userRow } = await supabase
+      .from('users')
+      .select('membership, role')
+      .eq('id', userId)
+      .single();
+
+    // If membership is free, block enrollment via this endpoint
+    // Subscribed members should get an actual enrollment record upon clicking enroll
+    if (userRow?.membership === 'free') {
+      return NextResponse.json(
+        { error: 'Subscription required to enroll', membership: 'free', redirect: '/payment' },
+        { status: 403 }
+      );
+    }
+
+    // For subscribed membership (especially students), proceed to ensure an active enrollment row exists
 
     // Validate that the course exists to avoid FK violations
     const { data: courseExists, error: courseCheckError } = await supabase
@@ -57,14 +75,13 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (existingEnrollment) {
-      console.log('API: Enrollment already exists, updating with transaction ID');
+      console.log('API: Enrollment already exists, ensuring status active');
 
       // Update existing enrollment with the transaction ID
       const { error: updateError } = await supabase
         .from('enrollments')
         .update({
           status: 'active',
-          paddle_transaction_id: paddleTransactionId,
           enrolled_at: new Date().toISOString(),
         })
         .eq('user_id', userId)
@@ -86,8 +103,7 @@ export async function POST(req: NextRequest) {
     const { error: insertError } = await supabase.from('enrollments').insert({
       user_id: userId,
       course_id: courseId,
-      paddle_transaction_id: paddleTransactionId,
-      status: 'active', // Use 'active' instead of 'paid' to match the schema update
+      status: 'active',
       enrolled_at: new Date().toISOString(),
     });
 

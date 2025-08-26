@@ -12,7 +12,8 @@ export interface Database {
       users: {
         Row: {
           id: string
-          role: 'admin' | 'creator' | 'student'
+          role: 'admin' | 'teacher' | 'student'
+          membership: 'free' | 'subscribed'
           name: string
           email: string
           photo_url: string | null
@@ -21,7 +22,8 @@ export interface Database {
         }
         Insert: {
           id: string
-          role: 'admin' | 'creator' | 'student'
+          role: 'admin' | 'teacher' | 'student'
+          membership?: 'free' | 'subscribed'
           name: string
           email: string
           photo_url?: string | null
@@ -30,7 +32,8 @@ export interface Database {
         }
         Update: {
           id?: string
-          role?: 'admin' | 'creator' | 'student'
+          role?: 'admin' | 'teacher' | 'student'
+          membership?: 'free' | 'subscribed'
           name?: string
           email?: string
           photo_url?: string | null
@@ -45,7 +48,6 @@ export interface Database {
           description: string
           thumbnail_url: string | null
           thumbnail_description: string | null
-          price: number
           creator_id: string
           created_at: string
           is_featured: boolean
@@ -62,7 +64,6 @@ export interface Database {
           description: string
           thumbnail_url?: string | null
           thumbnail_description?: string | null
-          price: number
           creator_id: string
           created_at?: string
           is_featured?: boolean
@@ -79,7 +80,6 @@ export interface Database {
           description?: string
           thumbnail_url?: string | null
           thumbnail_description?: string | null
-          price?: number
           creator_id?: string
           created_at?: string
           is_featured?: boolean
@@ -152,21 +152,21 @@ export interface Database {
           user_id: string
           course_id: string
           enrolled_at: string
-          payment_status: 'paid' | 'pending'
+          status: 'active' | 'refunded' | 'disputed'
         }
         Insert: {
           id?: string
           user_id: string
           course_id: string
           enrolled_at?: string
-          payment_status?: 'paid' | 'pending'
+          status?: 'active' | 'refunded' | 'disputed'
         }
         Update: {
           id?: string
           user_id?: string
           course_id?: string
           enrolled_at?: string
-          payment_status?: 'paid' | 'pending'
+          status?: 'active' | 'refunded' | 'disputed'
         }
       }
     }

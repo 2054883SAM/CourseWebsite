@@ -58,9 +58,7 @@ function CourseCard({ course }: { course: Course }) {
           </div>
         )}
         
-        <div className="absolute bottom-0 right-0 bg-blue-600 text-white px-2 py-1 text-xs font-semibold">
-          ${course.price.toFixed(2)}
-        </div>
+        {/* Price removed */}
       </div>
       
       <div className="p-3">

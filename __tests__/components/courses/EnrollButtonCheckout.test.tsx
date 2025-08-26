@@ -36,14 +36,14 @@ describe('EnrollButton Checkout Integration', () => {
     title: 'Test Course',
     description: 'Test Description',
     thumbnail_url: '/test.jpg',
-    price: 29.99,
+    // price removed
     creator_id: 'creator-1',
     created_at: '2023-01-01',
     creator: { 
       id: 'creator-1', 
       name: 'Test Creator', 
       email: 'creator@test.com',
-      role: 'creator' as const, // Use 'as const' to ensure it's the literal type
+      role: 'teacher' as const, // updated role name
       created_at: '2023-01-01'
     },
   };

@@ -3,9 +3,11 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/lib/auth/AuthContext';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export function SignUp() {
   const { signUp } = useAuth();
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -25,10 +27,11 @@ export function SignUp() {
         setError(error.message);
       } else {
         setSuccess(true);
-        // Clear form
+        // Clear form and redirect to homepage
         setEmail('');
         setPassword('');
         setName('');
+        router.push('/');
       }
     } catch (err) {
       setError('An unexpected error occurred. Please try again.');

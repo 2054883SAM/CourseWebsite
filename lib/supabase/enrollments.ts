@@ -50,6 +50,29 @@ export async function verifyEnrollmentEligibility(
   userRole?: string,
   courseId?: string
 ) {
+  // If user has active subscription (membership=subscribed), allow free enrollment
+  try {
+    if (userId) {
+      const supabase = createBrowserClient<Database>(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
+      const { data: u } = await supabase
+        .from('users')
+        .select('membership')
+        .eq('id', userId)
+        .single();
+      if (u?.membership === 'subscribed') {
+        return {
+          status: 'not-enrolled',
+          message: 'Subscription active: click to enroll for free',
+          canEnroll: true,
+        } as const;
+      }
+    }
+  } catch (e) {
+    // Non-fatal; continue to normal checks
+  }
   // No user ID means not authenticated
   if (!userId) {
     return {
@@ -69,13 +92,35 @@ export async function verifyEnrollmentEligibility(
   }
 
   // Check if user has appropriate role
-  if (userRole !== 'admin' && userRole !== 'creator' && userRole !== 'student') {
+  if (userRole !== 'admin' && userRole !== 'teacher' && userRole !== 'student') {
     return {
       status: 'not-enrolled',
       message: 'Your account type cannot enroll in courses',
       canEnroll: false,
     };
   }
+
+  // If user explicitly has free membership, direct them to subscribe
+  try {
+    if (userId) {
+      const supabase = createBrowserClient<Database>(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
+      const { data: u } = await supabase
+        .from('users')
+        .select('membership')
+        .eq('id', userId)
+        .single();
+      if (u?.membership === 'free') {
+        return {
+          status: 'not-enrolled',
+          message: 'Subscribe to get access to all courses',
+          canEnroll: false,
+        } as const;
+      }
+    }
+  } catch {}
 
   // Check if the user is already enrolled
   try {

@@ -62,10 +62,7 @@ export function CourseHeader({ course }: CourseHeaderProps) {
               </div>
             )}
             
-            <div className="flex items-center">
-              <span className="text-gray-600 mr-1">Prix :</span>
-              <span className="font-medium">${course.price.toFixed(2)}</span>
-            </div>
+            {/* Price removed from schema */}
             
             <div className="flex items-center">
               <span className="text-gray-600 mr-1">Sections :</span>

@@ -96,11 +96,7 @@ function CourseListItem({ course, searchQuery = '', onDeleted, onDeleteStart, on
               <span className="text-gray-400 dark:text-gray-500">No image</span>
             </div>
           )}
-          {dbUser ? (
-            <div className="absolute bottom-0 right-0 bg-gradient-to-r from-gray-600 to-gray-800 text-white px-2 py-1 text-sm font-semibold">
-              ${course.price.toFixed(2)}
-            </div>
-          ) : (
+          {!dbUser && (
             <div className="absolute bottom-0 right-0 bg-green-600 text-white px-2 py-1 text-sm font-semibold">
               Sign in to enroll
             </div>

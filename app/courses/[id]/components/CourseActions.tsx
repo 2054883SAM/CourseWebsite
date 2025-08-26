@@ -231,9 +231,9 @@ export function CourseActions({ course, initialEnrollmentStatus = 'not-enrolled'
   }, [user, dbUser, course.id, authLoading, initialEnrollmentStatus, isEnrollmentChecked]);
 
   // Create an enrollment record in the database
-  const createEnrollmentRecord = async (paddleTransactionId: string) => {
+  const createEnrollmentRecord = async (_transactionId: string) => {
     try {
-      console.log('Creating enrollment record with transaction ID:', paddleTransactionId);
+      console.log('Creating enrollment record...');
 
       const response = await fetch('/api/enrollments/create', {
         method: 'POST',
@@ -242,7 +242,6 @@ export function CourseActions({ course, initialEnrollmentStatus = 'not-enrolled'
         },
         body: JSON.stringify({
           courseId: course.id,
-          paddleTransactionId,
         }),
       });
 
@@ -329,6 +328,33 @@ export function CourseActions({ course, initialEnrollmentStatus = 'not-enrolled'
     // Clear any previous errors
     setErrorMessage(null);
 
+    // Membership-based gating:
+    // Free membership: redirect to payment page to subscribe
+    if (dbUser?.membership === 'free') {
+      router.push('/payment');
+      return;
+    }
+
+    // If user is subscribed, enroll directly without payment
+    if (dbUser?.membership === 'subscribed') {
+      try {
+        setEnrollmentStatus('processing');
+        const success = await createEnrollmentRecord('subscription');
+        if (success) {
+          setEnrollmentStatus('enrolled');
+          setTooltipMessage("You're enrolled in this course");
+          router.refresh();
+        } else {
+          setEnrollmentStatus('not-enrolled');
+          setErrorMessage('Could not finalize your enrollment. Please try again.');
+        }
+      } catch (e: any) {
+        setEnrollmentStatus('not-enrolled');
+        setErrorMessage(e?.message || 'An error occurred while enrolling');
+      }
+      return;
+    }
+
     // Verify Paddle is loaded
     if (!paddleLoaded) {
       console.error('Paddle is not loaded yet');
@@ -346,7 +372,7 @@ export function CourseActions({ course, initialEnrollmentStatus = 'not-enrolled'
     // Check role eligibility
     if (
       !dbUser?.role ||
-      (dbUser.role !== 'admin' && dbUser.role !== 'creator' && dbUser.role !== 'student')
+      (dbUser.role !== 'admin' && dbUser.role !== 'teacher' && dbUser.role !== 'student')
     ) {
       setErrorMessage('Your account does not have permission to enroll in courses');
       console.error('Your account does not have permission to enroll in courses');
@@ -359,9 +385,10 @@ export function CourseActions({ course, initialEnrollmentStatus = 'not-enrolled'
     try {
       console.log('Initiating checkout for course:', course.id);
 
-      // Check if we have a direct paddle_price_id available
-      if (course.paddle_price_id) {
-        console.log('Using direct Paddle checkout with price ID:', course.paddle_price_id);
+      // Check if we have a global Paddle price ID available
+      const configuredPriceId = process.env.NEXT_PUBLIC_PADDLE_COURSE_PRICE_ID;
+      if (configuredPriceId) {
+        console.log('Using Paddle checkout with configured price ID:', configuredPriceId);
 
         // Open Paddle checkout directly using the price ID from the course
         if (typeof window !== 'undefined' && window.Paddle) {
@@ -402,7 +429,7 @@ export function CourseActions({ course, initialEnrollmentStatus = 'not-enrolled'
             },
             items: [
               {
-                priceId: course.paddle_price_id,
+                priceId: configuredPriceId,
                 quantity: 1,
               },
             ]
@@ -413,11 +440,9 @@ export function CourseActions({ course, initialEnrollmentStatus = 'not-enrolled'
           
           return;
         }
-      } else {
-        console.log('No paddle_price_id found');
       }
 
-      // Fall back to the API-based checkout if no paddle_price_id is available
+      // Fall back to the API-based checkout if no configured price ID is available
       const result = await initiateCheckout(course.id);
       console.log('Checkout result:', result);
 
@@ -487,7 +512,7 @@ export function CourseActions({ course, initialEnrollmentStatus = 'not-enrolled'
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-md">
-      <div className="mb-4 text-2xl font-bold">${course.price.toFixed(2)}</div>
+      {/* Price removed from schema; consider showing category or duration instead */}
 
       {/* Error message display */}
       {errorMessage && (
@@ -505,6 +530,36 @@ export function CourseActions({ course, initialEnrollmentStatus = 'not-enrolled'
           enrolledText="Watch now"
           className="w-full"
         />
+        {enrollmentStatus === 'enrolled' && (
+          <button
+            onClick={async () => {
+              try {
+                console.log('Unenrolling from course');
+                setErrorMessage(null);
+                setEnrollmentStatus('processing');
+                const res = await fetch('/api/enrollments/delete', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ courseId: course.id }),
+                });
+                const data = await res.json().catch(() => ({}));
+                console.log('Unenrollment response:', data);
+                if (!res.ok || !data?.success) {
+                  throw new Error(data?.error || 'Failed to unenroll from course');
+                }
+                setEnrollmentStatus('not-enrolled');
+                setTooltipMessage('Click to enroll in this course');
+                router.refresh();
+              } catch (e: any) {
+                setEnrollmentStatus('enrolled');
+                setErrorMessage(e?.message || 'Could not unenroll at this time.');
+              }
+            }}
+            className="mt-3 w-full rounded border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+          >
+            Unenroll from course
+          </button>
+        )}
       </div>
 
       <div className="space-y-4 text-sm">

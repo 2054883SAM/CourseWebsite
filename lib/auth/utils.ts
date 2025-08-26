@@ -10,9 +10,9 @@ export const checkPermission = (user: UserWithRole | null, requiredRole: Role): 
   switch (requiredRole) {
     case 'admin':
       return user.role === 'admin';
-    case 'creator':
-      // Admins can do everything creators can
-      return user.role === 'admin' || user.role === 'creator';
+    case 'teacher':
+      // Admins can do everything teachers can
+      return user.role === 'admin' || user.role === 'teacher';
     case 'student':
       // All authenticated users can access student content
       return true;
@@ -27,7 +27,7 @@ export const checkPermission = (user: UserWithRole | null, requiredRole: Role): 
  */
 export const getRoleFlags = (user: UserWithRole | null) => ({
   isAdmin: user?.role === 'admin',
-  isCreator: user?.role === 'admin' || user?.role === 'creator',
+  isCreator: user?.role === 'admin' || user?.role === 'teacher',
   isStudent: !!user?.role,
 });
 

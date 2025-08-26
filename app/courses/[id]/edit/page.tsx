@@ -23,7 +23,6 @@ function EditCoursePage({ params }: PageProps) {
   // Form state
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [price, setPrice] = useState<string>('');
   const [currency, setCurrency] = useState<string>('USD');
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
 
@@ -41,7 +40,7 @@ function EditCoursePage({ params }: PageProps) {
         setCourse(data);
         setTitle(data.title || '');
         setDescription(data.description || '');
-        setPrice(data.price != null ? String(data.price) : '');
+        // price removed from schema
       } catch (e) {
         console.error(e);
         if (mounted) setError('Failed to load course');
@@ -118,41 +117,15 @@ function EditCoursePage({ params }: PageProps) {
       }
 
       // Update Supabase course fields first
-      const newPriceNumber = Number(price);
-      if (Number.isNaN(newPriceNumber) || newPriceNumber < 0) {
-        throw new Error('Le prix doit être un nombre valide');
-      }
-
       const { error: updateErr } = await supabase
         .from('courses')
         .update({
           title: title.trim(),
           description: description.trim(),
-          price: newPriceNumber,
           thumbnail_url: thumbnailUrlToUse ?? null,
         })
         .eq('id', course.id);
       if (updateErr) throw new Error(updateErr.message);
-
-      // If price changed and paddle_price_id exists, PATCH Paddle price
-      const priceChanged = newPriceNumber !== course.price;
-      if (priceChanged && course.paddle_price_id) {
-        const amountCents = Math.round(newPriceNumber * 100);
-        const resp = await fetch(`/api/paddle/prices/${course.paddle_price_id}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            unit_price: {
-              amount: String(amountCents),
-              currency_code: currency || 'USD',
-            },
-          }),
-        });
-        if (!resp.ok) {
-          const j = await resp.json().catch(() => ({}));
-          throw new Error(j?.error || 'Paddle price update failed');
-        }
-      }
 
       setSuccessMsg('Cours mis à jour avec succès');
       // Refresh and redirect back to course page after a short delay
@@ -220,18 +193,6 @@ function EditCoursePage({ params }: PageProps) {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="sm:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Prix</label>
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-              className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2"
-              required
-            />
-          </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Devise</label>
             <select

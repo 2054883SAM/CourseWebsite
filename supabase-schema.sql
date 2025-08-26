@@ -1,7 +1,8 @@
 -- Create tables first
 CREATE TABLE users (
     id UUID PRIMARY KEY REFERENCES auth.users(id),
-    role TEXT NOT NULL CHECK (role IN ('admin', 'creator', 'student')),
+    role TEXT NOT NULL CHECK (role IN ('admin', 'teacher', 'student')),
+    membership TEXT NOT NULL DEFAULT 'free' CHECK (membership IN ('free', 'subscribed')),
     name TEXT NOT NULL,
     email TEXT NOT NULL,
     photo_url TEXT,
@@ -14,7 +15,6 @@ CREATE TABLE courses (
     description TEXT NOT NULL,
     thumbnail_url TEXT,
     thumbnail_description TEXT,
-    price NUMERIC NOT NULL,
     creator_id UUID REFERENCES users(id) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
     is_featured BOOLEAN DEFAULT false,
@@ -24,7 +24,6 @@ CREATE TABLE courses (
     public_cible TEXT,
     duree_estimee TEXT,
     niveau_difficulte TEXT CHECK (niveau_difficulte IN ('debutant', 'intermediaire', 'avance')),
-    paddle_price_id TEXT,
     playback_id TEXT,
     duration NUMERIC,
     chapters JSONB DEFAULT '[]'::jsonb
@@ -35,7 +34,6 @@ CREATE TABLE enrollments (
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   course_id UUID NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
   enrolled_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  paddle_transaction_id TEXT,
   status TEXT NOT NULL CHECK (status IN ('active', 'refunded', 'disputed')),
   UNIQUE (user_id, course_id)
 );
@@ -95,34 +93,34 @@ ON courses FOR SELECT
 TO authenticated, anon
 USING (true);
 
--- Admins and creators can create courses
-CREATE POLICY "Admins and creators can create courses."
+-- Admins and teachers can create courses
+CREATE POLICY "Admins and teachers can create courses."
 ON courses FOR INSERT
 TO authenticated
 WITH CHECK (
     EXISTS (
         SELECT 1 FROM users
         WHERE id = (select auth.uid())
-        AND (role = 'admin' OR role = 'creator')
+        AND (role = 'admin' OR role = 'teacher')
     )
 );
 
--- Admins can update any course, creators can update their own courses
-CREATE POLICY "Admins can update any course, creators their own."
+-- Admins can update any course, teachers can update their own courses
+CREATE POLICY "Admins can update any course, teachers their own."
 ON courses FOR UPDATE
 TO authenticated
 USING (
     EXISTS (
         SELECT 1 FROM users
         WHERE id = (select auth.uid())
-        AND (role = 'admin' OR (role = 'creator' AND id = courses.creator_id))
+        AND (role = 'admin' OR (role = 'teacher' AND id = courses.creator_id))
     )
 )
 WITH CHECK (
     EXISTS (
         SELECT 1 FROM users
         WHERE id = (select auth.uid())
-        AND (role = 'admin' OR (role = 'creator' AND id = courses.creator_id))
+        AND (role = 'admin' OR (role = 'teacher' AND id = courses.creator_id))
     )
 );
 
@@ -195,6 +193,19 @@ USING (
         AND role = 'admin'
     )
 ); 
+
+-- Students can delete their own enrollments
+CREATE POLICY "Students can delete their own enrollments."
+ON enrollments FOR DELETE
+TO authenticated
+USING (
+    (select auth.uid()) = user_id 
+    AND EXISTS (
+        SELECT 1 FROM users
+        WHERE id = (select auth.uid())
+        AND role = 'student'
+    )
+);
 
 -- Create courses_progress table
 CREATE TABLE courses_progress (
@@ -296,16 +307,15 @@ ON CONFLICT (id) DO UPDATE SET public = true;
 -- Ensure RLS is enabled on storage objects
 ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
 
--- Storage policies for course-thumbnails bucket
--- Allow creators and admins to upload course thumbnails
-CREATE POLICY "Allow creators and admins to upload course thumbnails" ON storage.objects
+-- Allow teachers and admins to upload course thumbnails
+CREATE POLICY "Allow teachers and admins to upload course thumbnails" ON storage.objects
 FOR INSERT WITH CHECK (
   bucket_id = 'course-thumbnails' 
   AND auth.role() = 'authenticated'
   AND EXISTS (
     SELECT 1 FROM users 
     WHERE id = auth.uid() 
-    AND role IN ('admin', 'creator')
+    AND role IN ('admin', 'teacher')
   )
 );
 
@@ -313,15 +323,15 @@ FOR INSERT WITH CHECK (
 CREATE POLICY "Allow public read access to course thumbnails" ON storage.objects
 FOR SELECT USING (bucket_id = 'course-thumbnails');
 
--- Allow creators and admins to update course thumbnails
-CREATE POLICY "Allow creators and admins to update course thumbnails" ON storage.objects
+-- Allow teachers and admins to update course thumbnails
+CREATE POLICY "Allow teachers and admins to update course thumbnails" ON storage.objects
 FOR UPDATE USING (
   bucket_id = 'course-thumbnails' 
   AND auth.role() = 'authenticated'
   AND EXISTS (
     SELECT 1 FROM users 
     WHERE id = auth.uid() 
-    AND role IN ('admin', 'creator')
+    AND role IN ('admin', 'teacher')
   )
 ) WITH CHECK (
   bucket_id = 'course-thumbnails' 
@@ -329,18 +339,18 @@ FOR UPDATE USING (
   AND EXISTS (
     SELECT 1 FROM users 
     WHERE id = auth.uid() 
-    AND role IN ('admin', 'creator')
+    AND role IN ('admin', 'teacher')
   )
 );
 
--- Allow creators and admins to delete course thumbnails
-CREATE POLICY "Allow creators and admins to delete course thumbnails" ON storage.objects
+-- Allow teachers and admins to delete course thumbnails
+CREATE POLICY "Allow teachers and admins to delete course thumbnails" ON storage.objects
 FOR DELETE USING (
   bucket_id = 'course-thumbnails' 
   AND auth.role() = 'authenticated'
   AND EXISTS (
     SELECT 1 FROM users 
     WHERE id = auth.uid() 
-    AND role IN ('admin', 'creator')
+    AND role IN ('admin', 'teacher')
   )
 );

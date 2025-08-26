@@ -20,7 +20,7 @@ export const useIsRole = (role: Role) => {
 
 // Convenience hooks for common role checks
 export const useIsAdmin = () => useIsRole('admin');
-export const useIsCreator = () => useIsRole('creator');
+export const useIsCreator = () => useIsRole('teacher');
 export const useIsStudent = () => useIsRole('student');
 
 /**

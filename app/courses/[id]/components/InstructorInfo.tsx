@@ -54,7 +54,7 @@ export function InstructorInfo({ creator }: InstructorInfoProps) {
           <div>
             <h3 className="text-lg font-semibold mb-1 text-gray-900 dark:text-white">{creator.name}</h3>
             <p className="text-blue-600 dark:text-blue-400 font-medium mb-2 capitalize">
-              {creator.role === 'creator' ? 'Créateur de cours' : creator.role === 'admin' ? 'Administrateur' : 'Étudiant'}
+              {creator.role === 'teacher' ? 'Enseignant' : creator.role === 'admin' ? 'Administrateur' : 'Étudiant'}
             </p>
             
             <div className="flex items-center mt-3">

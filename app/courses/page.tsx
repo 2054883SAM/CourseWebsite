@@ -43,8 +43,6 @@ function CoursesPage() {
   const view = searchParams.get('view') || 'grid';
   const query = searchParams.get('query') || '';
   const creator = searchParams.get('creator') || undefined;
-  const min_price = searchParams.get('min_price') || undefined;
-  const max_price = searchParams.get('max_price') || undefined;
   const sort = searchParams.get('sort') || undefined;
   const order = (searchParams.get('order') as 'asc' | 'desc') || undefined;
   const page = searchParams.get('page') || '1';
@@ -64,8 +62,7 @@ function CoursesPage() {
         : await getCourses({
           query,
           creator_id: creator,
-          min_price: min_price ? parseFloat(min_price) : undefined,
-          max_price: max_price ? parseFloat(max_price) : undefined,
+          // price-based filters removed
           sort_by: sort as any,
           sort_order: order,
           page: parseInt(page),
@@ -84,7 +81,7 @@ function CoursesPage() {
     } finally {
       if (mounted) setLoading(false);
     }
-  }, [query, creator, min_price, max_price, sort, order, page]);
+  }, [query, creator, sort, order, page]);
 
   // Effect for initial load and filter changes
   useEffect(() => {

@@ -51,7 +51,7 @@ erDiagram
         UUID course_id FK
         TIMESTAMP created_at
         TIMESTAMP updated_at
-        TEXT paddle_transaction_id
+        -- TEXT paddle_transaction_id (removed)
         TEXT status
     }
 ```
@@ -64,7 +64,8 @@ erDiagram
 
 **Fields**:
 - `id` (UUID, Primary Key): Links to auth.users, serving as the user's unique identifier
-- `role` (TEXT, NOT NULL): User's role - must be one of: 'admin', 'creator', 'student'
+- `role` (TEXT, NOT NULL): User's role - must be one of: 'admin', 'teacher', 'student'
+- `membership` (TEXT, NOT NULL, DEFAULT 'free'): must be one of: 'free', 'subscribed'
 - `name` (TEXT, NOT NULL): User's full name
 - `email` (TEXT, NOT NULL): User's email address
 - `photo_url` (TEXT): Optional URL to the user's profile photo
@@ -83,13 +84,13 @@ erDiagram
 - `title` (TEXT, NOT NULL): Course title
 - `description` (TEXT, NOT NULL): Course description
 - `thumbnail_url` (TEXT): Optional URL to course thumbnail image
-- `price` (NUMERIC, NOT NULL): Course price in default currency
+- -- price removed from schema
 - `creator_id` (UUID, NOT NULL): Foreign key reference to the creator's user ID
 - `created_at` (TIMESTAMP WITH TIME ZONE, NOT NULL): When the course was created
 
 **Indexes**:
 - Primary Key on `id`
-- Index on `creator_id` for efficient querying of a creator's courses
+- Index on `creator_id` for efficient querying of a teacher's courses
 
 ### 3. Sections Table
 
@@ -135,7 +136,7 @@ erDiagram
 - `course_id` (UUID, NOT NULL): Foreign key reference to the course ID
 - `created_at` (TIMESTAMP WITH TIME ZONE, NOT NULL): When the enrollment was created
 - `updated_at` (TIMESTAMP WITH TIME ZONE, NOT NULL): When the enrollment was last updated
-- `paddle_transaction_id` (TEXT): Optional payment transaction reference
+- -- paddle_transaction_id removed from schema
 - `status` (TEXT, NOT NULL): Enrollment status - must be one of: 'active', 'refunded', 'disputed'
 
 **Indexes**:

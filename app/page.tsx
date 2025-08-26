@@ -128,9 +128,7 @@ function Home() {
                     {course.description}
                   </p>
                   <div className="flex items-center justify-between">
-                    <span className="text-2xl font-bold text-gold-600 dark:text-gold-400">
-                      ${course.price.toFixed(2)}
-                    </span>
+                    {/* Price removed from schema */}
                     <Link
                       href={`/courses/${course.id}`}
                       className="inline-flex h-10 items-center justify-center rounded-full bg-gradient-to-r from-gray-600 to-gray-800 px-6 text-sm font-semibold text-white transition-all duration-300 hover:from-gray-700 hover:to-gray-900 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-gold-500 focus:ring-offset-2"

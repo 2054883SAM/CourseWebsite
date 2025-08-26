@@ -4,10 +4,10 @@ import { User as DbUser } from '../supabase/types';
 /**
  * Available user roles in the system
  * - admin: Full system access
- * - creator: Can create and manage courses
+ * - teacher: Can create and manage courses
  * - student: Can access and enroll in courses
  */
-export type Role = 'admin' | 'creator' | 'student';
+export type Role = 'admin' | 'teacher' | 'student';
 
 /**
  * Extends Supabase User type with our custom role

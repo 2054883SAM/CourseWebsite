@@ -16,7 +16,6 @@ export default function CourseCard({
     title: 'Introduction à React et Next.js',
     description: 'Apprenez les fondamentaux de React et Next.js pour développer des applications web modernes et performantes.',
     thumbnail_url: '/images/placeholders/course-thumbnail.jpg',
-    price: 29.99,
     creator_id: 'demo',
     created_at: '2025-06-01',
     progress: 35,

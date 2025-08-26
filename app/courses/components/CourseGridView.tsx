@@ -109,13 +109,9 @@ function CourseCard({ course, searchQuery = '', index, onDeleted, onDeleteStart,
         {/* Overlay au survol */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
         
-        {/* Badge de prix */}
+        {/* Badge: sign in prompt */}
         <div className="absolute top-4 right-4">
-          {(dbUser) ? (
-            <div className="bg-gradient-to-r from-gray-600 to-gray-800 text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg">
-              ${course.price.toFixed(2)}
-            </div>
-          ) : (
+          {!dbUser && (
             <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg">
               Se connecter
             </div>

@@ -32,10 +32,8 @@ async function getCourseDetails(courseId: string, supabaseClient: any): Promise<
       title, 
       description, 
       thumbnail_url, 
-      price, 
       creator_id,
       created_at,
-      paddle_price_id,
       creator:creator_id (
         id,
         name,
@@ -118,7 +116,7 @@ export async function POST(req: NextRequest, context: { params: { courseId: stri
       console.log('API: User role:', role);
 
       // Check if user role allows enrollment (student or higher roles)
-      if (!role || (role !== 'student' && role !== 'creator' && role !== 'admin')) {
+      if (!role || (role !== 'student' && role !== 'teacher' && role !== 'admin')) {
         return NextResponse.json(
           { error: 'Your account does not have permission to enroll in courses' },
           { status: 403 }
@@ -143,37 +141,25 @@ export async function POST(req: NextRequest, context: { params: { courseId: stri
       // Get Paddle API client
       const paddle = getPaddleClient();
 
-      // Determine which price ID to use (prefer the one from the course)
-      const priceId = course.paddle_price_id || process.env.NEXT_PUBLIC_PADDLE_COURSE_PRICE_ID;
-
+      // Create checkout data response (use global price ID if configured)
+      const priceId = process.env.NEXT_PUBLIC_PADDLE_COURSE_PRICE_ID;
       if (!priceId) {
-        console.error('API: No price ID available for course:', courseId);
-        return NextResponse.json(
-          { error: 'Course pricing information is missing' },
-          { status: 500 }
-        );
+        console.warn('API: NEXT_PUBLIC_PADDLE_COURSE_PRICE_ID is not set; cannot open checkout.');
       }
-
-      console.log('API: Using price ID for checkout:', priceId);
-
-      // Create checkout data response
       return NextResponse.json({
         success: true,
-        checkoutData: {
-          priceId: priceId,
-          title: course.title,
-          courseId: course.id,
-          price: course.price,
-          clientReferenceId: clientReferenceId,
-          userId: userId,
-          passthrough: JSON.stringify({
-            courseId: course.id,
-            userId: userId,
-            clientReferenceId: clientReferenceId,
-          }),
-          successUrl: `${req.nextUrl.origin}/courses/${courseId}?enrollment=success`,
-          cancelUrl: `${req.nextUrl.origin}/courses/${courseId}?enrollment=cancelled`,
-        },
+        checkoutData: priceId
+          ? {
+              priceId,
+              title: course.title,
+              courseId: course.id,
+              clientReferenceId,
+              userId,
+              passthrough: JSON.stringify({ courseId: course.id, userId, clientReferenceId }),
+              successUrl: `${req.nextUrl.origin}/courses/${courseId}?enrollment=success`,
+              cancelUrl: `${req.nextUrl.origin}/courses/${courseId}?enrollment=cancelled`,
+            }
+          : undefined,
         paddleConfig: {
           sellerId: paddle.sellerId,
           sandboxMode: paddle.sandboxMode,

@@ -210,7 +210,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const role = dbUser?.role;
     if (!role) return false;
     if (requiredRole === 'admin') return role === 'admin';
-    if (requiredRole === 'creator') return role === 'admin' || role === 'creator';
+    if (requiredRole === 'teacher') return role === 'admin' || role === 'teacher';
     if (requiredRole === 'student') return true;
     return false;
   };

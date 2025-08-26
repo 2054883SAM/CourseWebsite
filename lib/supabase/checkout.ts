@@ -12,7 +12,6 @@ interface CheckoutResponse {
     priceId: string;
     title: string;
     courseId: string;
-    price: number;
     clientReferenceId: string;
     userId: string;
     passthrough: string;
@@ -168,7 +167,7 @@ export async function initiateCheckout(courseId: string): Promise<CheckoutResult
 
     const checkoutData: CheckoutResponse = await response.json();
 
-    if (!checkoutData.success || !checkoutData.checkoutData) {
+    if (!checkoutData.success || !checkoutData.checkoutData || !checkoutData.checkoutData.priceId) {
       throw new Error(checkoutData.error || 'Failed to create checkout session');
     }
 

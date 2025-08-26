@@ -5,7 +5,8 @@
 // User model
 export interface User {
   id: string; // UUID from Supabase Auth
-  role: 'admin' | 'creator' | 'student';
+  role: 'admin' | 'teacher' | 'student';
+  membership?: 'free' | 'subscribed';
   name: string;
   email: string;
   photo_url?: string;
@@ -20,7 +21,6 @@ export interface Course {
   description: string;
   thumbnail_url?: string;
   thumbnail_description?: string;
-  price: number;
   creator_id: string; // UUID linked to users.id
   created_at: string;
   is_featured?: boolean;
@@ -32,8 +32,6 @@ export interface Course {
   niveau_difficulte?: 'debutant' | 'intermediaire' | 'avance';
   // Champ pour le playbackId de Mux
   playback_id?: string;
-  // Paddle checkout integration
-  paddle_price_id?: string; // Paddle price ID for the checkout
   // Computed fields (not in DB)
   creator?: User;
   section_count?: number;
@@ -67,16 +65,13 @@ export interface Enrollment {
   created_at: string;
   updated_at: string;
   status: 'active' | 'refunded' | 'disputed'; // Updated to match schema
-  paddle_transaction_id?: string; // Paddle transaction ID
 }
 
 // Search params for course filtering
 export interface CourseSearchParams {
   query?: string;
   creator_id?: string;
-  min_price?: number;
-  max_price?: number;
-  sort_by?: 'title' | 'created_at' | 'price';
+  sort_by?: 'title' | 'created_at';
   sort_order?: 'asc' | 'desc';
   page?: number;
   limit?: number;
