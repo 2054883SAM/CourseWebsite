@@ -29,7 +29,7 @@ type PageProps = {
 function CourseDetailPage({ params }: PageProps) {
   const { id } = use(params);
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, dbUser } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [course, setCourse] = useState<Course | null>(null);
@@ -44,6 +44,13 @@ function CourseDetailPage({ params }: PageProps) {
   // Check enrollment status
   useEffect(() => {
     const checkEnrollment = async () => {
+      // Admins have access to all courses without enrollment
+      if (dbUser?.role === 'admin') {
+        setIsEnrolled(true);
+        setIsCheckingEnrollment(false);
+        return;
+      }
+
       if (!user?.id || !id) {
         setIsEnrolled(false);
         setIsCheckingEnrollment(false);
@@ -63,7 +70,7 @@ function CourseDetailPage({ params }: PageProps) {
     };
 
     checkEnrollment();
-  }, [user, id]);
+  }, [user, id, dbUser]);
 
   // Memoize the fetch function to prevent unnecessary recreations
   const fetchData = useCallback(async (mounted: boolean) => {
@@ -205,7 +212,7 @@ function CourseDetailPage({ params }: PageProps) {
               <div className="lg:col-span-1">
                 <CourseActions 
                   course={course} 
-                  initialEnrollmentStatus={isCheckingEnrollment ? 'processing' : (isEnrolled ? 'enrolled' : 'not-enrolled')} 
+                  initialEnrollmentStatus={dbUser?.role === 'admin' ? 'enrolled' : (isCheckingEnrollment ? 'processing' : (isEnrolled ? 'enrolled' : 'not-enrolled'))} 
                 />
               </div>
             </div>

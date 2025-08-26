@@ -57,6 +57,7 @@ export interface Database {
           duree_estimee: string | null
           niveau_difficulte: 'debutant' | 'intermediaire' | 'avance' | null
           chapters: Json | null
+          chapters_ai_generated: boolean
         }
         Insert: {
           id?: string
@@ -73,6 +74,7 @@ export interface Database {
           duree_estimee?: string | null
           niveau_difficulte?: 'debutant' | 'intermediaire' | 'avance' | null
           chapters?: Json | null
+          chapters_ai_generated?: boolean
         }
         Update: {
           id?: string
@@ -89,6 +91,7 @@ export interface Database {
           duree_estimee?: string | null
           niveau_difficulte?: 'debutant' | 'intermediaire' | 'avance' | null
           chapters?: Json | null
+          chapters_ai_generated?: boolean
         }
         Relationships: [
           {

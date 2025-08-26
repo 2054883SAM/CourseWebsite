@@ -4,13 +4,15 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { getEnrolledCourse } from '@/lib/supabase/learning';
+import { getCourseById } from '@/lib/supabase/courses';
+import { normalizeChaptersToVideo } from '@/lib/utils/chapters';
 import VdoCipherPlayer from '@/components/video/VdoCipherPlayer';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 export default function CoursePlayerPage() {
   const params = useParams();
   const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
+  const { user, dbUser, loading: authLoading } = useAuth();
   const [courseData, setCourseData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -53,11 +55,46 @@ export default function CoursePlayerPage() {
         
         // If no cached data, fetch from API
         console.log('Fetching course data from API');
+
+        // Admins can access any course without enrollment
+        if (dbUser?.role === 'admin') {
+          const course = await getCourseById(courseId);
+          if (!course) {
+            setError('Course not found');
+            setLoading(false);
+            return;
+          }
+
+          const adminCourseData = {
+            id: course.id,
+            title: course.title,
+            description: course.description,
+            thumbnail_url: course.thumbnail_url,
+            created_at: course.created_at,
+            creator_id: course.creator_id,
+            playbackId: (course as any).playback_id,
+            chapters: normalizeChaptersToVideo((course as any).chapters),
+            duration: (course as any).duration,
+          } as any;
+
+          // Cache the result in session storage
+          try {
+            sessionStorage.setItem(`course_${courseId}`, JSON.stringify(adminCourseData));
+          } catch (e) {
+            console.warn('Failed to cache course data:', e);
+          }
+
+          hasFetchedRef.current = true;
+          setCourseData(adminCourseData);
+          setLoading(false);
+          return;
+        }
+
         const result = await getEnrolledCourse(user.id, courseId);
 
         if (result.error || !result.data) {
           setError(result.error || 'Course not found');
-          // Redirect to unauthorized page if not enrolled
+          // Redirect to unauthorized page if not enrolled (non-admin)
           router.replace('/unauthorized?requiredRole=student');
           return;
         }
@@ -80,7 +117,7 @@ export default function CoursePlayerPage() {
     }
 
     fetchCourse();
-  }, [courseId, user, authLoading, router, courseData]);
+  }, [courseId, user, dbUser, authLoading, router, courseData]);
 
   if (loading || authLoading) {
     return (

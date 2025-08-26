@@ -22,6 +22,7 @@ export default function CreateVideoPage() {
     title: '',
     description: '',
     isFeatured: false,
+    aiGenerated: false,
     thumbnailUrl: '',
     thumbnailDescription: '',
     primary_language: 'fr' as 'fr' | 'en' | 'es',
@@ -481,12 +482,9 @@ export default function CreateVideoPage() {
         title: formData.title,
         description: formData.description,
         thumbnail_url: thumbnailUrl || null,
-        thumbnail_description: formData.thumbnailDescription || null,
         creator_id: user.id,
         is_featured: formData.isFeatured,
         ce_que_vous_allez_apprendre: formData.ceQueVousAllezApprendre || null,
-        prerequis: formData.prerequis || null,
-        public_cible: formData.publicCible || null,
         niveau_difficulte: formData.niveauDifficulte,
         playback_id: videoPlaybackId, // Stocker le videoId VdoCipher comme playback_id
         chapters: chapters.length > 0 ? JSON.stringify(chapters) : null, // Stocker les chapitres au format JSON
@@ -541,6 +539,49 @@ export default function CreateVideoPage() {
           } else {
             const json = await capRes.json();
             console.log('CAPTIONS: Stored', json?.storedPath);
+
+            // If AI-generated chapters requested, generate via OpenAI based on captions
+            if (formData.aiGenerated && json?.captions) {
+              try {
+                const genRes = await fetch('/api/upload-video/generate-chapters', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    captions: String(json.captions),
+                    language: formData.primary_language,
+                  }),
+                });
+                if (!genRes.ok) {
+                  const txt = await genRes.text();
+                  console.warn('CHAPTERS: Generation failed', { status: genRes.status, body: txt });
+                } else {
+                  const { chapters: aiChapters } = await genRes.json();
+                  if (Array.isArray(aiChapters)) {
+                    const withIds: VideoChapter[] = aiChapters.map((c: any) => ({
+                      id: crypto.randomUUID(),
+                      title: String(c.title || '').trim(),
+                      startTime: Math.max(0, Math.floor(Number(c.startTime) || 0)),
+                      duration: c.duration != null ? Math.max(1, Math.floor(Number(c.duration))) : undefined,
+                      description: c.description != null ? String(c.description) : undefined,
+                    }));
+                    setChapters(withIds);
+                    // Persist chapters and flag on the course row
+                    const { error: updError } = await supabase
+                      .from('courses')
+                      .update({
+                        chapters: JSON.stringify(withIds),
+                        chapters_ai_generated: true,
+                      })
+                      .eq('id', course.id);
+                    if (updError) {
+                      console.warn('CHAPTERS: Failed to persist AI chapters', updError.message);
+                    }
+                  }
+                }
+              } catch (genErr) {
+                console.warn('CHAPTERS: Error during AI generation', genErr);
+              }
+            }
           }
 
           // FINAL STEP: Translate VTT to the other two languages and upload to VdoCipher as captions
@@ -597,6 +638,7 @@ export default function CreateVideoPage() {
         title: '',
         description: '',
         isFeatured: false,
+        aiGenerated: false,
         thumbnailUrl: '',
         thumbnailDescription: '',
         primary_language: 'fr',
@@ -937,7 +979,23 @@ export default function CreateVideoPage() {
                 </h2>
                 
                 <div className="space-y-6">
+                  <div className="flex items-center justify-between p-4 border border-gray-200 rounded-xl dark:border-gray-700">
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        name="aiGenerated"
+                        checked={formData.aiGenerated}
+                        onChange={handleInputChange}
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600"
+                      />
+                      <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">AI generated</span>
+                    </label>
+                    {formData.aiGenerated && (
+                      <span className="text-xs text-gray-500 dark:text-gray-400">Les chapitres seront générés automatiquement à partir de la transcription.</span>
+                    )}
+                  </div>
                   {/* Add Chapter Form */}
+                  {!formData.aiGenerated && (
                   <div className="p-6 border border-gray-200 rounded-xl dark:border-gray-700">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                       Ajouter un chapitre
@@ -1015,6 +1073,7 @@ export default function CreateVideoPage() {
                       </button>
                     </div>
                   </div>
+                  )}
                   
                   {/* Chapter List */}
                   {chapters.length > 0 && (

@@ -530,7 +530,7 @@ export function CourseActions({ course, initialEnrollmentStatus = 'not-enrolled'
           enrolledText="Watch now"
           className="w-full"
         />
-        {enrollmentStatus === 'enrolled' && (
+        {enrollmentStatus === 'enrolled' && dbUser?.role !== 'admin' && (
           <button
             onClick={async () => {
               try {

@@ -26,7 +26,8 @@ CREATE TABLE courses (
     niveau_difficulte TEXT CHECK (niveau_difficulte IN ('debutant', 'intermediaire', 'avance')),
     playback_id TEXT,
     duration NUMERIC,
-    chapters JSONB DEFAULT '[]'::jsonb
+    chapters JSONB DEFAULT '[]'::jsonb,
+    chapters_ai_generated BOOLEAN NOT NULL DEFAULT false
 );
 
 CREATE TABLE enrollments (
