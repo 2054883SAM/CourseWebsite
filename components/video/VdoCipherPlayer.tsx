@@ -18,9 +18,11 @@ interface VdoCipherPlayerProps {
   courseId?: string;
   duration?: number;
   onChapterSeek?: (chapter: VideoChapter, time: number) => void;
+  onProgress?: (percent: number) => void;
+  onComplete?: () => void;
 }
 
-function VdoCipherPlayerComponent({ videoId, watermark, className, chapters = [], userId, courseId, duration, onChapterSeek }: VdoCipherPlayerProps) {
+function VdoCipherPlayerComponent({ videoId, watermark, className, chapters = [], userId, courseId, duration, onChapterSeek, onProgress, onComplete }: VdoCipherPlayerProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const hasInitialized = useRef(false);
   const playerLoaded = useRef(false);
@@ -31,6 +33,42 @@ function VdoCipherPlayerComponent({ videoId, watermark, className, chapters = []
   const lastProgressUpdateMsRef = useRef<number>(0);
   const lastProgressValueRef = useRef<number>(-1);
   const hasStartedPlayingRef = useRef<boolean>(false);
+  const completionFiredRef = useRef<boolean>(false);
+  // Allow parent/ChapterList to jump near the end to mark as finished
+  const handleFinishClick = () => {
+    try {
+      if (iframeRef.current && (window as any).VdoPlayer) {
+        const iframeElement = iframeRef.current;
+        const vdoPlayer = (window as any).VdoPlayer;
+        const player = vdoPlayer.getInstance(iframeElement);
+        const durationSec = player.video?.duration || duration || 0;
+        if (durationSec > 0) {
+          // Jump to the very end (tiny epsilon before end) to ensure 100%
+          const target = Math.max(durationSec - 0.05, 0);
+          player.video.currentTime = target;
+          player.video.play?.();
+          // Proactively signal completion and 100% progress
+          if (typeof onProgress === 'function') {
+            try { onProgress(100); } catch {}
+          }
+          if (!completionFiredRef.current && typeof onComplete === 'function') {
+            completionFiredRef.current = true;
+            try { onComplete(); } catch {}
+          }
+          // Persist 100% progress server-side
+          if (userId && courseId) {
+            void fetch('/api/courses/progress/update', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ userId, courseId, progress: 100 }),
+            }).catch(() => {});
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Could not jump to end:', e);
+    }
+  };
 
   // This ensures the video is loaded ONCE and never reloaded unless the page refreshes
   useEffect(() => {
@@ -185,9 +223,21 @@ function VdoCipherPlayerComponent({ videoId, watermark, className, chapters = []
 
               setCurrentTime(currentTime);
 
-              if (durationSec > 0 && userId && courseId && hasStartedPlayingRef.current) {
+              const durationPositive = durationSec > 0;
+              if (durationPositive && hasStartedPlayingRef.current) {
                 const percent = Math.min(Math.round((currentTime / durationSec) * 100), 100);
-                void persistProgress(percent);
+                if (typeof onProgress === 'function') {
+                  try { onProgress(percent); } catch {}
+                }
+                if (!completionFiredRef.current && percent >= 100) {
+                  completionFiredRef.current = true;
+                  if (typeof onComplete === 'function') {
+                    try { onComplete(); } catch {}
+                  }
+                }
+                if (userId && courseId) {
+                  void persistProgress(percent);
+                }
               }
 
               // If we have chapters, find the current chapter based on time
@@ -233,7 +283,7 @@ function VdoCipherPlayerComponent({ videoId, watermark, className, chapters = []
         currentIframe.removeEventListener('load', handleIframeLoad);
       }
     };
-  }, [embedUrl, chapters, onChapterSeek, safeChapters]);
+  }, [embedUrl, chapters, onChapterSeek, safeChapters, userId, courseId, duration, onProgress, onComplete]);
 
   const handleChapterClick = (chapter: VideoChapter) => {
     setIsLoading(true);
@@ -314,6 +364,7 @@ function VdoCipherPlayerComponent({ videoId, watermark, className, chapters = []
             currentTime={currentTime}
             onChapterClick={handleChapterClick}
             isLoading={isLoading}
+            onFinish={handleFinishClick}
           />
         </div>
       )}

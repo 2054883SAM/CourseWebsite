@@ -17,6 +17,14 @@ export default function CoursePlayerPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const hasFetchedRef = useRef(false);
+  const hasRequestedFlashcardsRef = useRef(false);
+
+  type Flashcard = { id: number; question: string; choices: string[]; correctAnswer: string };
+  const [flashcards, setFlashcards] = useState<Flashcard[] | null>(null);
+  const [showFlashcards, setShowFlashcards] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
+  const [answerState, setAnswerState] = useState<'idle' | 'correct' | 'incorrect'>('idle');
 
   const courseId = params.courseId as string;
 
@@ -156,7 +164,123 @@ export default function CoursePlayerPage() {
       userId={user?.id}
       courseId={courseId}
       duration={courseData.duration}
+      onComplete={async () => {
+        // Prevent duplicate requests
+        if (hasRequestedFlashcardsRef.current) return;
+        hasRequestedFlashcardsRef.current = true;
+        try {
+          const res = await fetch('/api/video/generate-flashcards', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ courseId }),
+          });
+          if (!res.ok) {
+            console.error('Failed to generate flashcards', await res.text());
+            return;
+          }
+          const data = await res.json();
+          if (Array.isArray(data?.flashcards) && data.flashcards.length > 0) {
+            setFlashcards(data.flashcards as Flashcard[]);
+            setCurrentIndex(0);
+            setSelectedChoice(null);
+            setAnswerState('idle');
+            setShowFlashcards(true);
+          }
+        } catch (e) {
+          console.error('Error generating flashcards:', e);
+        }
+      }}
     />
+
+    {/* Flashcards Dialog */}
+    {showFlashcards && flashcards && flashcards.length > 0 && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="absolute inset-0 bg-black/50" onClick={() => setShowFlashcards(false)} />
+        <div className="relative z-10 w-full max-w-xl rounded-lg bg-white p-6 shadow-xl dark:bg-zinc-900">
+          {currentIndex >= flashcards.length ? (
+            <div className="text-center">
+              <h3 className="mb-4 text-xl font-semibold">Great job! 🎉</h3>
+              <p className="mb-6 text-gray-600 dark:text-gray-300">You&apos;ve completed all the flashcards.</p>
+              <button
+                className="rounded bg-emerald-600 px-4 py-2 text-white hover:bg-emerald-700"
+                onClick={() => setShowFlashcards(false)}
+              >
+                Close
+              </button>
+            </div>
+          ) : (
+            (() => {
+              const card = flashcards[currentIndex];
+              return (
+                <div>
+                  <div className="mb-4 text-sm text-gray-500">Question {currentIndex + 1} of {flashcards.length}</div>
+                  <h3 className="mb-4 text-lg font-semibold">{card.question}</h3>
+                  <div className="grid grid-cols-1 gap-3">
+                    {card.choices.map((choice, idx) => {
+                      const isSelected = selectedChoice === choice;
+                      const isCorrect = answerState !== 'idle' && choice === card.correctAnswer;
+                      const isIncorrect = answerState === 'incorrect' && isSelected && choice !== card.correctAnswer;
+                      const base = 'w-full rounded border px-4 py-3 text-left transition-colors';
+                      const idle = 'border-gray-300 hover:bg-gray-50 dark:border-zinc-700 dark:hover:bg-zinc-800';
+                      const correct = 'border-emerald-600 bg-emerald-50 text-emerald-800 dark:border-emerald-500 dark:bg-emerald-900/30 dark:text-emerald-300';
+                      const incorrect = 'border-red-600 bg-red-50 text-red-800 dark:border-red-500 dark:bg-red-900/30 dark:text-red-300';
+                      let cls = base + ' ' + idle;
+                      if (isCorrect) cls = base + ' ' + correct;
+                      if (isIncorrect) cls = base + ' ' + incorrect;
+                      return (
+                        <button
+                          key={idx}
+                          className={cls}
+                          onClick={() => {
+                            if (answerState !== 'idle' || !flashcards) return;
+                            setSelectedChoice(choice);
+                            const current = flashcards[currentIndex];
+                            const correctNow = choice === current.correctAnswer;
+                            if (correctNow) {
+                              setAnswerState('correct');
+                              setTimeout(() => {
+                                setAnswerState('idle');
+                                setSelectedChoice(null);
+                                setCurrentIndex((i) => i + 1);
+                              }, 700);
+                            } else {
+                              setAnswerState('incorrect');
+                              setTimeout(() => {
+                                setFlashcards((cards) => {
+                                  if (!cards) return cards;
+                                  const next = cards.slice();
+                                  const [removed] = next.splice(currentIndex, 1);
+                                  next.push(removed);
+                                  return next;
+                                });
+                                setAnswerState('idle');
+                                setSelectedChoice(null);
+                              }, 800);
+                            }
+                          }}
+                          disabled={answerState !== 'idle'}
+                        >
+                          <span className="mr-2 inline-block h-2 w-2 rounded-full bg-current opacity-50" />
+                          {choice}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="mt-6 flex items-center justify-end">
+                    <button
+                      className="rounded px-4 py-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-zinc-800"
+                      onClick={() => setShowFlashcards(false)}
+                    >
+                      Exit
+                    </button>
+                  </div>
+                </div>
+              );
+            })()
+          )}
+        </div>
+      </div>
+    )}
     </div>
   );
 }

@@ -40,6 +40,7 @@ export interface ChapterListProps {
   onChapterClick: (chapter: VideoChapter) => void;
   className?: string;
   isLoading?: boolean;
+  onFinish?: () => void;
 }
 
 declare global {

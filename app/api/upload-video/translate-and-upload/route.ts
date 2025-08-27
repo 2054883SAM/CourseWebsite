@@ -2,6 +2,15 @@ import { NextResponse } from 'next/server';
 import { createRouteHandlerClient } from '@/lib/supabase/server';
 import { translateWebVtt } from '@/lib/deepl/client';
 
+// Normalize incoming language codes/names to one of: 'fr' | 'en' | 'es'
+function normalizeLanguage(input: string): 'fr' | 'en' | 'es' {
+  const v = String(input || '').toLowerCase();
+  if (v === 'english' || v.startsWith('en')) return 'en';
+  if (v === 'french' || v === 'français' || v === 'francais' || v.startsWith('fr')) return 'fr';
+  if (v === 'spanish' || v === 'español' || v === 'espanol' || v.startsWith('es')) return 'es';
+  return 'en';
+}
+
 /**
  * POST /api/upload-video/translate-and-upload
  * Body: { courseId: number|string, videoId: string, sourceLanguage: 'fr'|'en'|'es' }
@@ -33,11 +42,12 @@ export async function POST(req: Request) {
     const originalVtt = await downloadData.text();
 
     const allLangs: Array<'fr' | 'en' | 'es'> = ['fr', 'en', 'es'];
-    const targets = allLangs.filter((l) => l !== sourceLanguage);
+    const src = normalizeLanguage(sourceLanguage);
+    const targets = allLangs.filter((l) => l !== src);
 
     const translatedMap: Record<string, string> = {};
     for (const lang of targets) {
-      const translated = await translateWebVtt(originalVtt, sourceLanguage, lang);
+      const translated = await translateWebVtt(originalVtt, src, lang);
       translatedMap[lang] = translated;
     }
 

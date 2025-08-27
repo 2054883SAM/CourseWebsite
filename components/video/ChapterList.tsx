@@ -35,7 +35,8 @@ const ChapterList: React.FC<ChapterListProps> = ({
   currentTime,
   onChapterClick,
   className = '',
-  isLoading = false
+  isLoading = false,
+  onFinish
 }) => {
   const safeChapters: VideoChapter[] = normalizeChaptersToVideo(chapters);
 
@@ -62,6 +63,17 @@ const ChapterList: React.FC<ChapterListProps> = ({
         <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
           {chapters.length} chapter{chapters.length !== 1 ? 's' : ''}
         </p>
+        <div className="mt-3 flex justify-end">
+          <button
+            type="button"
+            className="rounded bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+            onClick={() => onFinish && onFinish()}
+            disabled={!!isLoading}
+            title="Mark video as finished and jump near the end"
+          >
+            Finished
+          </button>
+        </div>
       </div>
 
       {/* Chapters List */}

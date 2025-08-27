@@ -1,0 +1,52 @@
+[
+  {
+    "id": 1,
+    "question": "What is 5 + 3?",
+    "choices": [
+      "6",
+      "8",
+      "9"
+    ],
+    "correctAnswer": "8"
+  },
+  {
+    "id": 2,
+    "question": "Which planet is known as the Red Planet?",
+    "choices": [
+      "Venus",
+      "Mars",
+      "Jupiter"
+    ],
+    "correctAnswer": "Mars"
+  },
+  {
+    "id": 3,
+    "question": "What is the capital of Canada?",
+    "choices": [
+      "Toronto",
+      "Ottawa",
+      "Vancouver"
+    ],
+    "correctAnswer": "Ottawa"
+  },
+  {
+    "id": 4,
+    "question": "Which shape has 3 sides?",
+    "choices": [
+      "Square",
+      "Triangle",
+      "Rectangle"
+    ],
+    "correctAnswer": "Triangle"
+  },
+  {
+    "id": 5,
+    "question": "What do plants need to make food?",
+    "choices": [
+      "Oxygen",
+      "Sunlight",
+      "Carbon Dioxide"
+    ],
+    "correctAnswer": "Sunlight"
+  }
+]
