@@ -15,7 +15,7 @@ export function Breadcrumbs({ items }: BreadcrumbsProps) {
       <ol className="flex flex-wrap items-center space-x-2">
         <li>
           <Link href="/" className="text-gray-500 hover:text-blue-600 hover:underline">
-            Home
+            Accueil
           </Link>
         </li>
         

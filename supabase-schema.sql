@@ -355,3 +355,109 @@ FOR DELETE USING (
     AND role IN ('admin', 'teacher')
   )
 );
+
+-- Sections: videos per course
+CREATE TABLE sections (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    course_id UUID NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+    section_number NUMERIC NOT NULL,
+    title TEXT NOT NULL,
+    duration NUMERIC NOT NULL,
+    chapters JSONB DEFAULT '[]'::jsonb,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
+);
+
+-- Indexes for sections
+CREATE INDEX idx_sections_course_id ON sections(course_id);
+CREATE INDEX idx_sections_course_section_number ON sections(course_id, section_number);
+
+-- Enable RLS on sections
+ALTER TABLE sections ENABLE ROW LEVEL SECURITY;
+
+-- Policies for sections
+-- Read: admins, course owner teachers, or enrolled students with active status
+CREATE POLICY "sections_select_by_role_or_enrollment"
+ON sections FOR SELECT
+TO authenticated
+USING (
+  -- Admins
+  EXISTS (
+    SELECT 1 FROM public.users u
+    WHERE u.id = auth.uid() AND u.role = 'admin'
+  )
+  OR
+  -- Teachers who own the course
+  EXISTS (
+    SELECT 1
+    FROM public.users u
+    JOIN public.courses c ON c.creator_id = u.id
+    WHERE u.id = auth.uid() AND u.role = 'teacher' AND c.id = sections.course_id
+  )
+  OR
+  -- Enrolled students (active)
+  EXISTS (
+    SELECT 1 FROM public.enrollments e
+    WHERE e.user_id = auth.uid()
+      AND e.course_id = sections.course_id
+      AND e.status = 'active'
+  )
+);
+
+-- Insert: admins anywhere, teachers only for their own courses
+CREATE POLICY "sections_insert_admin_or_course_owner"
+ON sections FOR INSERT
+TO authenticated
+WITH CHECK (
+  -- Admins
+  EXISTS (
+    SELECT 1 FROM public.users u
+    WHERE u.id = auth.uid() AND u.role = 'admin'
+  )
+  OR (
+    -- Teachers creating sections for their own course
+    EXISTS (
+      SELECT 1 FROM public.users u
+      WHERE u.id = auth.uid() AND u.role = 'teacher'
+    )
+    AND EXISTS (
+      SELECT 1 FROM public.courses c
+      WHERE c.id = sections.course_id AND c.creator_id = auth.uid()
+    )
+  )
+);
+
+-- Update: admins anywhere, teachers only for their own courses
+CREATE POLICY "sections_update_admin_or_course_owner"
+ON sections FOR UPDATE
+TO authenticated
+USING (
+  EXISTS (
+    SELECT 1 FROM public.users u
+    WHERE u.id = auth.uid() AND u.role = 'admin'
+  )
+  OR EXISTS (
+    SELECT 1 FROM public.courses c
+    WHERE c.id = sections.course_id AND c.creator_id = auth.uid()
+  )
+)
+WITH CHECK (
+  EXISTS (
+    SELECT 1 FROM public.users u
+    WHERE u.id = auth.uid() AND u.role = 'admin'
+  )
+  OR EXISTS (
+    SELECT 1 FROM public.courses c
+    WHERE c.id = sections.course_id AND c.creator_id = auth.uid()
+  )
+);
+
+-- Delete: admins only (matches courses deletion policy)
+CREATE POLICY "sections_delete_admin_only"
+ON sections FOR DELETE
+TO authenticated
+USING (
+  EXISTS (
+    SELECT 1 FROM public.users u
+    WHERE u.id = auth.uid() AND u.role = 'admin'
+  )
+);

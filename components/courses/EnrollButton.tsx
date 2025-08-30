@@ -49,9 +49,9 @@ export const EnrollButton: React.FC<EnrollButtonProps> = ({
   status = 'not-enrolled',
   className = '',
   tooltipText,
-  notEnrolledText = 'Enroll Now',
-  processingText = 'Processing...',
-  enrolledText = 'Enrolled',
+  notEnrolledText = "S'inscrire maintenant",
+  processingText = 'Traitement...',
+  enrolledText = 'Inscrit',
   onClick,
   disabled = false,
 }) => {

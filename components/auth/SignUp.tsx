@@ -34,7 +34,7 @@ export function SignUp() {
         router.push('/');
       }
     } catch (err) {
-      setError('An unexpected error occurred. Please try again.');
+      setError("Une erreur inattendue s'est produite. Veuillez réessayer.");
     } finally {
       setLoading(false);
     }
@@ -45,15 +45,15 @@ export function SignUp() {
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
-            Create your account
+            Créez votre compte
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-            Or{' '}
+            Ou{' '}
             <Link
               href="/signin"
               className="font-medium text-gold-600 hover:text-gold-500 dark:text-gold-400"
             >
-              sign in to your account
+              connectez-vous à votre compte
             </Link>
           </p>
         </div>
@@ -101,7 +101,7 @@ export function SignUp() {
               </div>
               <div className="ml-3">
                 <p className="text-sm font-medium text-green-800 dark:text-green-200">
-                  Account created successfully! Please check your email for verification.
+                  Compte créé avec succès ! Veuillez vérifier votre e-mail pour confirmer votre compte.
                 </p>
               </div>
             </div>
@@ -112,7 +112,7 @@ export function SignUp() {
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
               <label htmlFor="name" className="sr-only">
-                Full Name
+                Nom complet
               </label>
               <input
                 id="name"
@@ -120,7 +120,7 @@ export function SignUp() {
                 type="text"
                 required
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white rounded-t-md focus:outline-none focus:ring-gold-500 focus:border-gold-500 focus:z-10 sm:text-sm dark:bg-gray-800 bg-white"
-                placeholder="Full Name"
+                placeholder="Nom complet"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 disabled={loading}
@@ -128,7 +128,7 @@ export function SignUp() {
             </div>
             <div>
               <label htmlFor="email-address" className="sr-only">
-                Email address
+                Adresse e-mail
               </label>
               <input
                 id="email-address"
@@ -137,7 +137,7 @@ export function SignUp() {
                 autoComplete="email"
                 required
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white focus:outline-none focus:ring-gold-500 focus:border-gold-500 focus:z-10 sm:text-sm dark:bg-gray-800 bg-white"
-                placeholder="Email address"
+                placeholder="Adresse e-mail"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={loading}
@@ -145,7 +145,7 @@ export function SignUp() {
             </div>
             <div>
               <label htmlFor="password" className="sr-only">
-                Password
+                Mot de passe
               </label>
               <input
                 id="password"
@@ -154,7 +154,7 @@ export function SignUp() {
                 autoComplete="new-password"
                 required
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white rounded-b-md focus:outline-none focus:ring-gold-500 focus:border-gold-500 focus:z-10 sm:text-sm dark:bg-gray-800 bg-white"
-                placeholder="Password"
+                placeholder="Mot de passe"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={loading}
@@ -192,7 +192,7 @@ export function SignUp() {
                   </svg>
                 </span>
               ) : (
-                'Sign up'
+                "S'inscrire"
               )}
             </button>
           </div>

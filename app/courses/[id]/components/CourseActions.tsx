@@ -31,11 +31,11 @@ export function CourseActions({ course, initialEnrollmentStatus = 'not-enrolled'
   useEffect(() => {
     setEnrollmentStatus(initialEnrollmentStatus);
     if (initialEnrollmentStatus === 'enrolled') {
-      setTooltipMessage('Click to watch this course');
+      setTooltipMessage('Cliquez pour regarder ce cours');
     } else if (initialEnrollmentStatus === 'processing') {
-      setTooltipMessage('Processing your enrollment...');
+      setTooltipMessage('Traitement de votre inscription...');
     } else {
-      setTooltipMessage('Click to enroll in this course');
+      setTooltipMessage('Cliquez pour vous inscrire à ce cours');
     }
   }, [initialEnrollmentStatus]);
 
@@ -121,7 +121,7 @@ export function CourseActions({ course, initialEnrollmentStatus = 'not-enrolled'
               }
               finalizingRef.current = true;
               setEnrollmentStatus('processing');
-              setTooltipMessage('Finalizing your enrollment...');
+              setTooltipMessage('Finalisation de votre inscription...');
 
               // After 2s, close checkout and begin enrollment record creation with a progress UI
               setTimeout(() => {
@@ -139,20 +139,20 @@ export function CourseActions({ course, initialEnrollmentStatus = 'not-enrolled'
                     setShowEnrollmentProgress(false);
                     if (success) {
                       setEnrollmentStatus('enrolled');
-                      setTooltipMessage("You're enrolled in this course");
+                      setTooltipMessage('Vous êtes inscrit à ce cours');
                       setShowEnrollmentSuccess(true);
                     } else {
                       setEnrollmentStatus('not-enrolled');
-                      setErrorMessage('We could not finalize your enrollment. Please try again.');
-                      setTooltipMessage('Click to try enrolling again');
+                      setErrorMessage('Nous n\'avons pas pu finaliser votre inscription. Veuillez réessayer.');
+                      setTooltipMessage('Cliquez pour réessayer l\'inscription');
                     }
                   })
                   .catch(error => {
                     console.error('Error creating enrollment from event:', error);
                     setShowEnrollmentProgress(false);
                     setEnrollmentStatus('not-enrolled');
-                    setErrorMessage('An error occurred while finalizing your enrollment.');
-                    setTooltipMessage('Click to try enrolling again');
+                    setErrorMessage('Une erreur s\'est produite lors de la finalisation de votre inscription.');
+                    setTooltipMessage('Cliquez pour réessayer l\'inscription');
                   })
                   .finally(() => {
                     finalizingRef.current = false;
@@ -168,15 +168,15 @@ export function CourseActions({ course, initialEnrollmentStatus = 'not-enrolled'
                 return;
               }
               setEnrollmentStatus('not-enrolled');
-              setTooltipMessage('Click to try enrolling again');
+              setTooltipMessage('Cliquez pour réessayer l\'inscription');
             }
             
             // Handle checkout:error event
             if (data.name === 'checkout.error') {
               console.error('Checkout error event received:', data);
               setEnrollmentStatus('not-enrolled');
-              setErrorMessage('An error occurred during checkout. Please try again.');
-              setTooltipMessage('Click to try enrolling again');
+              setErrorMessage('Une erreur s\'est produite lors du paiement. Veuillez réessayer.');
+              setTooltipMessage('Cliquez pour réessayer l\'inscription');
             }
           }
         });
@@ -185,7 +185,7 @@ export function CourseActions({ course, initialEnrollmentStatus = 'not-enrolled'
         setPaddleLoaded(true);
       } catch (error) {
         console.error('Error setting up Paddle:', error);
-        setErrorMessage('Payment system could not be initialized. Please try again later.');
+        setErrorMessage('Le système de paiement n\'a pas pu être initialisé. Veuillez réessayer plus tard.');
       }
     };
 
@@ -303,7 +303,7 @@ export function CourseActions({ course, initialEnrollmentStatus = 'not-enrolled'
       } catch (verifyErr) {
         console.warn('Verification after catch failed:', verifyErr);
       }
-      setErrorMessage(`Enrollment failed: ${error.message}. Please contact support.`);
+      setErrorMessage(`Impossible de finaliser votre inscription: ${error.message}. Veuillez contacter le support.`);
       return false;
     }
   };
@@ -313,8 +313,8 @@ export function CourseActions({ course, initialEnrollmentStatus = 'not-enrolled'
     const usingMock = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
     const looksLikeUuid = typeof course.id === 'string' && /^[0-9a-fA-F-]{36}$/.test(course.id);
     if (usingMock || !looksLikeUuid) {
-      setErrorMessage('Enrollment is disabled in mock mode or for invalid course id.');
-      setTooltipMessage('Mock data mode detected');
+      setErrorMessage('L\'inscription est désactivée en mode maquette ou pour un identifiant de cours invalide.');
+      setTooltipMessage('Mode données factices détecté');
       return;
     }
 
@@ -342,15 +342,15 @@ export function CourseActions({ course, initialEnrollmentStatus = 'not-enrolled'
         const success = await createEnrollmentRecord('subscription');
         if (success) {
           setEnrollmentStatus('enrolled');
-          setTooltipMessage("You're enrolled in this course");
+          setTooltipMessage('Vous êtes inscrit à ce cours');
           router.refresh();
         } else {
           setEnrollmentStatus('not-enrolled');
-          setErrorMessage('Could not finalize your enrollment. Please try again.');
+          setErrorMessage('Impossible de finaliser votre inscription. Veuillez réessayer.');
         }
       } catch (e: any) {
         setEnrollmentStatus('not-enrolled');
-        setErrorMessage(e?.message || 'An error occurred while enrolling');
+        setErrorMessage(e?.message || 'Une erreur s\'est produite lors de l\'inscription');
       }
       return;
     }
@@ -358,7 +358,7 @@ export function CourseActions({ course, initialEnrollmentStatus = 'not-enrolled'
     // Verify Paddle is loaded
     if (!paddleLoaded) {
       console.error('Paddle is not loaded yet');
-      setErrorMessage('Payment system is not ready yet. Please try again in a moment.');
+      setErrorMessage('Le système de paiement n\'est pas encore prêt. Veuillez réessayer dans un instant.');
       return;
     }
 
@@ -374,8 +374,8 @@ export function CourseActions({ course, initialEnrollmentStatus = 'not-enrolled'
       !dbUser?.role ||
       (dbUser.role !== 'admin' && dbUser.role !== 'teacher' && dbUser.role !== 'student')
     ) {
-      setErrorMessage('Your account does not have permission to enroll in courses');
-      console.error('Your account does not have permission to enroll in courses');
+      setErrorMessage('Votre compte n\'a pas la permission de s\'inscrire aux cours');
+      console.error('Votre compte n\'a pas la permission de s\'inscrire aux cours');
       return;
     }
 
@@ -410,7 +410,7 @@ export function CourseActions({ course, initialEnrollmentStatus = 'not-enrolled'
                 if (status === 'enrolled') {
                   console.log('Fallback check: User is enrolled');
                   setEnrollmentStatus('enrolled');
-                  setTooltipMessage("You're enrolled in this course");
+                  setTooltipMessage('Vous êtes inscrit à ce cours');
                   router.refresh();
                 }
               } catch (err) {
@@ -450,11 +450,11 @@ export function CourseActions({ course, initialEnrollmentStatus = 'not-enrolled'
         // Successful payment and enrollment
         console.log('Enrollment successful');
         setEnrollmentStatus('enrolled');
-        setTooltipMessage("You're enrolled in this course");
+        setTooltipMessage('Vous êtes inscrit à ce cours');
       } else if (result.alreadyEnrolled) {
         // User is already enrolled
         setEnrollmentStatus('enrolled');
-        setTooltipMessage("You're already enrolled in this course");
+        setTooltipMessage('Vous êtes déjà inscrit à ce cours');
       } else if (result.error?.includes('Authentication required')) {
         // Authentication error, user session might have expired
         console.log('Authentication error detected, redirecting to login');
@@ -468,8 +468,8 @@ export function CourseActions({ course, initialEnrollmentStatus = 'not-enrolled'
       } else {
         // Handle other checkout errors
         setEnrollmentStatus('not-enrolled');
-        setErrorMessage(result.error || 'Failed to complete enrollment');
-        setTooltipMessage('Click to try enrolling again');
+        setErrorMessage(result.error || 'Échec de l\'inscription');
+        setTooltipMessage('Cliquez pour réessayer l\'inscription');
       }
     } catch (error: any) {
       console.error('Enrollment error:', error);
@@ -484,8 +484,8 @@ export function CourseActions({ course, initialEnrollmentStatus = 'not-enrolled'
       } else {
         // Handle other errors
         setEnrollmentStatus('not-enrolled');
-        setErrorMessage(error.message || 'An error occurred during enrollment');
-        setTooltipMessage('Click to try enrolling again');
+        setErrorMessage(error.message || 'Une erreur s\'est produite lors de l\'inscription');
+        setTooltipMessage('Cliquez pour réessayer l\'inscription');
       }
     }
   };
@@ -526,8 +526,8 @@ export function CourseActions({ course, initialEnrollmentStatus = 'not-enrolled'
           status={enrollmentStatus}
           onClick={handleEnrollClick}
           disabled={authLoading || enrollmentStatus === 'processing'}
-          tooltipText={enrollmentStatus === 'enrolled' ? 'Go to course' : (!paddleLoaded ? 'Payment system is loading...' : tooltipMessage)}
-          enrolledText="Watch now"
+          tooltipText={enrollmentStatus === 'enrolled' ? 'Aller au cours' : (!paddleLoaded ? 'Chargement du système de paiement...' : tooltipMessage)}
+          enrolledText="Regarder maintenant"
           className="w-full"
         />
         {enrollmentStatus === 'enrolled' && dbUser?.role !== 'admin' && (
@@ -548,16 +548,16 @@ export function CourseActions({ course, initialEnrollmentStatus = 'not-enrolled'
                   throw new Error(data?.error || 'Failed to unenroll from course');
                 }
                 setEnrollmentStatus('not-enrolled');
-                setTooltipMessage('Click to enroll in this course');
+                setTooltipMessage('Cliquez pour vous inscrire à ce cours');
                 router.refresh();
               } catch (e: any) {
                 setEnrollmentStatus('enrolled');
-                setErrorMessage(e?.message || 'Could not unenroll at this time.');
+                setErrorMessage(e?.message || 'Impossible de vous désinscrire pour le moment.');
               }
             }}
             className="mt-3 w-full rounded border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
           >
-            Unenroll from course
+            Se désinscrire du cours
           </button>
         )}
       </div>
@@ -583,8 +583,8 @@ export function CourseActions({ course, initialEnrollmentStatus = 'not-enrolled'
       {showEnrollmentProgress && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
-            <div className="mb-4 text-lg font-semibold">Finalizing your enrollment…</div>
-            <p className="mb-4 text-sm text-gray-600">This usually takes just a moment.</p>
+            <div className="mb-4 text-lg font-semibold">Finalisation de votre inscription…</div>
+            <p className="mb-4 text-sm text-gray-600">Cela ne prend généralement qu'un instant.</p>
             <div className="h-2 w-full overflow-hidden rounded bg-gray-200">
               <div className="h-2 w-1/2 animate-pulse rounded bg-blue-600"></div>
             </div>
@@ -596,8 +596,8 @@ export function CourseActions({ course, initialEnrollmentStatus = 'not-enrolled'
       {showEnrollmentSuccess && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
-            <div className="mb-2 text-lg font-semibold">You are enrolled! 🎉</div>
-            <p className="mb-6 text-sm text-gray-700">You now have access to {course.title}. Start learning right away.</p>
+            <div className="mb-2 text-lg font-semibold">Vous êtes inscrit ! 🎉</div>
+            <p className="mb-6 text-sm text-gray-700">Vous avez maintenant accès à {course.title}. Commencez à apprendre dès maintenant.</p>
             <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
               <button
                 onClick={() => {
@@ -606,7 +606,7 @@ export function CourseActions({ course, initialEnrollmentStatus = 'not-enrolled'
                 }}
                 className="w-full rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 sm:w-auto"
               >
-                Start learning
+                Commencer à apprendre
               </button>
               <button
                 onClick={() => {
@@ -616,7 +616,7 @@ export function CourseActions({ course, initialEnrollmentStatus = 'not-enrolled'
                 }}
                 className="w-full rounded border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50 sm:w-auto"
               >
-                Close
+                Fermer
               </button>
             </div>
           </div>

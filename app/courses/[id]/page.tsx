@@ -110,7 +110,7 @@ function CourseDetailPage({ params }: PageProps) {
       console.error('Error fetching course data:', err);
       if (!mounted) return;
 
-      setError('Failed to load course. Please try again.');
+      setError('Échec du chargement du cours. Veuillez réessayer.');
       setCourse(null);
       setRelatedCourses([]);
     } finally {
@@ -166,7 +166,7 @@ function CourseDetailPage({ params }: PageProps) {
                 }}
                 className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
               >
-                Retry
+                Réessayer
               </button>
             </div>
           </div>
@@ -185,7 +185,7 @@ function CourseDetailPage({ params }: PageProps) {
         <div className="container mx-auto px-4">
           <Breadcrumbs
             items={[
-              { label: 'Courses', href: '/courses' },
+              { label: 'Cours', href: '/courses' },
               { label: course.title, href: `/courses/${course.id}` },
             ]}
           />

@@ -58,10 +58,10 @@ const ChapterList: React.FC<ChapterListProps> = ({
           <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
           </svg>
-          Course Content
+          Chapitres
         </h3>
         <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-          {chapters.length} chapter{chapters.length !== 1 ? 's' : ''}
+          {chapters.length} chapitre{chapters.length !== 1 ? 's' : ''}
         </p>
         <div className="mt-3 flex justify-end">
           <button
@@ -71,7 +71,7 @@ const ChapterList: React.FC<ChapterListProps> = ({
             disabled={!!isLoading}
             title="Mark video as finished and jump near the end"
           >
-            Finished
+            Terminé
           </button>
         </div>
       </div>
@@ -116,6 +116,13 @@ const ChapterList: React.FC<ChapterListProps> = ({
                       }`}>
                         {chapter.title}
                       </h4>
+                      {chapter.flashcard === true && (
+                        <span className="ml-2 inline-flex items-center" title="Flashcard available" aria-label="Flashcard available">
+                          <svg className="w-4 h-4 text-yellow-500" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <path d="M12 2l2.39 4.84 5.34.78-3.86 3.76.91 5.32L12 14.77 6.22 16.7l.91-5.32-3.86-3.76 5.34-.78L12 2z"/>
+                          </svg>
+                        </span>
+                      )}
                     </div>
 
                     {/* Chapter description */}
@@ -133,7 +140,7 @@ const ChapterList: React.FC<ChapterListProps> = ({
                     </div>
                     {chapter.duration && (
                       <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                        {formatTime(chapter.duration)}
+                        {formatTime(chapter.duration + chapter.startTime)}
                       </div>
                     )}
                   </div>
@@ -144,7 +151,7 @@ const ChapterList: React.FC<ChapterListProps> = ({
                   <div className="flex items-center mt-2 ml-9">
                     <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse mr-2"></div>
                     <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">
-                      Currently playing
+                      En cours
                     </span>
                   </div>
                 )}

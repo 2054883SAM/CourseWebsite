@@ -56,7 +56,8 @@ export default function CreateVideoPage() {
     duration: undefined,
     durationFormatted: '',
     description: undefined,
-    thumbnail: undefined
+    thumbnail: undefined,
+    flashcard: false
   });
 
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
@@ -182,7 +183,16 @@ export default function CreateVideoPage() {
   
   const handleChapterInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    
+    const target = e.target as HTMLInputElement;
+
+    if (name === 'flashcard' && target.type === 'checkbox') {
+      setCurrentChapter(prev => ({
+        ...prev,
+        flashcard: target.checked
+      }));
+      return;
+    }
+
     if (name === 'startTimeFormatted') {
       // Handle time format input for startTime
       setCurrentChapter(prev => ({
@@ -218,7 +228,8 @@ export default function CreateVideoPage() {
       startTime: currentChapter.startTime,
       duration: currentChapter.duration,
       description: currentChapter.description,
-      thumbnail: currentChapter.thumbnail
+      thumbnail: currentChapter.thumbnail,
+      flashcard: !!currentChapter.flashcard
     };
     
     setChapters(prevChapters => [...prevChapters, newChapter]);
@@ -234,7 +245,8 @@ export default function CreateVideoPage() {
       duration: undefined,
       durationFormatted: '',
       description: undefined,
-      thumbnail: undefined
+      thumbnail: undefined,
+      flashcard: false
     });
     console.log('Chapters:', chapters);
   };
@@ -563,6 +575,7 @@ export default function CreateVideoPage() {
                       startTime: Math.max(0, Math.floor(Number(c.startTime) || 0)),
                       duration: c.duration != null ? Math.max(1, Math.floor(Number(c.duration))) : undefined,
                       description: c.description != null ? String(c.description) : undefined,
+                      flashcard: typeof c.flashcard === 'boolean' ? c.flashcard : false,
                     }));
                     setChapters(withIds);
                     // Persist chapters and flag on the course row
@@ -1048,6 +1061,24 @@ export default function CreateVideoPage() {
                         />
                       </div>
                       
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          Flashcard pour ce chapitre
+                        </label>
+                        <div className="flex items-center h-[48px] px-2">
+                          <input
+                            type="checkbox"
+                            name="flashcard"
+                            checked={!!currentChapter.flashcard}
+                            onChange={handleChapterInputChange}
+                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600"
+                          />
+                          <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                            Générer une flashcard pour ce chapitre
+                          </span>
+                        </div>
+                      </div>
+
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                           Description (optionnel)

@@ -50,27 +50,42 @@ function Home() {
         <Container className="relative z-10">
           <div className="animate-fade-in-up">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white mb-4 bg-gradient-to-r from-gray-900 via-gold-600 to-gray-800 bg-clip-text text-transparent dark:from-white dark:via-gold-400 dark:to-gray-300">
-              {user ? `Bon retour, ${dbUser?.name}!` : 'Bienvenue sur EzioAcademy'}
+              {user ? `Bon retour, ${dbUser?.name}!` : 'Apprendre devient amusant!'}
             </h1>
             <p className="mx-auto mb-10 max-w-3xl text-xl text-gray-600 dark:text-gray-300">
-              Une plateforme d'apprentissage en ligne avec des cours vidéo interactifs et des matériaux d'apprentissage complets.
+              Une plateforme éducative conçue spécialement pour les élèves du primaire. Des cours créés par des enseignants passionnés pour rendre l'apprentissage captivant et accessible.
             </p>
             <div className="flex flex-col justify-center gap-4 sm:flex-row">
               <Link
                 href="/courses"
                 className="group relative inline-flex h-12 items-center justify-center overflow-hidden rounded-full bg-gradient-to-r from-gray-600 to-gray-800 px-8 text-base font-semibold text-white transition-all duration-300 hover:from-gray-700 hover:to-gray-900 hover:shadow-lg hover:shadow-gray-500/25 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:ring-offset-2"
               >
-                <span className="relative z-10">Catalogue des cours</span>
+                <span className="relative z-10">Découvrir les cours</span>
                 <div className="absolute inset-0 bg-gradient-to-r from-gray-700 to-gray-900 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
               </Link>
               {!user ? (
+                <>
+                  <Link
+                    href="/payment"
+                    className="inline-flex h-12 items-center justify-center rounded-full bg-gradient-to-r from-green-500 to-green-600 px-8 text-base font-semibold text-white transition-all duration-300 hover:from-green-600 hover:to-green-700 hover:shadow-lg hover:shadow-green-500/25 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                  >
+                    Abonnement mensuel
+                  </Link>
+                  <Link
+                    href="/signin"
+                    className="inline-flex h-12 items-center justify-center rounded-full border-2 border-gray-300 px-8 text-base font-semibold text-gray-700 transition-all duration-300 hover:border-gold-500 hover:text-gold-600 hover:shadow-md dark:border-gray-600 dark:text-gray-300 dark:hover:border-gold-400 dark:hover:text-gold-400"
+                  >
+                    Se connecter
+                  </Link>
+                </>
+              ) : (
                 <Link
-                  href="/signin"
-                  className="inline-flex h-12 items-center justify-center rounded-full border-2 border-gray-300 px-8 text-base font-semibold text-gray-700 transition-all duration-300 hover:border-gold-500 hover:text-gold-600 hover:shadow-md dark:border-gray-600 dark:text-gray-300 dark:hover:border-gold-400 dark:hover:text-gold-400"
+                  href="/payment"
+                  className="inline-flex h-12 items-center justify-center rounded-full bg-gradient-to-r from-green-500 to-green-600 px-8 text-base font-semibold text-white transition-all duration-300 hover:from-green-600 hover:to-green-700 hover:shadow-lg hover:shadow-green-500/25 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
                 >
-                  Se connecter
+                  Mon abonnement
                 </Link>
-              ) : null}
+              )}
             </div>
           </div>
         </Container>
@@ -80,9 +95,9 @@ function Home() {
       <Section className="py-16 bg-white dark:bg-gray-900">
         <Container>
           <div className="text-center mb-16">
-            <h2 className="mb-4 text-4xl font-bold text-gray-900 dark:text-white">Cours en vedette</h2>
+            <h2 className="mb-4 text-4xl font-bold text-gray-900 dark:text-white">Cours populaires pour le primaire</h2>
             <p className="mx-auto max-w-2xl text-lg text-gray-600 dark:text-gray-300">
-              Découvrez nos cours les plus populaires et commencez votre apprentissage dès aujourd'hui.
+              Découvrez nos cours les plus appréciés par les élèves et leurs parents. Apprentissage ludique garanti !
             </p>
           </div>
 
@@ -117,7 +132,7 @@ function Home() {
                       />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700">
-                        <div className="text-4xl text-gray-400 dark:text-gray-500">📚</div>
+                        <div className="text-4xl text-gray-400 dark:text-gray-500">🎓</div>
                       </div>
                     )}
                   </div>
@@ -133,7 +148,7 @@ function Home() {
                       href={`/courses/${course.id}`}
                       className="inline-flex h-10 items-center justify-center rounded-full bg-gradient-to-r from-gray-600 to-gray-800 px-6 text-sm font-semibold text-white transition-all duration-300 hover:from-gray-700 hover:to-gray-900 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-gold-500 focus:ring-offset-2"
                     >
-                      Voir le cours
+                      Découvrir
                     </Link>
                   </div>
                 </div>
@@ -156,43 +171,43 @@ function Home() {
       <Section className="py-16 bg-gray-50 dark:bg-gray-800">
         <Container>
           <div className="text-center mb-16">
-            <h2 className="mb-4 text-4xl font-bold text-gray-900 dark:text-white">Pourquoi choisir notre plateforme</h2>
+            <h2 className="mb-4 text-4xl font-bold text-gray-900 dark:text-white">Pourquoi les enfants adorent apprendre ici</h2>
             <p className="mx-auto max-w-3xl text-lg text-gray-600 dark:text-gray-300">
-              Nous offrons la meilleure expérience d'apprentissage avec des fonctionnalités de pointe.
+              Une approche pédagogique innovante qui transforme l'apprentissage en aventure passionnante pour vos enfants.
             </p>
           </div>
 
           <GridLayout columns={{ default: 1, sm: 2, lg: 3 }} gap="gap-8">
             {[
               {
-                icon: '🎯',
-                title: 'Contenu de haute qualité',
-                description: 'Tous les cours sont créés par des experts du secteur et passent par des contrôles qualité rigoureux.',
+                icon: '🎨',
+                title: 'Cours ludiques et colorés',
+                description: 'Des contenus visuels captivants et des activités amusantes créés spécialement pour les enfants du primaire.',
               },
               {
-                icon: '🔄',
-                title: 'Apprentissage interactif',
-                description: 'Participez à des exercices interactifs, des quiz et des projets pratiques.',
+                icon: '🧩',
+                title: 'Apprentissage par le jeu',
+                description: 'Transformez l\'éducation en aventure avec des quiz interactifs, des défis et des récompenses.',
               },
               {
-                icon: '⏰',
-                title: 'Apprenez à votre rythme',
-                description: 'Accédez aux matériaux de cours à tout moment, n\'importe où, et apprenez à votre propre rythme.',
+                icon: '👩‍🏫',
+                title: 'Enseignants certifiés',
+                description: 'Tous nos cours sont créés par des enseignants expérimentés du primaire et validés pédagogiquement.',
               },
               {
-                icon: '👥',
-                title: 'Support communautaire',
-                description: 'Rejoignez notre communauté d\'apprenants et obtenez de l\'aide quand vous en avez besoin.',
+                icon: '📱',
+                title: 'Accessible partout',
+                description: 'Votre enfant peut apprendre sur tablette, ordinateur ou smartphone, à la maison ou en déplacement.',
               },
               {
-                icon: '🏆',
-                title: 'Certificats',
-                description: 'Obtenez des certificats à la fin pour mettre en valeur vos nouvelles compétences.',
+                icon: '⭐',
+                title: 'Suivi des progrès',
+                description: 'Les parents peuvent suivre les progrès de leur enfant et célébrer ses réussites ensemble.',
               },
               {
-                icon: '🛟',
-                title: 'Support 24/7',
-                description: 'Notre équipe de support est toujours prête à vous aider avec toutes vos questions.',
+                icon: '💰',
+                title: 'Revenus pour enseignants',
+                description: 'Plateforme permettant aux enseignants de valoriser leur expertise et générer des revenus complémentaires.',
               },
             ].map((feature, i) => (
               <div 
@@ -211,38 +226,113 @@ function Home() {
         </Container>
       </Section>
 
+      {/* Teacher Section */}
+      <Section className="py-16 bg-gradient-to-r from-blue-50 to-indigo-100 dark:from-blue-900 dark:to-indigo-900">
+        <Container>
+          <div className="text-center mb-16">
+            <h2 className="mb-4 text-4xl font-bold text-gray-900 dark:text-white">Enseignants : Partagez votre passion et générez des revenus</h2>
+            <p className="mx-auto max-w-3xl text-lg text-gray-600 dark:text-gray-300">
+              Transformez votre expertise pédagogique en une source de revenus complémentaires tout en aidant des milliers d'enfants à apprendre.
+            </p>
+          </div>
+
+          <GridLayout columns={{ default: 1, lg: 2 }} gap="gap-12" className="items-center">
+            <div className="space-y-6">
+              <div className="flex items-start space-x-4">
+                <div className="flex-shrink-0 w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-xl">💡</span>
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Créez vos cours en ligne</h3>
+                  <p className="text-gray-600 dark:text-gray-300">Utilisez vos méthodes pédagogiques éprouvées pour créer des cours vidéo engageants.</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start space-x-4">
+                <div className="flex-shrink-0 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-xl">💰</span>
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Générez des revenus passifs</h3>
+                  <p className="text-gray-600 dark:text-gray-300">Recevez une commission sur chaque inscription à vos cours, créant un revenu durable.</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start space-x-4">
+                <div className="flex-shrink-0 w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-xl">🌟</span>
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Valorisez votre expertise</h3>
+                  <p className="text-gray-600 dark:text-gray-300">Construisez votre réputation et montrez vos compétences pédagogiques à un large public.</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="text-center lg:text-left">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-xl">
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Rejoignez notre équipe d'enseignants</h3>
+                <p className="text-gray-600 dark:text-gray-300 mb-6">
+                  Nous recherchons des enseignants passionnés pour enrichir notre catalogue de cours. 
+                  Bénéficiez d'un support technique complet et d'une plateforme optimisée pour l'enseignement.
+                </p>
+                <div className="space-y-3">
+                  <Link
+                    href="/signup"
+                    className="w-full inline-flex h-12 items-center justify-center rounded-full bg-gradient-to-r from-blue-600 to-blue-700 px-8 text-base font-semibold text-white transition-all duration-300 hover:from-blue-700 hover:to-blue-800 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  >
+                    Devenir enseignant partenaire
+                  </Link>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Inscription gratuite • Support dédié • Commission attractive
+                  </p>
+                </div>
+              </div>
+            </div>
+          </GridLayout>
+        </Container>
+      </Section>
+
       {/* Call to Action Section */}
       <Section className="py-16 bg-gradient-to-r from-gray-600 to-gray-800 text-center text-white">
         <Container>
           <h2 className="mb-4 text-4xl font-bold">
-            {user ? 'Continuez à apprendre' : 'Prêt à commencer à apprendre ?'}
+            {user ? 'Continuez l\'aventure d\'apprentissage' : 'Offrez à votre enfant le meilleur de l\'éducation'}
           </h2>
           <p className="mx-auto mb-8 max-w-3xl text-xl text-gray-200">
             {user
-              ? 'Découvrez nos derniers cours et continuez votre parcours d\'apprentissage.'
-              : 'Rejoignez des milliers d\'étudiants qui apprennent déjà sur notre plateforme.'}
+              ? 'Découvrez nos nouveaux cours et continuez à grandir avec nous.'
+              : 'Rejoignez des milliers de familles qui font confiance à notre plateforme éducative. Apprentissage garanti !'}
           </p>
           <div className="flex flex-col justify-center gap-4 sm:flex-row">
             {user ? (
-              <Link
-                href="/courses"
-                className="inline-flex h-12 items-center justify-center rounded-full bg-white px-8 text-base font-semibold text-gray-700 transition-all duration-300 hover:bg-gray-100 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-600"
-              >
-                Catalogue des cours
-              </Link>
+              <>
+                <Link
+                  href="/courses"
+                  className="inline-flex h-12 items-center justify-center rounded-full bg-white px-8 text-base font-semibold text-gray-700 transition-all duration-300 hover:bg-gray-100 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-600"
+                >
+                  Découvrir les cours
+                </Link>
+                <Link
+                  href="/payment"
+                  className="inline-flex h-12 items-center justify-center rounded-full bg-gradient-to-r from-green-500 to-green-600 px-8 text-base font-semibold text-white transition-all duration-300 hover:from-green-600 hover:to-green-700 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                >
+                  Mon abonnement
+                </Link>
+              </>
             ) : (
               <>
                 <Link
-                  href="/signup"
-                  className="inline-flex h-12 items-center justify-center rounded-full bg-white px-8 text-base font-semibold text-gray-700 transition-all duration-300 hover:bg-gray-100 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-600"
+                  href="/payment"
+                  className="inline-flex h-12 items-center justify-center rounded-full bg-gradient-to-r from-green-500 to-green-600 px-8 text-base font-semibold text-white transition-all duration-300 hover:from-green-600 hover:to-green-700 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
                 >
-                  S'inscrire maintenant
+                  🚀 Commencer l'abonnement
                 </Link>
                 <Link
-                  href="/courses"
+                  href="/signup"
                   className="inline-flex h-12 items-center justify-center rounded-full border-2 border-white px-8 text-base font-semibold text-white transition-all duration-300 hover:bg-white hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-600"
                 >
-                  Catalogue des cours
+                  Créer un compte gratuit
                 </Link>
               </>
             )}

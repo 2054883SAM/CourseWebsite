@@ -25,6 +25,10 @@ export default function CoursePlayerPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
   const [answerState, setAnswerState] = useState<'idle' | 'correct' | 'incorrect'>('idle');
+  const [chapterFlashcard, setChapterFlashcard] = useState<Flashcard | null>(null);
+  const [showChapterFlashcard, setShowChapterFlashcard] = useState(false);
+  const [isGeneratingChapterFlashcard, setIsGeneratingChapterFlashcard] = useState(false);
+  const [isGeneratingFinalFlashcards, setIsGeneratingFinalFlashcards] = useState(false);
 
   const courseId = params.courseId as string;
 
@@ -164,10 +168,42 @@ export default function CoursePlayerPage() {
       userId={user?.id}
       courseId={courseId}
       duration={courseData.duration}
+      onChapterComplete={async (chapter) => {
+        if (!chapter || chapter.flashcard !== true) {
+          return;
+        }
+        setShowChapterFlashcard(true);
+        setIsGeneratingChapterFlashcard(true);
+        try {
+          const startTime = chapter.startTime;
+          const duration = typeof chapter.duration === 'number' ? chapter.duration : undefined;
+          const res = await fetch('/api/video/generate-chapter-flashcard', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ courseId, startTime, duration }),
+          });
+          if (!res.ok) {
+            console.error('Failed to generate chapter flashcard', await res.text());
+            return;
+          }
+          const data = await res.json();
+          if (data?.flashcard) {
+            setChapterFlashcard(data.flashcard as Flashcard);
+            setSelectedChoice(null);
+            setAnswerState('idle');
+          }
+        } catch (e) {
+          console.error('Error generating chapter flashcard:', e);
+        } finally {
+          setIsGeneratingChapterFlashcard(false);
+        }
+      }}
       onComplete={async () => {
         // Prevent duplicate requests
         if (hasRequestedFlashcardsRef.current) return;
         hasRequestedFlashcardsRef.current = true;
+        setShowFlashcards(true);
+        setIsGeneratingFinalFlashcards(true);
         try {
           const res = await fetch('/api/video/generate-flashcards', {
             method: 'POST',
@@ -184,23 +220,100 @@ export default function CoursePlayerPage() {
             setCurrentIndex(0);
             setSelectedChoice(null);
             setAnswerState('idle');
-            setShowFlashcards(true);
           }
         } catch (e) {
           console.error('Error generating flashcards:', e);
+        } finally {
+          setIsGeneratingFinalFlashcards(false);
         }
       }}
     />
 
-    {/* Flashcards Dialog */}
-    {showFlashcards && flashcards && flashcards.length > 0 && (
+    {/* Chapter Flashcard Dialog */}
+    {showChapterFlashcard && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="absolute inset-0 bg-black/50" onClick={() => setShowChapterFlashcard(false)} />
+        <div className="relative z-10 w-full max-w-xl rounded-lg bg-white p-6 shadow-xl dark:bg-zinc-900">
+          {isGeneratingChapterFlashcard || !chapterFlashcard ? (
+            <div className="flex flex-col items-center">
+              <LoadingSpinner />
+              <p className="mt-3 text-sm text-gray-700 dark:text-gray-300">Génération de la révision rapide…</p>
+            </div>
+          ) : (
+            <>
+              <div className="mb-4 text-sm text-gray-500">Révision rapide</div>
+              <h3 className="mb-4 text-lg font-semibold">{chapterFlashcard.question}</h3>
+              <div className="grid grid-cols-1 gap-3">
+                {chapterFlashcard.choices.map((choice, idx) => {
+                  const isSelected = selectedChoice === choice;
+                  const isCorrect = answerState !== 'idle' && choice === chapterFlashcard.correctAnswer;
+                  const isIncorrect = answerState === 'incorrect' && isSelected && choice !== chapterFlashcard.correctAnswer;
+                  const base = 'w-full rounded border px-4 py-3 text-left transition-colors';
+                  const idle = 'border-gray-300 hover:bg-gray-50 dark:border-zinc-700 dark:hover:bg-zinc-800';
+                  const correct = 'border-emerald-600 bg-emerald-50 text-emerald-800 dark:border-emerald-500 dark:bg-emerald-900/30 dark:text-emerald-300';
+                  const incorrect = 'border-red-600 bg-red-50 text-red-800 dark:border-red-500 dark:bg-red-900/30 dark:text-red-300';
+                  let cls = base + ' ' + idle;
+                  if (isCorrect) cls = base + ' ' + correct;
+                  if (isIncorrect) cls = base + ' ' + incorrect;
+                  return (
+                    <button
+                      key={idx}
+                      className={cls}
+                      onClick={() => {
+                        if (answerState !== 'idle' || !chapterFlashcard) return;
+                        setSelectedChoice(choice);
+                        const correctNow = choice === chapterFlashcard.correctAnswer;
+                        if (correctNow) {
+                          setAnswerState('correct');
+                          setTimeout(() => {
+                            setAnswerState('idle');
+                            setSelectedChoice(null);
+                            setShowChapterFlashcard(false);
+                          }, 700);
+                        } else {
+                          setAnswerState('incorrect');
+                          setTimeout(() => {
+                            setAnswerState('idle');
+                            setSelectedChoice(null);
+                          }, 800);
+                        }
+                      }}
+                      disabled={answerState !== 'idle'}
+                    >
+                      <span className="mr-2 inline-block h-2 w-2 rounded-full bg-current opacity-50" />
+                      {choice}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="mt-6 flex items-center justify-end">
+                <button
+                  className="rounded px-4 py-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-zinc-800"
+                  onClick={() => setShowChapterFlashcard(false)}
+                >
+                  Skip
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    )}
+
+    {/* Final Flashcards Dialog */}
+    {showFlashcards && (
       <div className="fixed inset-0 z-50 flex items-center justify-center">
         <div className="absolute inset-0 bg-black/50" onClick={() => setShowFlashcards(false)} />
         <div className="relative z-10 w-full max-w-xl rounded-lg bg-white p-6 shadow-xl dark:bg-zinc-900">
-          {currentIndex >= flashcards.length ? (
+          {isGeneratingFinalFlashcards || !flashcards || flashcards.length === 0 ? (
+            <div className="flex flex-col items-center">
+              <LoadingSpinner />
+              <p className="mt-3 text-sm text-gray-700 dark:text-gray-300">Génération des questions flash…</p>
+            </div>
+          ) : currentIndex >= flashcards.length ? (
             <div className="text-center">
-              <h3 className="mb-4 text-xl font-semibold">Great job! 🎉</h3>
-              <p className="mb-6 text-gray-600 dark:text-gray-300">You&apos;ve completed all the flashcards.</p>
+              <h3 className="mb-4 text-xl font-semibold">Bravo! 🎉</h3>
+              <p className="mb-6 text-gray-600 dark:text-gray-300">Tu as terminé toutes les questions flash.</p>
               <button
                 className="rounded bg-emerald-600 px-4 py-2 text-white hover:bg-emerald-700"
                 onClick={() => setShowFlashcards(false)}

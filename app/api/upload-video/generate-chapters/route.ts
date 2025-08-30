@@ -6,6 +6,7 @@ type ChapterDraft = {
   startTime: number;
   duration?: number;
   description?: string;
+  flashcard?: boolean;
 };
 
 // --- VTT Condenser Utilities ---
@@ -141,15 +142,16 @@ export async function POST(req: Request) {
     const system = [
       'You are an assistant that creates structured video chapters from a transcript or caption file.',
       'The output must be ONLY a valid JSON array of chapter objects, nothing else. No code fences, no prose.',
-      'Each chapter object must have: "title" (string), "startTime" (number, seconds).',
-      'Optional fields: "duration" (number, seconds), "description" (string).',
+      'Each chapter object MUST have: "title" (string), "startTime" (number, seconds), "duration" (number, seconds), "description" (string) and "flashcard" (boolean).',
       'Rules:',
       '- Use the transcript timing to choose reasonable chapter boundaries.',
       '- Ensure startTime values are increasing and start at 0 or the first meaningful point.',
       '- If duration is provided, ensure it is positive and non-overlapping with the next chapter.',
       '- Keep titles short and descriptive; use the transcript language.',
       '- If no clear structure, create 4-8 logical chapters depending on length.',
-      '- If targetChapterCount is provided, aim for that many chapters (but keep quality).'
+      '- If targetChapterCount is provided, aim for that many chapters (but keep quality).',
+      '- Set flashcard to true when the chapter contains a focused fact, definition, key concept, or short list suitable for a single multiple-choice question. Otherwise set flashcard to false.',
+      '- ALWAYS include the flashcard boolean field for every chapter.'
     ].join('\n');
 
     // Condense the VTT to a time-anchored timeline to fit long videos (8h+)
@@ -161,6 +163,7 @@ export async function POST(req: Request) {
       'Input is a condensed timeline with time anchors in the format "MM:SS text" (one per window).',
       'Use the anchors and content to infer global chapter boundaries and titles. Return absolute startTime in seconds.',
       'Return ONLY the JSON array as specified. Do not include comments or explanations.',
+      'For each chapter, include a boolean field "flashcard" (true/false) as required by the rules.',
       '```',
       condensed,
       '```'
@@ -192,14 +195,29 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Model did not return a JSON array', raw }, { status: 502 });
     }
 
+    console.log(parsed);
+
     // Sanitize and coerce
+    const normalizeBoolean = (value: unknown): boolean => {
+      if (typeof value === 'boolean') return value;
+      if (typeof value === 'string') {
+        const v = value.trim().toLowerCase();
+        if (v === 'true' || v === 'yes' || v === '1') return true;
+        if (v === 'false' || v === 'no' || v === '0') return false;
+        return false;
+      }
+      if (typeof value === 'number') return value !== 0;
+      return false;
+    };
     const chapters: ChapterDraft[] = (parsed as any[])
-      .map((c) => ({
-        title: String(c?.title || '').slice(0, 200).trim(),
-        startTime: Number(c?.startTime),
-        duration: c?.duration != null ? Number(c.duration) : undefined,
-        description: c?.description != null ? String(c.description).slice(0, 500).trim() : undefined,
-      }))
+      .map((c) => {
+        const title = String(c?.title || '').slice(0, 200).trim();
+        const startTime = Number(c?.startTime);
+        const duration = c?.duration != null ? Number(c.duration) : undefined;
+        const description = c?.description != null ? String(c.description).slice(0, 500).trim() : undefined;
+        const flashcard = normalizeBoolean((c as any)?.flashcard);
+        return { title, startTime, duration, description, flashcard } as ChapterDraft;
+      })
       .filter((c) => c.title && Number.isFinite(c.startTime) && c.startTime >= 0)
       .sort((a, b) => a.startTime - b.startTime);
 

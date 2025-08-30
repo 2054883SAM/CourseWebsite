@@ -5,6 +5,7 @@ import { createRouteHandlerClient } from '@/lib/supabase/server';
 // Steps:
 // 1) Delete VdoCipher video by playback_id
 // 2) Delete Supabase storage thumbnail from thumbnail_url
+// 2b) Delete captions VTT from 'translations' bucket at <courseId>/captions.vtt
 // 3) Delete the course record
 
 export async function DELETE(request: Request) {
@@ -109,6 +110,21 @@ export async function DELETE(request: Request) {
         }
       } catch {
         // Ignore malformed URL; proceed
+      }
+    }
+
+    // 2b) Delete captions VTT from 'translations' bucket: <courseId>/captions.vtt
+    {
+      const captionsPath = `${courseId}/captions.vtt`;
+      const { error: captionsRemoveErr } = await supabase
+        .storage
+        .from('translations')
+        .remove([captionsPath]);
+      if (captionsRemoveErr) {
+        return NextResponse.json(
+          { error: `Failed to delete captions: ${captionsRemoveErr.message}` },
+          { status: 500 }
+        );
       }
     }
 

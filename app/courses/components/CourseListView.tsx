@@ -17,11 +17,11 @@ export function CourseListView({ courses, searchQuery = '', onCourseDeleted, onD
   if (courses.length === 0) {
     return (
       <div className="text-center py-12">
-        <h3 className="text-xl font-medium text-gray-900 dark:text-white">No courses found</h3>
+        <h3 className="text-xl font-medium text-gray-900 dark:text-white">Aucun cours trouvé</h3>
         <p className="mt-2 text-gray-600 dark:text-gray-400">
           {searchQuery ? 
-            `No results match your search for "${searchQuery}". Try different keywords.` : 
-            'Try adjusting your search or filter criteria.'
+            `Aucun résultat ne correspond à votre recherche "${searchQuery}". Essayez d'autres mots-clés.` : 
+            'Essayez d\'ajuster vos critères de recherche ou de filtrage.'
           }
         </p>
       </div>
@@ -93,12 +93,12 @@ function CourseListItem({ course, searchQuery = '', onDeleted, onDeleteStart, on
             />
           ) : (
             <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-              <span className="text-gray-400 dark:text-gray-500">No image</span>
+              <span className="text-gray-400 dark:text-gray-500">Aucune image</span>
             </div>
           )}
           {!dbUser && (
             <div className="absolute bottom-0 right-0 bg-green-600 text-white px-2 py-1 text-sm font-semibold">
-              Sign in to enroll
+              Connectez-vous pour vous inscrire
             </div>
           )}
         </div>
@@ -139,7 +139,7 @@ function CourseListItem({ course, searchQuery = '', onDeleted, onDeleteStart, on
                   {course.creator?.name.charAt(0) || 'U'}
                 </div>
               )}
-              <span className="text-sm text-gray-700 dark:text-gray-300">{course.creator?.name || 'Unknown Creator'}</span>
+              <span className="text-sm text-gray-700 dark:text-gray-300">{course.creator?.name || 'Créateur inconnu'}</span>
             </div>
 
             {dbUser && (
@@ -169,7 +169,7 @@ function CourseListItem({ course, searchQuery = '', onDeleted, onDeleteStart, on
                 onClick={() => window.location.href = '/signin'} 
                 className="text-sm text-gold-600 hover:text-gold-800 dark:text-gold-400 dark:hover:text-gold-300 font-medium"
               >
-                Sign in to see full details
+                Connectez-vous pour voir tous les détails
               </button>
             )}
 

@@ -20,9 +20,10 @@ interface VdoCipherPlayerProps {
   onChapterSeek?: (chapter: VideoChapter, time: number) => void;
   onProgress?: (percent: number) => void;
   onComplete?: () => void;
+  onChapterComplete?: (chapter: VideoChapter) => void;
 }
 
-function VdoCipherPlayerComponent({ videoId, watermark, className, chapters = [], userId, courseId, duration, onChapterSeek, onProgress, onComplete }: VdoCipherPlayerProps) {
+function VdoCipherPlayerComponent({ videoId, watermark, className, chapters = [], userId, courseId, duration, onChapterSeek, onProgress, onComplete, onChapterComplete }: VdoCipherPlayerProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const hasInitialized = useRef(false);
   const playerLoaded = useRef(false);
@@ -34,6 +35,7 @@ function VdoCipherPlayerComponent({ videoId, watermark, className, chapters = []
   const lastProgressValueRef = useRef<number>(-1);
   const hasStartedPlayingRef = useRef<boolean>(false);
   const completionFiredRef = useRef<boolean>(false);
+  const completedChapterIdsRef = useRef<Set<string>>(new Set());
   // Allow parent/ChapterList to jump near the end to mark as finished
   const handleFinishClick = () => {
     try {
@@ -231,6 +233,8 @@ function VdoCipherPlayerComponent({ videoId, watermark, className, chapters = []
                 }
                 if (!completionFiredRef.current && percent >= 100) {
                   completionFiredRef.current = true;
+                  // Pause video before triggering completion callback
+                  try { player.video.pause?.(); } catch {}
                   if (typeof onComplete === 'function') {
                     try { onComplete(); } catch {}
                   }
@@ -242,14 +246,44 @@ function VdoCipherPlayerComponent({ videoId, watermark, className, chapters = []
 
               // If we have chapters, find the current chapter based on time
               if (safeChapters && safeChapters.length > 0) {
-                const currentChapter = safeChapters.find((chapter, index) => {
+                const currentChapterIndex = safeChapters.findIndex((chapter, index) => {
                   const nextChapter = safeChapters[index + 1];
                   return (
                     chapter.startTime <= currentTime &&
                     (!nextChapter || currentTime < nextChapter.startTime)
                   );
                 });
-                // Optional: highlight currentChapter if needed
+
+                if (currentChapterIndex >= 0) {
+                  const currentChapter = safeChapters[currentChapterIndex];
+                  const nextChapter = safeChapters[currentChapterIndex + 1];
+
+                  // Determine end time for this chapter
+                  let chapterEndTime = Number.NaN;
+                  if (typeof currentChapter.duration === 'number' && currentChapter.duration > 0) {
+                    chapterEndTime = currentChapter.startTime + currentChapter.duration;
+                  } else if (nextChapter) {
+                    chapterEndTime = nextChapter.startTime;
+                  } else if (durationSec > 0) {
+                    chapterEndTime = durationSec;
+                  }
+
+                  // Fire chapter-complete when passing end time once
+                  // Only trigger for chapters explicitly marked with flashcard
+                  if (!Number.isNaN(chapterEndTime) && hasStartedPlayingRef.current && currentChapter.flashcard === true) {
+                    const epsilon = 0.25;
+                    if (currentTime >= chapterEndTime - epsilon) {
+                      if (!completedChapterIdsRef.current.has(currentChapter.id)) {
+                        completedChapterIdsRef.current.add(currentChapter.id);
+                        // Pause video before notifying parent
+                        try { player.video.pause?.(); } catch {}
+                        if (typeof onChapterComplete === 'function') {
+                          try { onChapterComplete(currentChapter); } catch {}
+                        }
+                      }
+                    }
+                  }
+                }
               }
             } catch (e) {
               console.error('Error getting currentTime from VdoPlayer API:', e);
@@ -283,7 +317,7 @@ function VdoCipherPlayerComponent({ videoId, watermark, className, chapters = []
         currentIframe.removeEventListener('load', handleIframeLoad);
       }
     };
-  }, [embedUrl, chapters, onChapterSeek, safeChapters, userId, courseId, duration, onProgress, onComplete]);
+  }, [embedUrl, chapters, onChapterSeek, safeChapters, userId, courseId, duration, onProgress, onComplete, onChapterComplete]);
 
   const handleChapterClick = (chapter: VideoChapter) => {
     setIsLoading(true);

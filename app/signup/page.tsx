@@ -2,8 +2,8 @@ import { SignUp } from '@/components/auth/SignUp';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Sign Up - EzioAcademy',
-  description: 'Create a new account to start learning',
+  title: "S'inscrire - EzioAcademy",
+  description: 'Créez un nouveau compte pour commencer à apprendre',
 };
 
 export default function SignUpPage() {

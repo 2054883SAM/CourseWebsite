@@ -34,7 +34,7 @@ export function SkipToContent({ contentId = 'main-content' }: SkipToContentProps
       onFocus={() => setIsFocused(true)}
       onBlur={() => setIsFocused(false)}
     >
-      Skip to content
+      Aller au contenu principal
     </a>
   );
 } 

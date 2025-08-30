@@ -9,8 +9,8 @@ interface NewsletterProps {
 }
 
 export function Newsletter({
-  title = 'Subscribe to our newsletter',
-  description = 'Get the latest updates and news delivered to your inbox.',
+  title = 'Abonnez-vous à notre newsletter',
+  description = 'Recevez les dernières mises à jour et actualités directement dans votre boîte mail.',
   className = '',
 }: NewsletterProps) {
   const [email, setEmail] = useState('');
@@ -34,7 +34,7 @@ export function Newsletter({
       setIsSuccess(true);
       setEmail('');
     } catch (err) {
-      setError('An error occurred. Please try again.');
+      setError('Une erreur est survenue. Veuillez réessayer.');
     } finally {
       setIsSubmitting(false);
     }
@@ -55,7 +55,7 @@ export function Newsletter({
           role="status"
           aria-live="polite"
         >
-          Thank you for subscribing! We&apos;ve sent a confirmation email.
+          Merci pour votre abonnement ! Nous vous avons envoyé un e-mail de confirmation.
         </div>
       ) : (
         <form 
@@ -66,7 +66,7 @@ export function Newsletter({
         >
           <div>
             <label htmlFor={inputId} className="sr-only">
-              Email address
+              Adresse e-mail
             </label>
             <input
               id={inputId}
@@ -77,7 +77,7 @@ export function Newsletter({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-2 text-base text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              placeholder="Enter your email"
+              placeholder="Entrez votre adresse e-mail"
               aria-required="true"
               aria-invalid={error ? "true" : "false"}
             />
@@ -98,7 +98,7 @@ export function Newsletter({
               className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
               aria-busy={isSubmitting}
             >
-              {isSubmitting ? 'Subscribing...' : 'Subscribe'}
+              {isSubmitting ? 'Abonnement en cours...' : 'S\'abonner'}
             </button>
           </div>
         </form>

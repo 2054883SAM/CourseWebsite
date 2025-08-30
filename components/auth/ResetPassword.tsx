@@ -30,7 +30,7 @@ export function ResetPassword() {
 
   return (
     <div className="mx-auto max-w-md rounded-lg bg-white p-6 shadow-md dark:bg-gray-800">
-      <h2 className="mb-6 text-2xl font-bold text-gray-900 dark:text-white">Reset Password</h2>
+      <h2 className="mb-6 text-2xl font-bold text-gray-900 dark:text-white">Réinitialiser le mot de passe</h2>
       {error && (
         <div className="mb-4 rounded-lg bg-red-100 p-4 text-red-700" role="alert">
           {error}
@@ -38,7 +38,7 @@ export function ResetPassword() {
       )}
       {success && (
         <div className="mb-4 rounded-lg bg-green-100 p-4 text-green-700" role="alert">
-          Check your email for password reset instructions.
+          Vérifiez votre e-mail pour les instructions de réinitialisation du mot de passe.
         </div>
       )}
       <form onSubmit={handleSubmit}>
@@ -47,7 +47,7 @@ export function ResetPassword() {
             htmlFor="email"
             className="block text-sm font-medium text-gray-700 dark:text-gray-300"
           >
-            Email
+            Adresse e-mail
           </label>
           <input
             id="email"
@@ -63,7 +63,7 @@ export function ResetPassword() {
           disabled={loading}
           className="flex w-full justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
         >
-          {loading ? 'Sending...' : 'Reset Password'}
+          {loading ? 'Envoi en cours...' : 'Réinitialiser le mot de passe'}
         </button>
       </form>
       <div className="mt-4 text-center">
@@ -71,7 +71,7 @@ export function ResetPassword() {
           href="/signin"
           className="text-sm text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
         >
-          Back to Sign In
+          Retour à la connexion
         </Link>
       </div>
     </div>

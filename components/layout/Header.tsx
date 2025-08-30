@@ -16,7 +16,6 @@ import { useRouter } from 'next/navigation';
 const navigation = [
   { name: 'Accueil', href: '/' },
   { name: 'Cours', href: '/courses' },
-  { name: 'À propos', href: '/about' },
 ];
 
 export function Header() {
@@ -100,9 +99,16 @@ export function Header() {
   const getNavItems = () => {
     const baseItems = [...navigation];
     
-    // Add "My Learning" only for authenticated non-admin users
-    if (user && dbUser?.role !== 'admin') {
+    // Add "My Learning" only for authenticated non-admin users with an active (subscribed) membership
+    if (user && dbUser?.role !== 'admin' && dbUser?.membership === 'subscribed') {
       baseItems.splice(2, 0, { name: 'Mes formations', href: '/my-learning' });
+    }
+    
+    // Add "Membership" for users not signed in or students with free membership
+    if (!user || (dbUser?.role === 'student' && dbUser?.membership === 'free')) {
+      if (!baseItems.some((item) => item.href === '/payment')) {
+        baseItems.push({ name: 'Membership', href: '/payment' });
+      }
     }
     
     return baseItems;

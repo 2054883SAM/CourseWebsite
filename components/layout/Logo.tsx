@@ -18,8 +18,8 @@ export function Logo({ className = '' }: LogoProps) {
         <path d="M4.462 19.462c.42-.419.753-.89 1-1.394.453.213.902.434 1.347.661a6.743 6.743 0 01-1.286 1.794.75.75 0 11-1.06-1.06z" />
       </svg>
       <span className="text-2xl font-bold text-black dark:text-white">
-        <span className="text-gold-600 dark:text-gold-400">Ezio</span>
-        <span className="text-black dark:text-white">Academy</span>
+        <span className="text-gold-600 dark:text-gold-400">Edu</span>
+        <span className="text-black dark:text-white">Kids Academy</span>
       </span>
     </Link>
   );

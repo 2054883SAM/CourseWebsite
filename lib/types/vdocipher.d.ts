@@ -32,6 +32,7 @@ export interface VideoChapter {
   duration?: number; // in seconds, optional
   description?: string;
   thumbnail?: string;
+  flashcard?: boolean;
 }
 
 export interface ChapterListProps {

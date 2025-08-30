@@ -31,7 +31,7 @@ export function ViewToggle({ currentView }: ViewToggleProps) {
             ? 'bg-gradient-to-r from-gray-600 to-gray-800 text-white'
             : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
         }`}
-        aria-label="Grid view"
+        aria-label="Vue grille"
       >
         <GridIcon className="w-5 h-5" />
       </button>
@@ -43,7 +43,7 @@ export function ViewToggle({ currentView }: ViewToggleProps) {
             ? 'bg-gradient-to-r from-gray-600 to-gray-800 text-white'
             : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
         }`}
-        aria-label="List view"
+        aria-label="Vue liste"
       >
         <ListIcon className="w-5 h-5" />
       </button>

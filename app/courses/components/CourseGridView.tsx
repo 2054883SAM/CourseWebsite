@@ -17,11 +17,11 @@ export function CourseGridView({ courses, searchQuery = '', onCourseDeleted, onD
   if (courses.length === 0) {
     return (
       <div className="text-center py-12">
-        <h3 className="text-xl font-medium text-gray-900 dark:text-white">No courses found</h3>
+        <h3 className="text-xl font-medium text-gray-900 dark:text-white">Aucun cours trouvé</h3>
         <p className="mt-2 text-gray-600 dark:text-gray-400">
           {searchQuery ? 
-            `No results match your search for "${searchQuery}". Try different keywords.` : 
-            'Try adjusting your search or filter criteria.'
+            `Aucun résultat ne correspond à votre recherche "${searchQuery}". Essayez d'autres mots-clés.` : 
+            'Essayez d\'ajuster vos critères de recherche ou de filtrage.'
           }
         </p>
       </div>

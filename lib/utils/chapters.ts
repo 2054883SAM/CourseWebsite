@@ -10,7 +10,8 @@ export function convertDBChapterToVideoChapter(dbChapter: DBChapter): VideoChapt
     startTime: dbChapter.start_time,
     duration: dbChapter.duration,
     description: dbChapter.description,
-    thumbnail: dbChapter.thumbnail_url
+    thumbnail: dbChapter.thumbnail_url,
+    // DB currently has no flashcard column; leave undefined when converting from DB
   };
 }
 
@@ -89,7 +90,8 @@ export function isVideoChapter(chapter: unknown): chapter is VideoChapter {
     typeof c.startTime === 'number' &&
     (c.duration === undefined || typeof c.duration === 'number') &&
     (c.description === undefined || typeof c.description === 'string') &&
-    (c.thumbnail === undefined || typeof c.thumbnail === 'string')
+    (c.thumbnail === undefined || typeof c.thumbnail === 'string') &&
+    (c.flashcard === undefined || typeof c.flashcard === 'boolean')
   );
 }
 

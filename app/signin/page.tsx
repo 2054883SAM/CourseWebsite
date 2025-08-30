@@ -3,8 +3,8 @@ import { Metadata } from 'next';
 import { Logo } from '@/components/layout/Logo';
 
 export const metadata: Metadata = {
-  title: 'Sign In - EzioAcademy',
-  description: 'Sign in to your account to access your courses',
+  title: 'Connexion - EzioAcademy',
+  description: 'Connectez-vous à votre compte pour accéder à vos cours',
 };
 
 export default function SignInPage() {

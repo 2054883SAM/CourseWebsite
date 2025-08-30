@@ -5,24 +5,24 @@ import { Logo } from './Logo';
 
 const footerNavigation = {
   main: [
-    { name: 'Home', href: '/' },
-    { name: 'Courses', href: '/courses' },
-    { name: 'Pricing', href: '/pricing' },
-    { name: 'About', href: '/about' },
+    { name: 'Accueil', href: '/' },
+    { name: 'Cours', href: '/courses' },
+    { name: 'Tarifs', href: '/pricing' },
+    { name: 'À propos', href: '/about' },
   ],
   legal: [
-    { name: 'Privacy', href: '/privacy' },
-    { name: 'Terms', href: '/terms' },
+    { name: 'Confidentialité', href: '/privacy' },
+    { name: 'Conditions', href: '/terms' },
   ],
   company: [
-    { name: 'About Us', href: '/about' },
+    { name: 'À propos de nous', href: '/about' },
     { name: 'Contact', href: '/contact' },
     { name: 'Blog', href: '/blog' },
   ],
   support: [
-    { name: 'Help Center', href: '/help' },
-    { name: 'FAQs', href: '/faqs' },
-    { name: 'Contact Support', href: '/support' },
+    { name: 'Centre d\'aide', href: '/help' },
+    { name: 'FAQ', href: '/faqs' },
+    { name: 'Support', href: '/support' },
   ],
 };
 
@@ -86,7 +86,7 @@ export function Footer() {
       role="contentinfo"
       aria-labelledby="footer-heading"
     >
-      <h2 id="footer-heading" className="sr-only">Footer</h2>
+      <h2 id="footer-heading" className="sr-only">Pied de page</h2>
       <Container>
         <div className="py-12 md:py-16">
           <div className="mb-8 flex items-center">
@@ -106,7 +106,7 @@ export function Footer() {
                   id="footer-main-navigation"
                   className="text-sm font-semibold text-gray-500 dark:text-gray-400 tracking-wider uppercase mb-4"
                 >
-                  Main
+                  Principal
                 </h3>
                 <ul className="space-y-3" role="list" aria-labelledby="footer-main-navigation">
                   {footerNavigation.main.map((item) => (
@@ -126,7 +126,7 @@ export function Footer() {
                   id="footer-company-navigation"
                   className="text-sm font-semibold text-gray-500 dark:text-gray-400 tracking-wider uppercase mb-4"
                 >
-                  Company
+                  Entreprise
                 </h3>
                 <ul className="space-y-3" role="list" aria-labelledby="footer-company-navigation">
                   {footerNavigation.company.map((item) => (
@@ -164,7 +164,7 @@ export function Footer() {
                       href="/legal"
                       className="text-base text-gray-600 dark:text-gray-400 hover:text-gold-600 dark:hover:text-gold-400 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:ring-offset-2 rounded-md"
                     >
-                      Legal
+                      Mentions légales
                     </Link>
                   </li>
                 </ul>
@@ -190,7 +190,7 @@ export function Footer() {
                 ))}
               </div>
               <p className="text-base text-gray-500 dark:text-gray-400">
-                &copy; {currentYear} EzioAcademy. All rights reserved.
+                &copy; {currentYear} EzioAcademy. Tous droits réservés.
               </p>
             </div>
           </div>

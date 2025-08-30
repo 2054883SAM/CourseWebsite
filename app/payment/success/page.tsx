@@ -36,19 +36,19 @@ export default function PaymentSuccessPage() {
           <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
       </div>
-      <h1 className="text-3xl font-semibold">Payment successful</h1>
-      <p className="mt-2 text-gray-600">Your subscription is active. Enjoy unlimited access to all courses.</p>
+      <h1 className="text-3xl font-semibold">Paiement réussi</h1>
+      <p className="mt-2 text-gray-600">Votre abonnement est actif. Profitez d'un accès illimité à tous les cours.</p>
 
       {confirming && (
-        <p className="mt-4 text-sm text-gray-500">Activating your membership…</p>
+        <p className="mt-4 text-sm text-gray-500">Activation de votre abonnement…</p>
       )}
       {error && (
         <p className="mt-4 text-sm text-red-600">{error}</p>
       )}
 
       <div className="mt-8 flex items-center justify-center gap-3">
-        <Link href="/" className="rounded-md border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50">Go home</Link>
-        <Link href="/my-learning" className="rounded-md bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700">Start learning</Link>
+        <Link href="/" className="rounded-md border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50">Accueil</Link>
+        <Link href="/my-learning" className="rounded-md bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700">Commencer à apprendre</Link>
       </div>
     </div>
   );

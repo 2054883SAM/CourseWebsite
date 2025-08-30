@@ -38,33 +38,33 @@ export default function PaymentPage() {
   return (
     <div className="mx-auto max-w-3xl px-6 py-12">
       <div className="mb-8">
-        <h1 className="text-3xl font-semibold tracking-tight">Subscribe to Course Access</h1>
-        <p className="mt-2 text-gray-600">Monthly membership to access all courses.</p>
+        <h1 className="text-3xl font-semibold tracking-tight">S'abonner pour accéder aux cours</h1>
+        <p className="mt-2 text-gray-600">Abonnement mensuel pour accéder à tous les cours.</p>
       </div>
 
       <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
         <div className="mb-6">
           <div className="flex items-center gap-3">
-            <div className="rounded-md bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700">Monthly</div>
+            <div className="rounded-md bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700">Mensuel</div>
             <span className="text-3xl font-bold">$</span>
             <span className="text-5xl font-extrabold leading-none">50</span>
-            <span className="text-gray-500">/mo</span>
+            <span className="text-gray-500">/mois</span>
           </div>
-          <p className="mt-3 text-sm text-gray-600">Cancel anytime. Secured by Stripe.</p>
+          <p className="mt-3 text-sm text-gray-600">Annulable à tout moment. Sécurisé par Stripe.</p>
         </div>
 
         <ul className="mb-8 space-y-3 text-sm text-gray-700">
           <li className="flex items-center gap-2">
             <span className="inline-block h-1.5 w-1.5 rounded-full bg-green-500"></span>
-            Unlimited access to all courses
+            Accès illimité à tous les cours
           </li>
           <li className="flex items-center gap-2">
             <span className="inline-block h-1.5 w-1.5 rounded-full bg-green-500"></span>
-            New content monthly
+            Nouveau contenu chaque mois
           </li>
           <li className="flex items-center gap-2">
             <span className="inline-block h-1.5 w-1.5 rounded-full bg-green-500"></span>
-            Cancel anytime
+            Annulation à tout moment
           </li>
         </ul>
 
@@ -77,11 +77,11 @@ export default function PaymentPage() {
           disabled={loading || !user}
           className="inline-flex w-full items-center justify-center rounded-md bg-indigo-600 px-4 py-2.5 text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-gray-300"
         >
-          {loading ? 'Redirecting…' : user ? 'Subscribe with Stripe' : 'Sign in to subscribe'}
+          {loading ? 'Redirection…' : user ? "S'abonner avec Stripe" : 'Connectez-vous pour vous abonner'}
         </button>
 
         {!user && (
-          <p className="mt-3 text-xs text-gray-500">You must be signed in to subscribe.</p>
+          <p className="mt-3 text-xs text-gray-500">Vous devez être connecté pour vous abonner.</p>
         )}
       </div>
     </div>
