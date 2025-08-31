@@ -7,9 +7,9 @@
   --foreground: #000000;
   --primary: #000000;
   --secondary: #ffffff;
-  --accent: #eab308;
-  --accent-light: #fde047;
-  --accent-dark: #ca8a04;
+  --accent: #2563eb;
+  --accent-light: #3b82f6;
+  --accent-dark: #1d4ed8;
   --gray-light: #f9fafb;
   --gray-medium: #e5e7eb;
   --gray-dark: #d1d5db;
@@ -21,9 +21,9 @@
     --foreground: #ffffff;
     --primary: #ffffff;
     --secondary: #000000;
-    --accent: #eab308;
-    --accent-light: #fde047;
-    --accent-dark: #ca8a04;
+    --accent: #2563eb;
+    --accent-light: #3b82f6;
+    --accent-dark: #1d4ed8;
     --gray-light: #1f2937;
     --gray-medium: #374151;
     --gray-dark: #4b5563;
@@ -108,91 +108,29 @@ body {
   animation: scale-in 0.6s ease-out forwards;
 }
 
-.animate-shimmer {
-  background: linear-gradient(90deg, #f5f5f5 25%, #e5e5e5 50%, #f5f5f5 75%);
-  background-size: 200px 100%;
-  animation: shimmer 1.5s infinite;
-}
-
-/* Enhanced focus styles */
-.focus-ring {
-  @apply focus:outline-none focus:ring-2 focus:ring-gold-500 focus:ring-offset-2 dark:focus:ring-offset-black;
-}
-
-/* Smooth scrolling */
-html {
-  scroll-behavior: smooth;
-}
-
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: #f5f5f5;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #eab308;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #ca8a04;
-}
-
-/* Dark mode scrollbar */
-.dark ::-webkit-scrollbar-track {
-  background: #1a1a1a;
-}
-
-.dark ::-webkit-scrollbar-thumb {
-  background: #eab308;
-}
-
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: #ca8a04;
-}
-
-/* Line clamp utility */
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.line-clamp-3 {
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
 /* Glass morphism effect */
 .glass {
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(234, 179, 8, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .dark .glass {
   background: rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(234, 179, 8, 0.2);
+  border: 1px solid rgba(37, 99, 235, 0.2);
 }
 
 /* Gradient text */
 .gradient-text {
-  background: linear-gradient(135deg, #000000 0%, #eab308 50%, #ffffff 100%);
+  background: linear-gradient(135deg, #000000 0%, #2563eb 50%, #ffffff 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-/* Gold gradient text */
-.gold-gradient-text {
-  background: linear-gradient(135deg, #fde047 0%, #eab308 50%, #ca8a04 100%);
+/* Blue gradient text */
+.blue-gradient-text {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -221,7 +159,7 @@ html {
 
 /* Custom button styles */
 .btn-primary {
-  @apply bg-black text-white hover:bg-gray-800 border border-gold-500 hover:border-gold-400 transition-all duration-200;
+  @apply bg-black text-white hover:bg-gray-800 border border-blue-500 hover:border-blue-400 transition-all duration-200;
 }
 
 .btn-secondary {
@@ -229,7 +167,7 @@ html {
 }
 
 .btn-accent {
-  @apply bg-gold-500 text-black hover:bg-gold-600 border border-gold-600 hover:border-gold-700 transition-all duration-200;
+  @apply bg-blue-500 text-white hover:bg-blue-600 border border-blue-600 hover:border-blue-700 transition-all duration-200;
 }
 
 .btn-gray {
@@ -237,7 +175,7 @@ html {
 }
 
 .dark .btn-primary {
-  @apply bg-white text-black hover:bg-gray-100 border border-gold-500 hover:border-gold-400;
+  @apply bg-white text-black hover:bg-gray-100 border border-blue-500 hover:border-blue-400;
 }
 
 .dark .btn-secondary {
@@ -259,11 +197,11 @@ html {
 
 /* Input styles */
 .input {
-  @apply bg-white border border-gray-300 focus:border-gold-500 focus:ring-2 focus:ring-gold-200 transition-all duration-200;
+  @apply bg-white border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200;
 }
 
 .dark .input {
-  @apply bg-black border border-gray-700 focus:border-gold-500;
+  @apply bg-black border border-gray-700 focus:border-blue-500;
 }
 
 /* Gradient backgrounds */
@@ -273,4 +211,63 @@ html {
 
 .dark .bg-gradient-gray {
   background: linear-gradient(135deg, #1f2937 0%, #374151 50%, #4b5563 100%);
+}
+
+/* Custom scrollbar styles */
+::-webkit-scrollbar {
+  width: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%);
+  border-radius: 6px;
+  border: 2px solid #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 50%, #1e40af 100%);
+}
+
+/* Dark mode scrollbar */
+.dark ::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%);
+  border: 2px solid #1e293b;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 50%, #1e40af 100%);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #3b82f6 #f1f5f9;
+}
+
+.dark * {
+  scrollbar-color: #3b82f6 #1e293b;
+}
+
+/* Line clamp utility */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }

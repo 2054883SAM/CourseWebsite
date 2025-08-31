@@ -40,16 +40,16 @@ function Home() {
   }, []);
 
   return (
-    <PageLayout>
-      {/* Hero Section with Gradient Background */}
-      <Section className="relative overflow-hidden bg-gradient-gray py-20 text-center md:py-32">
+    <PageLayout maxWidth="full">
+      {/* Hero Section with Blue Gradient Background */}
+      <Section className="relative overflow-hidden bg-gradient-to-br from-blue-50 to-blue-100 py-20 text-center md:py-32 dark:from-blue-900 dark:to-blue-800">
         {/* Background decoration */}
-        <div className="absolute -top-40 -right-40 h-80 w-80 rounded-full bg-gradient-to-r from-gold-400 to-gold-600 opacity-10 blur-3xl"></div>
-        <div className="absolute -bottom-40 -left-40 h-80 w-80 rounded-full bg-gradient-to-r from-gray-400 to-gray-600 opacity-10 blur-3xl"></div>
+        <div className="absolute -top-40 -right-40 h-80 w-80 rounded-full bg-gradient-to-r from-blue-400 to-blue-600 opacity-20 blur-3xl"></div>
+        <div className="absolute -bottom-40 -left-40 h-80 w-80 rounded-full bg-gradient-to-r from-blue-300 to-blue-500 opacity-20 blur-3xl"></div>
         
-        <Container className="relative z-10">
+        <Container maxWidth="2xl" className="relative z-10">
           <div className="animate-fade-in-up">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white mb-4 bg-gradient-to-r from-gray-900 via-gold-600 to-gray-800 bg-clip-text text-transparent dark:from-white dark:via-gold-400 dark:to-gray-300">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white mb-4 bg-gradient-to-r from-gray-900 via-blue-600 to-gray-800 bg-clip-text text-transparent dark:from-white dark:via-blue-400 dark:to-gray-300">
               {user ? `Bon retour, ${dbUser?.name}!` : 'Apprendre devient amusant!'}
             </h1>
             <p className="mx-auto mb-10 max-w-3xl text-xl text-gray-600 dark:text-gray-300">
@@ -58,10 +58,10 @@ function Home() {
             <div className="flex flex-col justify-center gap-4 sm:flex-row">
               <Link
                 href="/courses"
-                className="group relative inline-flex h-12 items-center justify-center overflow-hidden rounded-full bg-gradient-to-r from-gray-600 to-gray-800 px-8 text-base font-semibold text-white transition-all duration-300 hover:from-gray-700 hover:to-gray-900 hover:shadow-lg hover:shadow-gray-500/25 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:ring-offset-2"
+                className="group relative inline-flex h-12 items-center justify-center overflow-hidden rounded-full bg-gradient-to-r from-blue-600 to-blue-800 px-8 text-base font-semibold text-white transition-all duration-300 hover:from-blue-700 hover:to-blue-900 hover:shadow-lg hover:shadow-blue-500/25 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               >
                 <span className="relative z-10">Découvrir les cours</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-gray-700 to-gray-900 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-700 to-blue-900 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
               </Link>
               {!user ? (
                 <>
@@ -73,7 +73,7 @@ function Home() {
                   </Link>
                   <Link
                     href="/signin"
-                    className="inline-flex h-12 items-center justify-center rounded-full border-2 border-gray-300 px-8 text-base font-semibold text-gray-700 transition-all duration-300 hover:border-gold-500 hover:text-gold-600 hover:shadow-md dark:border-gray-600 dark:text-gray-300 dark:hover:border-gold-400 dark:hover:text-gold-400"
+                    className="inline-flex h-12 items-center justify-center rounded-full border-2 border-blue-300 px-8 text-base font-semibold text-blue-700 transition-all duration-300 hover:border-blue-500 hover:text-blue-600 hover:shadow-md dark:border-blue-600 dark:text-blue-300 dark:hover:border-blue-400 dark:hover:text-blue-400"
                   >
                     Se connecter
                   </Link>
@@ -81,7 +81,7 @@ function Home() {
               ) : (
                 <Link
                   href="/payment"
-                  className="inline-flex h-12 items-center justify-center rounded-full bg-gradient-to-r from-green-500 to-green-600 px-8 text-base font-semibold text-white transition-all duration-300 hover:from-green-600 hover:to-green-700 hover:shadow-lg hover:shadow-green-500/25 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                  className="inline-flex h-12 items-center justify-center rounded-full bg-gradient-to-r from-green-500 to-green-600 px-8 text-base font-semibold text-white transition-all duration-300 hover:from-green-600 hover:to-green-700 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
                 >
                   Mon abonnement
                 </Link>
@@ -93,7 +93,7 @@ function Home() {
 
       {/* Featured Courses Section */}
       <Section className="py-16 bg-white dark:bg-gray-900">
-        <Container>
+        <Container maxWidth="7xl">
           <div className="text-center mb-16">
             <h2 className="mb-4 text-4xl font-bold text-gray-900 dark:text-white">Cours populaires pour le primaire</h2>
             <p className="mx-auto max-w-2xl text-lg text-gray-600 dark:text-gray-300">
@@ -131,12 +131,12 @@ function Home() {
                         className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                       />
                     ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700">
-                        <div className="text-4xl text-gray-400 dark:text-gray-500">🎓</div>
+                      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-800 dark:to-blue-700">
+                        <div className="text-4xl text-blue-400 dark:text-blue-500">🎓</div>
                       </div>
                     )}
                   </div>
-                  <h3 className="mb-3 text-xl font-bold text-gray-900 dark:text-white group-hover:text-gold-600 dark:group-hover:text-gold-400 transition-colors">
+                  <h3 className="mb-3 text-xl font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                     {course.title}
                   </h3>
                   <p className="mb-4 line-clamp-2 text-gray-600 dark:text-gray-300">
@@ -146,7 +146,7 @@ function Home() {
                     {/* Price removed from schema */}
                     <Link
                       href={`/courses/${course.id}`}
-                      className="inline-flex h-10 items-center justify-center rounded-full bg-gradient-to-r from-gray-600 to-gray-800 px-6 text-sm font-semibold text-white transition-all duration-300 hover:from-gray-700 hover:to-gray-900 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-gold-500 focus:ring-offset-2"
+                      className="inline-flex h-10 items-center justify-center rounded-full bg-gradient-to-r from-blue-600 to-blue-800 px-6 text-sm font-semibold text-white transition-all duration-300 hover:from-blue-700 hover:to-blue-900 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                     >
                       Découvrir
                     </Link>
@@ -159,7 +159,7 @@ function Home() {
           <div className="text-center">
             <Link
               href="/courses"
-              className="inline-flex h-12 items-center justify-center rounded-full border-2 border-gray-300 px-8 text-base font-semibold text-gray-700 transition-all duration-300 hover:border-gold-500 hover:text-gold-600 hover:shadow-md dark:border-gray-600 dark:text-gray-300 dark:hover:border-gold-400 dark:hover:text-gold-400"
+              className="inline-flex h-12 items-center justify-center rounded-full border-2 border-blue-300 px-8 text-base font-semibold text-blue-700 transition-all duration-300 hover:border-blue-500 hover:text-blue-600 hover:shadow-md dark:border-blue-600 dark:text-blue-300 dark:hover:border-blue-400 dark:hover:text-blue-400"
             >
               Voir tous les cours
             </Link>
@@ -168,8 +168,8 @@ function Home() {
       </Section>
 
       {/* Features Section with Icons */}
-      <Section className="py-16 bg-gray-50 dark:bg-gray-800">
-        <Container>
+      <Section className="py-16 bg-blue-50 dark:bg-blue-900">
+        <Container maxWidth="7xl">
           <div className="text-center mb-16">
             <h2 className="mb-4 text-4xl font-bold text-gray-900 dark:text-white">Pourquoi les enfants adorent apprendre ici</h2>
             <p className="mx-auto max-w-3xl text-lg text-gray-600 dark:text-gray-300">
@@ -216,7 +216,7 @@ function Home() {
                 style={{ animationDelay: `${i * 100}ms` }}
               >
                 <div className="mb-4 text-4xl">{feature.icon}</div>
-                <h3 className="mb-3 text-xl font-bold text-gray-900 dark:text-white group-hover:text-gold-600 dark:group-hover:text-gold-400 transition-colors">
+                <h3 className="mb-3 text-xl font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                   {feature.title}
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300">{feature.description}</p>
@@ -227,8 +227,8 @@ function Home() {
       </Section>
 
       {/* Teacher Section */}
-      <Section className="py-16 bg-gradient-to-r from-blue-50 to-indigo-100 dark:from-blue-900 dark:to-indigo-900">
-        <Container>
+      <Section className="py-16 bg-gradient-to-r from-blue-100 to-indigo-200 dark:from-blue-800 dark:to-indigo-800">
+        <Container maxWidth="7xl">
           <div className="text-center mb-16">
             <h2 className="mb-4 text-4xl font-bold text-gray-900 dark:text-white">Enseignants : Partagez votre passion et générez des revenus</h2>
             <p className="mx-auto max-w-3xl text-lg text-gray-600 dark:text-gray-300">
@@ -294,12 +294,12 @@ function Home() {
       </Section>
 
       {/* Call to Action Section */}
-      <Section className="py-16 bg-gradient-to-r from-gray-600 to-gray-800 text-center text-white">
-        <Container>
+      <Section className="py-16 bg-gradient-to-r from-blue-600 to-blue-800 text-center text-white">
+        <Container maxWidth="2xl">
           <h2 className="mb-4 text-4xl font-bold">
             {user ? 'Continuez l\'aventure d\'apprentissage' : 'Offrez à votre enfant le meilleur de l\'éducation'}
           </h2>
-          <p className="mx-auto mb-8 max-w-3xl text-xl text-gray-200">
+          <p className="mx-auto mb-8 max-w-3xl text-xl text-blue-100">
             {user
               ? 'Découvrez nos nouveaux cours et continuez à grandir avec nous.'
               : 'Rejoignez des milliers de familles qui font confiance à notre plateforme éducative. Apprentissage garanti !'}
@@ -309,7 +309,7 @@ function Home() {
               <>
                 <Link
                   href="/courses"
-                  className="inline-flex h-12 items-center justify-center rounded-full bg-white px-8 text-base font-semibold text-gray-700 transition-all duration-300 hover:bg-gray-100 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-600"
+                  className="inline-flex h-12 items-center justify-center rounded-full bg-white px-8 text-base font-semibold text-blue-700 transition-all duration-300 hover:bg-blue-50 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-600"
                 >
                   Découvrir les cours
                 </Link>
@@ -330,7 +330,7 @@ function Home() {
                 </Link>
                 <Link
                   href="/signup"
-                  className="inline-flex h-12 items-center justify-center rounded-full border-2 border-white px-8 text-base font-semibold text-white transition-all duration-300 hover:bg-white hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-600"
+                  className="inline-flex h-12 items-center justify-center rounded-full border-2 border-white px-8 text-base font-semibold text-white transition-all duration-300 hover:bg-white hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-600"
                 >
                   Créer un compte gratuit
                 </Link>

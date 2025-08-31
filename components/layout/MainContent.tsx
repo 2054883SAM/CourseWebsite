@@ -5,7 +5,7 @@ interface MainContentProps {
   children: ReactNode;
   className?: string;
   withContainer?: boolean;
-  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
+  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '7xl' | 'full';
   withPadding?: boolean;
   id?: string;
 }
