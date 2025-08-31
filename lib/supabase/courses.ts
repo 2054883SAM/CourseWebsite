@@ -67,7 +67,7 @@ export async function getCourses(params?: CourseSearchParams): Promise<Course[]>
 }
 
 /**
- * Fetch a single course by ID with creator information
+ * Fetch a single course by ID with creator information and section count
  */
 export async function getCourseById(id: string): Promise<Course | null> {
   try {
@@ -83,11 +83,17 @@ export async function getCourseById(id: string): Promise<Course | null> {
     if (courseError) throw courseError;
     if (!courseData) return null;
 
+    // Get section count
+    const { count: sectionCount } = await supabase
+      .from('sections')
+      .select('*', { count: 'exact', head: true })
+      .eq('course_id', id);
+
     // Transform the data to match our interfaces
     const course: Course = {
       ...courseData,
       creator: courseData.users,
-      section_count: 0, // Default to 0 since sections table doesn't exist
+      section_count: sectionCount || 0,
     };
 
     return course;
@@ -98,19 +104,84 @@ export async function getCourseById(id: string): Promise<Course | null> {
 }
 
 /**
- * Fetch course sections - stubbed since sections table doesn't exist
+ * Fetch course sections with chapters and progress tracking
  */
 export async function getCourseSections(courseId: string): Promise<Section[]> {
-  console.log(`Note: sections table does not exist. Returning empty array for courseId: ${courseId}`);
-  return [];
+  try {
+    const { data: sectionsData, error } = await supabase
+      .from('sections')
+      .select('*')
+      .eq('course_id', courseId)
+      .order('section_number', { ascending: true });
+
+    if (error) throw error;
+    if (!sectionsData) return [];
+
+    // Transform the data to match our Section interface
+    const sections: Section[] = sectionsData.map((section: any) => ({
+      id: section.id,
+      course_id: section.course_id,
+      section_number: section.section_number,
+      title: section.title,
+      duration: section.duration,
+      playback_id: section.playback_id,
+      chapters: section.chapters ? JSON.parse(section.chapters) : [],
+      created_at: section.created_at,
+    }));
+
+    return sections;
+  } catch (error) {
+    console.error(`Error fetching sections for course ${courseId}:`, error);
+    handleTimeoutError(error, 'load course sections');
+  }
 }
 
 /**
- * Fetch subtitles for a section - stubbed since sections table doesn't exist
+ * Fetch a specific section by ID
+ */
+export async function getSectionById(sectionId: string): Promise<Section | null> {
+  try {
+    const { data: sectionData, error } = await supabase
+      .from('sections')
+      .select('*')
+      .eq('id', sectionId)
+      .single();
+
+    if (error) throw error;
+    if (!sectionData) return null;
+
+    // Transform the data to match our Section interface
+    const section: Section = {
+      id: sectionData.id,
+      course_id: sectionData.course_id,
+      section_number: sectionData.section_number,
+      title: sectionData.title,
+      duration: sectionData.duration,
+      playback_id: sectionData.playback_id,
+      chapters: sectionData.chapters ? JSON.parse(sectionData.chapters) : [],
+      created_at: sectionData.created_at,
+    };
+
+    return section;
+  } catch (error) {
+    console.error(`Error fetching section with ID ${sectionId}:`, error);
+    handleTimeoutError(error, 'load section');
+  }
+}
+
+/**
+ * Fetch subtitles for a section
  */
 export async function getSectionSubtitles(sectionId: string): Promise<Subtitle[]> {
-  console.log(`Note: subtitles/sections tables do not exist. Returning empty array for sectionId: ${sectionId}`);
-  return [];
+  try {
+    // Note: Assuming there's a subtitles table in the future
+    // For now, return empty array as subtitles are handled via storage
+    console.log(`Subtitles are handled via Supabase storage for sectionId: ${sectionId}`);
+    return [];
+  } catch (error) {
+    console.error(`Error fetching subtitles for section ${sectionId}:`, error);
+    return [];
+  }
 }
 
 /**

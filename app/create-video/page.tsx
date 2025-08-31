@@ -5,7 +5,8 @@ import { PageLayout, Container, Section } from '@/components/layout';
 import { useAuth } from '@/lib/auth/hooks';
 import { createBrowserClient } from '@supabase/ssr';
 import { useRouter } from 'next/navigation';
-import { VideoChapter } from '@/lib/types/vdocipher';
+import { VideoChapter, VideoSection } from '@/lib/types/vdocipher';
+import { SectionForm } from '@/components/video/SectionForm';
 import Image from 'next/image';
 // import { useToast, ToastContainer } from '../../../components/ui/Toast';
 
@@ -38,30 +39,26 @@ export default function CreateVideoPage() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [selectedThumbnail, setSelectedThumbnail] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string>('');
-  const [selectedVideo, setSelectedVideo] = useState<File | null>(null);
-  const [videoDurationSeconds, setVideoDurationSeconds] = useState<number | null>(null);
-  const [vdoCipherDurationSeconds, setVdoCipherDurationSeconds] = useState<number | null>(null);
+  
+  // Replace single video management with sections management
+  const [sections, setSections] = useState<VideoSection[]>([
+    {
+      id: crypto.randomUUID(),
+      title: '',
+      videoFile: null,
+      aiGeneratedChapters: false,
+      chapters: [],
+      uploadProgress: 0,
+      status: 'pending',
+      currentStep: 'En attente'
+    }
+  ]);
   
 
-  // Removed FFmpeg conversion. Deepgram supports common video containers (MP4/MOV) directly.
-  const [videoUploadProgress, setVideoUploadProgress] = useState(0);
-  const [playbackId, setPlaybackId] = useState<string>('');
   const [translationProgress, setTranslationProgress] = useState(0);
   const translationProgressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const [chapters, setChapters] = useState<VideoChapter[]>([]);
-  const [currentChapter, setCurrentChapter] = useState<Omit<VideoChapter, 'id'> & { startTimeFormatted: string, durationFormatted: string }>({
-    title: '',
-    startTime: 0,
-    startTimeFormatted: '00:00',
-    duration: undefined,
-    durationFormatted: '',
-    description: undefined,
-    thumbnail: undefined,
-    flashcard: false
-  });
 
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
-  const videoInputRef = useRef<HTMLInputElement>(null);
 
   // Temporary toast replacements
   const success = (message: string) => {
@@ -139,6 +136,31 @@ export default function CreateVideoPage() {
     }));
   };
 
+  // Section management functions
+  const addSection = () => {
+    const newSection: VideoSection = {
+      id: crypto.randomUUID(),
+      title: '',
+      videoFile: null,
+      aiGeneratedChapters: false,
+      chapters: [],
+      uploadProgress: 0,
+      status: 'pending',
+      currentStep: 'En attente'
+    };
+    setSections(prev => [...prev, newSection]);
+  };
+
+  const removeSection = (index: number) => {
+    if (sections.length > 1) {
+      setSections(prev => prev.filter((_, i) => i !== index));
+    }
+  };
+
+  const updateSection = (index: number, updatedSection: VideoSection) => {
+    setSections(prev => prev.map((section, i) => i === index ? updatedSection : section));
+  };
+
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -151,149 +173,19 @@ export default function CreateVideoPage() {
     }
   };
 
-  const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedVideo(file);
-      console.log('Vidéo sélectionnée:', file.name, 'Taille:', file.size);
 
-      // Try to read duration from the local file metadata
-      try {
-        const url = URL.createObjectURL(file);
-        const videoEl = document.createElement('video');
-        videoEl.preload = 'metadata';
-        videoEl.onloadedmetadata = () => {
-          const durationSec = videoEl.duration;
-          if (!isNaN(durationSec) && isFinite(durationSec) && durationSec > 0) {
-            setVideoDurationSeconds(Math.round(durationSec));
-          }
-          URL.revokeObjectURL(url);
-        };
-        videoEl.onerror = () => {
-          URL.revokeObjectURL(url);
-        };
-        videoEl.src = url;
-      } catch (_) {
-        // Ignore failures to read metadata
-      }
-    }
-  };
 
-  // Removed video->audio conversion. We will send the original video file to Deepgram.
-  
-  const handleChapterInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    const target = e.target as HTMLInputElement;
-
-    if (name === 'flashcard' && target.type === 'checkbox') {
-      setCurrentChapter(prev => ({
-        ...prev,
-        flashcard: target.checked
-      }));
-      return;
-    }
-
-    if (name === 'startTimeFormatted') {
-      // Handle time format input for startTime
-      setCurrentChapter(prev => ({
-        ...prev,
-        startTimeFormatted: value,
-        startTime: timeToSeconds(value)
-      }));
-    } else if (name === 'durationFormatted') {
-      // Handle time format input for duration
-      setCurrentChapter(prev => ({
-        ...prev,
-        durationFormatted: value,
-        duration: value ? timeToSeconds(value) : undefined
-      }));
-    } else {
-      // Handle other inputs normally
-      setCurrentChapter(prev => ({
-        ...prev,
-        [name]: value
-      }));
-    }
-  };
-
-  const addChapter = () => {
-    if (!currentChapter.title) {
-      error('Le titre du chapitre est obligatoire');
-      return;
-    }
-    
-    const newChapter: VideoChapter = {
-      id: crypto.randomUUID(),
-      title: currentChapter.title,
-      startTime: currentChapter.startTime,
-      duration: currentChapter.duration,
-      description: currentChapter.description,
-      thumbnail: currentChapter.thumbnail,
-      flashcard: !!currentChapter.flashcard
-    };
-    
-    setChapters(prevChapters => [...prevChapters, newChapter]);
-    
-    // Calculate next logical start time based on the end of this chapter
-    const nextStartTime = currentChapter.startTime + (currentChapter.duration || 300);
-    const nextStartTimeFormatted = formatTime(nextStartTime);
-    
-    setCurrentChapter({
-      title: '',
-      startTime: nextStartTime,
-      startTimeFormatted: nextStartTimeFormatted,
-      duration: undefined,
-      durationFormatted: '',
-      description: undefined,
-      thumbnail: undefined,
-      flashcard: false
-    });
-    console.log('Chapters:', chapters);
-  };
-
-  const removeChapter = (id: string) => {
-    setChapters(prevChapters => prevChapters.filter(chapter => chapter.id !== id));
-  };
-  
-  const formatTime = (seconds: number): string => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const remainingSeconds = Math.floor(seconds % 60);
-    
-    if (hours > 0) {
-      return `${hours}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
-    }
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-  };
-  
-  const timeToSeconds = (timeString: string): number => {
-    // Handle HH:MM:SS or MM:SS format
-    const parts = timeString.split(':').map(part => parseInt(part, 10));
-    
-    if (parts.length === 3) {
-      // HH:MM:SS format
-      return parts[0] * 3600 + parts[1] * 60 + parts[2];
-    } else if (parts.length === 2) {
-      // MM:SS format
-      return parts[0] * 60 + parts[1];
-    } else if (parts.length === 1 && !isNaN(parts[0])) {
-      // Just seconds
-      return parts[0];
-    }
-    return 0;
-  };
-
-  const uploadVideoToVdoCipher = async (file: File): Promise<string> => {
+  const uploadVideoToVdoCipher = async (file: File, title: string, onProgress: (progress: number) => void): Promise<string> => {
     try {
       // STEP 1: Obtain upload credentials (align with test page behavior)
       console.log('VDOCIPHER: Requesting upload credentials...');
-      setVideoUploadProgress(10);
+      onProgress(10);
 
       const credentialsResponse = await fetch('/api/upload-video/vdocipher-credentials', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title: formData.title?.trim() || 'Untitled video',
+          title: title?.trim() || 'Untitled video',
           folderId: 'root',
         }),
       });
@@ -305,7 +197,7 @@ export default function CreateVideoPage() {
 
       const { clientPayload, videoId } = await credentialsResponse.json();
       console.log('VDOCIPHER: Upload credentials received', { videoId });
-      setVideoUploadProgress(25);
+      onProgress(25);
 
       // STEP 2: Upload file to VdoCipher
       console.log('VDOCIPHER: Uploading file to VdoCipher...');
@@ -331,7 +223,7 @@ export default function CreateVideoPage() {
       }
 
       console.log('VDOCIPHER: Upload completed');
-      setVideoUploadProgress(50);
+      onProgress(50);
 
       // STEP 3: Monitor processing status (limit to ~10 minutes like test page)
       console.log('VDOCIPHER: Monitoring processing status (up to ~10 minutes)...');
@@ -348,7 +240,7 @@ export default function CreateVideoPage() {
 
         // Progress from 50% -> 90%
         const progressPercent = 50 + (attempts / maxAttempts) * 40;
-        setVideoUploadProgress(progressPercent);
+        onProgress(progressPercent);
 
         if (attempts > 1) {
           await new Promise(resolve => setTimeout(resolve, checkInterval));
@@ -372,10 +264,6 @@ export default function CreateVideoPage() {
           throw new Error(`Video processing failed with status: ${statusData.status}`);
         }
 
-        // Capture duration from VdoCipher status if available
-        if (typeof statusData.duration === 'number' && statusData.duration > 0) {
-          setVdoCipherDurationSeconds(statusData.duration);
-        }
       }
 
       if (!videoReady) {
@@ -383,7 +271,7 @@ export default function CreateVideoPage() {
         console.warn(`VDOCIPHER: Video still processing after ${elapsedMinutes} minutes. Proceeding with course creation; processing continues in background.`);
       }
 
-      setVideoUploadProgress(100);
+      onProgress(100);
       return videoId; // Use videoId as playback_id
     } catch (err) {
       console.error('VDOCIPHER: Upload error', err);
@@ -432,9 +320,248 @@ export default function CreateVideoPage() {
     return publicUrl;
   };
 
+  const updateSectionStatus = (sectionIndex: number, updates: Partial<VideoSection>) => {
+    setSections(prev => prev.map((section, i) => 
+      i === sectionIndex ? { ...section, ...updates } : section
+    ));
+  };
+
+  const getVideoDurationFromFile = async (file: File): Promise<number> => {
+    return new Promise((resolve) => {
+      try {
+        const url = URL.createObjectURL(file);
+        const videoEl = document.createElement('video');
+        videoEl.preload = 'metadata';
+        videoEl.onloadedmetadata = () => {
+          const durationSec = videoEl.duration;
+          URL.revokeObjectURL(url);
+          if (!isNaN(durationSec) && isFinite(durationSec) && durationSec > 0) {
+            const durationMinutes = Math.max(1, Math.round(durationSec / 60));
+            console.log('LOCAL DURATION: Extracted from file', { seconds: durationSec, minutes: durationMinutes });
+            resolve(durationMinutes);
+          } else {
+            resolve(1); // Fallback: 1 minute
+          }
+        };
+        videoEl.onerror = () => {
+          URL.revokeObjectURL(url);
+          resolve(1); // Fallback: 1 minute
+        };
+        videoEl.src = url;
+      } catch (error) {
+        console.warn('LOCAL DURATION: Error extracting duration from file', error);
+        resolve(1); // Fallback: 1 minute
+      }
+    });
+  };
+
+  const processSection = async (section: VideoSection, sectionIndex: number, totalSections: number): Promise<{ playbackId: string; chapters: VideoChapter[]; duration?: number }> => {
+    if (!section.videoFile) {
+      throw new Error('Aucun fichier vidéo sélectionné');
+    }
+
+    try {
+      // Step 0: Try to get duration from local file first
+      const localDurationMinutes = await getVideoDurationFromFile(section.videoFile);
+      console.log('DURATION: Local file analysis result', { minutes: localDurationMinutes });
+      // Step 1: Upload video to VdoCipher
+      updateSectionStatus(sectionIndex, {
+        status: 'uploading',
+        currentStep: 'Upload de la vidéo...',
+        uploadProgress: 0
+      });
+
+      const videoPlaybackId = await uploadVideoToVdoCipher(
+        section.videoFile,
+        section.title,
+        (progress) => {
+          updateSectionStatus(sectionIndex, {
+            uploadProgress: Math.round(progress * 0.4), // 40% for video upload
+            currentStep: `Upload de la vidéo... ${Math.round(progress)}%`
+          });
+        }
+      );
+
+      updateSectionStatus(sectionIndex, {
+        playbackId: videoPlaybackId,
+        status: 'processing',
+        currentStep: 'Vidéo uploadée, obtention de la durée...',
+        uploadProgress: 40
+      });
+
+      // Step 1.5: Get video duration (prefer local, fallback to VdoCipher)
+      let videoDurationMinutes: number = localDurationMinutes; // Use local duration as primary
+      
+      // If local duration is the fallback value (1), try to get from VdoCipher
+      if (localDurationMinutes === 1) {
+        try {
+          const statusResponse = await fetch(`/api/upload-video/vdocipher-status?videoId=${videoPlaybackId}`, { method: 'GET' });
+          if (statusResponse.ok) {
+            const statusData = await statusResponse.json();
+            if (typeof statusData.duration === 'number' && statusData.duration > 0) {
+              // Convert from seconds to minutes and ensure minimum of 1 minute
+              videoDurationMinutes = Math.max(1, Math.round(statusData.duration / 60));
+              console.log('DURATION: Got duration from VdoCipher', { seconds: statusData.duration, minutes: videoDurationMinutes });
+            }
+          }
+        } catch (durationError) {
+          console.warn('DURATION: Could not get duration from VdoCipher, using local duration', durationError);
+        }
+      }
+      
+      console.log('DURATION: Final duration for section', { minutes: videoDurationMinutes, source: localDurationMinutes > 1 ? 'local' : 'vdocipher' });
+
+      updateSectionStatus(sectionIndex, {
+        currentStep: 'Durée obtenue, génération des sous-titres...',
+        uploadProgress: 45
+      });
+
+      // Step 2: Generate captions via Deepgram
+      updateSectionStatus(sectionIndex, {
+        status: 'transcribing',
+        currentStep: 'Génération des sous-titres...',
+        uploadProgress: 50
+      });
+
+      // We need a temporary courseId for storage path - we'll use a placeholder
+      const tempCourseId = 'temp_' + crypto.randomUUID();
+      const tempSectionId = section.id;
+
+      const form = new FormData();
+      form.append('file', section.videoFile);
+      form.append('format', 'vtt');
+      form.append('language', formData.primary_language);
+      form.append('courseId', tempCourseId);
+      form.append('sectionId', tempSectionId);
+      form.append('videoId', videoPlaybackId);
+      
+      const capRes = await fetch('/api/upload-video/deepgram-captions', {
+        method: 'POST',
+        body: form,
+      });
+      
+      if (!capRes.ok) {
+        const t = await capRes.text();
+        throw new Error(`Erreur lors de la génération des sous-titres: ${t}`);
+      }
+
+      const captionData = await capRes.json();
+      console.log('CAPTIONS: Generated for section', tempSectionId);
+
+      updateSectionStatus(sectionIndex, {
+        currentStep: 'Sous-titres générés...',
+        uploadProgress: 65
+      });
+
+      // Step 3: Generate AI chapters if requested
+      let generatedChapters: VideoChapter[] = section.chapters;
+      
+      if (section.aiGeneratedChapters && captionData?.captions) {
+        updateSectionStatus(sectionIndex, {
+          currentStep: 'Génération des chapitres IA...',
+          uploadProgress: 70
+        });
+
+        try {
+          const genRes = await fetch('/api/upload-video/generate-chapters', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              captions: String(captionData.captions),
+              language: formData.primary_language,
+            }),
+          });
+          
+          if (genRes.ok) {
+            const { chapters: aiChapters } = await genRes.json();
+            if (Array.isArray(aiChapters)) {
+              generatedChapters = aiChapters.map((c: any) => ({
+                id: crypto.randomUUID(),
+                title: String(c.title || '').trim(),
+                startTime: Math.max(0, Math.floor(Number(c.startTime) || 0)),
+                duration: c.duration != null ? Math.max(1, Math.floor(Number(c.duration))) : undefined,
+                description: c.description != null ? String(c.description) : undefined,
+                flashcard: typeof c.flashcard === 'boolean' ? c.flashcard : false,
+              }));
+              
+              // Update the section with AI-generated chapters
+              updateSectionStatus(sectionIndex, { chapters: generatedChapters });
+              console.log('CHAPTERS: AI chapters generated for section', section.title);
+            }
+          }
+        } catch (genErr) {
+          console.warn('CHAPTERS: Error during AI generation', genErr);
+        }
+      }
+
+      updateSectionStatus(sectionIndex, {
+        currentStep: 'Chapitres traités...',
+        uploadProgress: 80
+      });
+
+      // Step 4: Translate captions
+      updateSectionStatus(sectionIndex, {
+        status: 'translating',
+        currentStep: 'Traduction des sous-titres...',
+        uploadProgress: 85
+      });
+
+      try {
+        const translateRes = await fetch('/api/upload-video/translate-and-upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            courseId: tempCourseId,
+            sectionId: tempSectionId,
+            videoId: videoPlaybackId,
+            sourceLanguage: formData.primary_language,
+          }),
+        });
+        
+        if (translateRes.ok) {
+          console.log('CAPTIONS: Translation completed for section', section.title);
+        }
+      } catch (trErr) {
+        console.warn('CAPTIONS: Error in translate/upload step', trErr);
+      }
+
+      // Step 5: Complete
+      updateSectionStatus(sectionIndex, {
+        status: 'completed',
+        currentStep: 'Section terminée',
+        uploadProgress: 100
+      });
+
+      return {
+        playbackId: videoPlaybackId,
+        chapters: generatedChapters,
+        duration: videoDurationMinutes // Duration in minutes for database
+      };
+
+    } catch (error) {
+      updateSectionStatus(sectionIndex, {
+        status: 'error',
+        currentStep: 'Erreur',
+        uploadProgress: 0,
+        error: error instanceof Error ? error.message : 'Erreur inconnue'
+      });
+      throw error;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+
+    // Validate sections
+    const validSections = sections.filter(section => 
+      section.title.trim() && section.videoFile
+    );
+
+    if (validSections.length === 0) {
+      error('Au moins une section avec un titre et une vidéo est requise');
+      return;
+    }
 
     setIsSubmitting(true);
     // Ensure the user sees the progress bar by scrolling to the top smoothly
@@ -445,51 +572,53 @@ export default function CreateVideoPage() {
 
     try {
       let thumbnailUrl = formData.thumbnailUrl;
-      let videoPlaybackId = '';
-      let paddlePriceId: string | null = null;
 
-      // Upload thumbnail si un fichier est sélectionné
+      // Step 1: Upload thumbnail if selected
       if (selectedThumbnail) {
-        setUploadProgress(20);
+        setUploadProgress(5);
         thumbnailUrl = await uploadThumbnail(selectedThumbnail);
-        setUploadProgress(40);
+        setUploadProgress(10);
       }
 
-      // Upload vidéo si un fichier est sélectionné
-      if (selectedVideo) {
-        setUploadProgress(60);
-        videoPlaybackId = await uploadVideoToVdoCipher(selectedVideo);
-        setPlaybackId(videoPlaybackId);
-        setUploadProgress(80);
+      // Step 2: Process all sections sequentially
+      console.log(`Starting processing of ${validSections.length} sections...`);
+      const processedSections: Array<{
+        originalSection: VideoSection;
+        playbackId: string;
+        chapters: VideoChapter[];
+        duration?: number;
+      }> = [];
 
-        // Generate captions via server (Deepgram) and store .vtt in Supabase 'translations/<courseId>'
+      const sectionProgressWeight = 80 / validSections.length; // 80% total for sections processing
+
+      for (let i = 0; i < validSections.length; i++) {
+        const section = validSections[i];
+        const sectionIndex = sections.findIndex(s => s.id === section.id);
+        
+        console.log(`Processing section ${i + 1}/${validSections.length}: ${section.title}`);
+        
         try {
-          console.log('CAPTIONS: Start generation/upload to Supabase storage via API', {
-            step: 'client-start',
-            primary_language: formData.primary_language,
-            videoId: videoPlaybackId,
-            hasSelectedVideo: !!selectedVideo,
+          const result = await processSection(section, sectionIndex, validSections.length);
+          processedSections.push({
+            originalSection: section,
+            ...result
           });
-          if (!selectedVideo) {
-            console.warn('CAPTIONS: No selected video available for file transcription. Skipping.');
-            throw new Error('No selected video available');
-          }
-          // We don't yet have the courseId until after insertion; call Deepgram after inserting course
-        } catch (capErr) {
-          console.warn('CAPTIONS: Pre-course caption flow note', capErr);
+
+          // Update overall progress
+          const currentProgress = 10 + (i + 1) * sectionProgressWeight;
+          setUploadProgress(Math.round(currentProgress));
+
+        } catch (sectionError) {
+          console.error(`Error processing section ${section.title}:`, sectionError);
+          error(`Erreur lors du traitement de la section "${section.title}": ${sectionError instanceof Error ? sectionError.message : 'Erreur inconnue'}`);
+          throw sectionError;
         }
       }
 
-      // No per-course Paddle pricing anymore
+      console.log('All sections processed successfully. Creating course...');
+      setUploadProgress(90);
 
-      // Compute course duration in minutes (prefer local file metadata, fallback to VdoCipher)
-      let durationMinutes: number | null = null;
-      const durationSecondsCandidate = videoDurationSeconds ?? vdoCipherDurationSeconds ?? null;
-      if (durationSecondsCandidate && durationSecondsCandidate > 0) {
-        durationMinutes = Math.max(1, Math.round(durationSecondsCandidate / 60));
-      }
-
-      // Créer le cours dans la base de données
+      // Step 3: Create course in database with all section data
       const courseInsertPayload: Record<string, any> = {
         title: formData.title,
         description: formData.description,
@@ -498,12 +627,7 @@ export default function CreateVideoPage() {
         is_featured: formData.isFeatured,
         ce_que_vous_allez_apprendre: formData.ceQueVousAllezApprendre || null,
         niveau_difficulte: formData.niveauDifficulte,
-        playback_id: videoPlaybackId, // Stocker le videoId VdoCipher comme playback_id
-        chapters: chapters.length > 0 ? JSON.stringify(chapters) : null, // Stocker les chapitres au format JSON
       };
-      if (durationMinutes != null) {
-        courseInsertPayload.duration = durationMinutes;
-      }
 
       let { data: course, error: courseError } = await supabase
         .from('courses')
@@ -511,138 +635,44 @@ export default function CreateVideoPage() {
         .select()
         .single();
 
-      // If the DB doesn't have the duration column yet, retry without it
-      if (courseError && durationMinutes != null &&
-          typeof courseError.message === 'string' &&
-          (courseError.message.includes('duration') || courseError.message.includes('42703'))) {
-        console.warn('Insert failed due to duration column. Retrying without duration field.', courseError);
-        const retryPayload = { ...courseInsertPayload };
-        delete (retryPayload as any).duration;
-        const retry = await supabase
-          .from('courses')
-          .insert(retryPayload)
-          .select()
-          .single();
-        course = retry.data;
-        courseError = retry.error;
-      }
-
       if (courseError) {
         console.error('Course insert error details:', courseError);
         throw new Error('Erreur lors de la création du cours');
       }
 
-      // Now that we have course.id, call captions API to generate and store VTT in translations/<courseId>/captions.vtt
-      if (selectedVideo && course?.id) {
-        try {
-          const form = new FormData();
-          form.append('file', selectedVideo);
-          form.append('format', 'vtt');
-          form.append('language', formData.primary_language);
-          form.append('courseId', String(course.id));
-          form.append('videoId', videoPlaybackId);
-          const capRes = await fetch('/api/upload-video/deepgram-captions', {
-            method: 'POST',
-            body: form,
-          });
-          if (!capRes.ok) {
-            const t = await capRes.text();
-            console.warn('CAPTIONS: Deepgram/store failed', { status: capRes.status, body: t });
-          } else {
-            const json = await capRes.json();
-            console.log('CAPTIONS: Stored', json?.storedPath);
+      console.log('Course created:', course.id);
+      setUploadProgress(95);
 
-            // If AI-generated chapters requested, generate via OpenAI based on captions
-            if (formData.aiGenerated && json?.captions) {
-              try {
-                const genRes = await fetch('/api/upload-video/generate-chapters', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    captions: String(json.captions),
-                    language: formData.primary_language,
-                  }),
-                });
-                if (!genRes.ok) {
-                  const txt = await genRes.text();
-                  console.warn('CHAPTERS: Generation failed', { status: genRes.status, body: txt });
-                } else {
-                  const { chapters: aiChapters } = await genRes.json();
-                  if (Array.isArray(aiChapters)) {
-                    const withIds: VideoChapter[] = aiChapters.map((c: any) => ({
-                      id: crypto.randomUUID(),
-                      title: String(c.title || '').trim(),
-                      startTime: Math.max(0, Math.floor(Number(c.startTime) || 0)),
-                      duration: c.duration != null ? Math.max(1, Math.floor(Number(c.duration))) : undefined,
-                      description: c.description != null ? String(c.description) : undefined,
-                      flashcard: typeof c.flashcard === 'boolean' ? c.flashcard : false,
-                    }));
-                    setChapters(withIds);
-                    // Persist chapters and flag on the course row
-                    const { error: updError } = await supabase
-                      .from('courses')
-                      .update({
-                        chapters: JSON.stringify(withIds),
-                        chapters_ai_generated: true,
-                      })
-                      .eq('id', course.id);
-                    if (updError) {
-                      console.warn('CHAPTERS: Failed to persist AI chapters', updError.message);
-                    }
-                  }
-                }
-              } catch (genErr) {
-                console.warn('CHAPTERS: Error during AI generation', genErr);
-              }
-            }
-          }
+      // Step 4: Create all sections in database
+      const sectionInserts = processedSections.map((processedSection, index) => {
+        const duration = processedSection.duration && processedSection.duration > 0 ? processedSection.duration : 1;
+        console.log(`SECTION INSERT: Section ${index + 1} - Duration: ${duration} minutes (original: ${processedSection.duration})`);
+        
+        return {
+          course_id: course.id,
+          title: processedSection.originalSection.title,
+          section_number: index + 1,
+          playback_id: processedSection.playbackId,
+          chapters: processedSection.chapters.length > 0 ? JSON.stringify(processedSection.chapters) : '[]',
+          duration: duration // Duration in minutes, guaranteed to be a positive number
+        };
+      });
 
-          // FINAL STEP: Translate VTT to the other two languages and upload to VdoCipher as captions
-          try {
-            // Start translation progress indicator
-            setTranslationProgress(5);
-            if (translationProgressIntervalRef.current) {
-              clearInterval(translationProgressIntervalRef.current as unknown as number);
-            }
-            translationProgressIntervalRef.current = setInterval(() => {
-              setTranslationProgress(prev => (prev < 95 ? prev + 2 : prev));
-            }, 1000);
+      const { data: createdSections, error: sectionsError } = await supabase
+        .from('sections')
+        .insert(sectionInserts)
+        .select();
 
-            const translateRes = await fetch('/api/upload-video/translate-and-upload', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                courseId: course.id,
-                videoId: videoPlaybackId,
-                sourceLanguage: formData.primary_language,
-              }),
-            });
-            if (!translateRes.ok) {
-              const body = await translateRes.text();
-              console.warn('CAPTIONS: Translate/upload failed', { status: translateRes.status, body });
-            } else {
-              const data = await translateRes.json();
-              console.log('CAPTIONS: Translate/upload success', data);
-              setTranslationProgress(100);
-            }
-            if (translationProgressIntervalRef.current) {
-              clearInterval(translationProgressIntervalRef.current as unknown as number);
-              translationProgressIntervalRef.current = null;
-            }
-          } catch (trErr) {
-            console.warn('CAPTIONS: Error in translate/upload step', trErr);
-            if (translationProgressIntervalRef.current) {
-              clearInterval(translationProgressIntervalRef.current as unknown as number);
-              translationProgressIntervalRef.current = null;
-            }
-          }
-        } catch (e) {
-          console.warn('CAPTIONS: Error generating/storing captions', e);
-        }
+      if (sectionsError) {
+        console.error('Sections insert error:', sectionsError);
+        throw new Error('Erreur lors de la création des sections');
       }
 
+      console.log(`Created ${createdSections.length} sections in database`);
+
       setUploadProgress(100);
-      success('Cours créé avec succès ! Votre vidéo a été uploadée sur VdoCipher et sera bientôt disponible.');
+      success(`Cours créé avec succès ! ${validSections.length} section(s) ont été uploadées sur VdoCipher et seront bientôt disponibles.`);
+      
       // Redirect to courses page after successful creation
       router.push('/courses');
       
@@ -662,23 +692,18 @@ export default function CreateVideoPage() {
         niveauDifficulte: 'debutant'
       });
       setSelectedThumbnail(null);
-      setSelectedVideo(null);
       setThumbnailPreview('');
-      setPlaybackId('');
-      setVideoUploadProgress(0);
-      setVideoDurationSeconds(null);
-      setVdoCipherDurationSeconds(null);
-      setTranslationProgress(0);
-      setChapters([]);
-      setCurrentChapter({
+      setSections([{
+        id: crypto.randomUUID(),
         title: '',
-        startTime: 0,
-        startTimeFormatted: '00:00',
-        duration: undefined,
-        durationFormatted: '',
-        description: undefined,
-        thumbnail: undefined
-      });
+        videoFile: null,
+        aiGeneratedChapters: false,
+        chapters: [],
+        uploadProgress: 0,
+        status: 'pending',
+        currentStep: 'En attente'
+      }]);
+      setTranslationProgress(0);
 
     } catch (err) {
       console.error('Erreur lors de la création du cours:', err);
@@ -705,41 +730,55 @@ export default function CreateVideoPage() {
               </p>
             </div>
 
-            {/* Progress Bar */}
+            {/* Enhanced Progress Bar */}
             {isSubmitting && (
               <div className="mb-8 p-6 bg-white rounded-2xl shadow-lg dark:bg-gray-800">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Création en cours...
+                    Création du cours en cours...
                   </span>
                   <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
                     {uploadProgress}%
                   </span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
+                <div className="w-full bg-gray-200 rounded-full h-3 dark:bg-gray-700">
                   <div 
-                    className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-300"
+                    className="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full transition-all duration-300"
                     style={{ width: `${uploadProgress}%` }}
                   ></div>
                 </div>
-                {videoUploadProgress > 0 && videoUploadProgress < 100 && (
-                  <div className="mt-4">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs text-gray-600 dark:text-gray-400">
-                        Upload vidéo...
-                      </span>
-                      <span className="text-xs text-green-600 dark:text-green-400">
-                        {videoUploadProgress}%
-                      </span>
+
+                {/* Section Status Overview */}
+                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                  {sections.filter(s => s.title.trim() && s.videoFile).map((section, index) => (
+                    <div key={section.id} className={`flex items-center text-xs p-2 rounded border ${
+                      section.status === 'completed' ? 'bg-green-50 border-green-200 text-green-700 dark:bg-green-900/20 dark:border-green-800 dark:text-green-300' :
+                      section.status === 'error' ? 'bg-red-50 border-red-200 text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-300' :
+                      section.status === 'pending' ? 'bg-gray-50 border-gray-200 text-gray-600 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400' :
+                      'bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300'
+                    }`}>
+                      <div className="mr-2">
+                        {section.status === 'pending' && '⏳'}
+                        {section.status === 'uploading' && '📤'}
+                        {section.status === 'processing' && '⚙️'}
+                        {section.status === 'transcribing' && '🎤'}
+                        {section.status === 'translating' && '🌍'}
+                        {section.status === 'completed' && '✅'}
+                        {section.status === 'error' && '❌'}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="truncate font-medium">Section {index + 1}</div>
+                        <div className="truncate text-xs opacity-75">{section.currentStep}</div>
+                      </div>
+                      {section.status !== 'pending' && section.status !== 'completed' && (
+                        <div className="ml-2 text-xs font-medium">
+                          {section.uploadProgress}%
+                        </div>
+                      )}
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-1 dark:bg-gray-700">
-                      <div 
-                        className="bg-green-500 h-1 rounded-full transition-all duration-300"
-                        style={{ width: `${videoUploadProgress}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                )}
+                  ))}
+                </div>
+
                 {translationProgress > 0 && translationProgress < 100 && (
                   <div className="mt-4">
                     <div className="flex items-center justify-between mb-1">
@@ -958,212 +997,33 @@ export default function CreateVideoPage() {
                 </div>
               </div>
 
-              {/* Video Section */}
+              {/* Sections Management */}
               <div className="bg-white rounded-2xl shadow-lg p-8 dark:bg-gray-800">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
-                  <span className="mr-3">🎥</span>
-                  Vidéo du cours
-                </h2>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Sélectionner une vidéo
-                  </label>
-                  <input
-                    type="file"
-                    ref={videoInputRef}
-                    onChange={handleVideoChange}
-                    accept="video/*"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all duration-200"
-                  />
-                  {selectedVideo && (
-                    <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                      Vidéo sélectionnée: {selectedVideo.name} ({(selectedVideo.size / 1024 / 1024).toFixed(2)} MB)
-                    </p>
-                  )}
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
+                    <span className="mr-3">🎬</span>
+                    Sections du cours
+                  </h2>
+                  <button
+                    type="button"
+                    onClick={addSection}
+                    className="px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors duration-200"
+                  >
+                    ➕ Ajouter une section
+                  </button>
                 </div>
-              </div>
-              
-              {/* Chapters Section */}
-              <div className="bg-white rounded-2xl shadow-lg p-8 dark:bg-gray-800">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
-                  <span className="mr-3">📑</span>
-                  Description des chapitres
-                </h2>
                 
                 <div className="space-y-6">
-                  <div className="flex items-center justify-between p-4 border border-gray-200 rounded-xl dark:border-gray-700">
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        name="aiGenerated"
-                        checked={formData.aiGenerated}
-                        onChange={handleInputChange}
-                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600"
-                      />
-                      <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">AI generated</span>
-                    </label>
-                    {formData.aiGenerated && (
-                      <span className="text-xs text-gray-500 dark:text-gray-400">Les chapitres seront générés automatiquement à partir de la transcription.</span>
-                    )}
-                  </div>
-                  {/* Add Chapter Form */}
-                  {!formData.aiGenerated && (
-                  <div className="p-6 border border-gray-200 rounded-xl dark:border-gray-700">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                      Ajouter un chapitre
-                    </h3>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          Titre du chapitre *
-                        </label>
-                        <input
-                          type="text"
-                          name="title"
-                          value={currentChapter.title}
-                          onChange={handleChapterInputChange}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all duration-200"
-                          placeholder="Ex: Introduction au cours"
-                        />
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          Temps de début (HH:MM:SS ou MM:SS) *
-                        </label>
-                        <input
-                          type="text"
-                          name="startTimeFormatted"
-                          value={currentChapter.startTimeFormatted}
-                          onChange={handleChapterInputChange}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all duration-200"
-                          placeholder="00:00"
-                          pattern="([0-9]+:)?[0-5]?[0-9]:[0-5][0-9]"
-                          title="Format: HH:MM:SS ou MM:SS (ex: 01:30:45 ou 05:20)"
-                        />
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          Durée (HH:MM:SS ou MM:SS, optionnel)
-                        </label>
-                        <input
-                          type="text"
-                          name="durationFormatted"
-                          value={currentChapter.durationFormatted}
-                          onChange={handleChapterInputChange}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all duration-200"
-                          placeholder="05:00"
-                          pattern="([0-9]+:)?[0-5]?[0-9]:[0-5][0-9]"
-                          title="Format: HH:MM:SS ou MM:SS (ex: 00:05:00 ou 05:00)"
-                        />
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          Flashcard pour ce chapitre
-                        </label>
-                        <div className="flex items-center h-[48px] px-2">
-                          <input
-                            type="checkbox"
-                            name="flashcard"
-                            checked={!!currentChapter.flashcard}
-                            onChange={handleChapterInputChange}
-                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600"
-                          />
-                          <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
-                            Générer une flashcard pour ce chapitre
-                          </span>
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          Description (optionnel)
-                        </label>
-                        <textarea
-                          name="description"
-                          value={currentChapter.description || ''}
-                          onChange={handleChapterInputChange}
-                          rows={2}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all duration-200"
-                          placeholder="Description brève du chapitre..."
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="mt-4 flex justify-end">
-                      <button
-                        type="button"
-                        onClick={addChapter}
-                        className="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200"
-                      >
-                        Ajouter le chapitre
-                      </button>
-                    </div>
-                  </div>
-                  )}
-                  
-                  {/* Chapter List */}
-                  {chapters.length > 0 && (
-                    <div className="mt-6">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-                        Chapitres ({chapters.length})
-                      </h3>
-                      
-                      <div className="border rounded-xl overflow-hidden dark:border-gray-700">
-                        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                          <thead className="bg-gray-50 dark:bg-gray-800">
-                            <tr>
-                              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
-                                Titre
-                              </th>
-                              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
-                                Début
-                              </th>
-                              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
-                                Durée
-                              </th>
-                              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
-                                Description
-                              </th>
-                              <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
-                                Actions
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-900 dark:divide-gray-700">
-                            {chapters.map((chapter) => (
-                              <tr key={chapter.id}>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                                  {chapter.title}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                  {formatTime(chapter.startTime)}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                  {chapter.duration ? formatTime(chapter.duration) : '-'}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                  {chapter.description || '-'}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                  <button
-                                    onClick={() => removeChapter(chapter.id)}
-                                    className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                                  >
-                                    Supprimer
-                                  </button>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  )}
+                  {sections.map((section, index) => (
+                    <SectionForm
+                      key={section.id}
+                      section={section}
+                      sectionIndex={index}
+                      onSectionChange={updateSection}
+                      onRemoveSection={removeSection}
+                      canRemove={sections.length > 1}
+                    />
+                  ))}
                 </div>
               </div>
 

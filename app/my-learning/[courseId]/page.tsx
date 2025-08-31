@@ -4,31 +4,22 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { getEnrolledCourse } from '@/lib/supabase/learning';
-import { getCourseById } from '@/lib/supabase/courses';
-import { normalizeChaptersToVideo } from '@/lib/utils/chapters';
-import VdoCipherPlayer from '@/components/video/VdoCipherPlayer';
+import { getCourseById, getCourseSections } from '@/lib/supabase/courses';
+import { getUserCourseProgress } from '@/lib/supabase/progress';
+import { Section } from '@/lib/supabase/types';
+import SectionList from '@/components/courses/SectionList';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
-export default function CoursePlayerPage() {
+export default function CourseOverviewPage() {
   const params = useParams();
   const router = useRouter();
   const { user, dbUser, loading: authLoading } = useAuth();
   const [courseData, setCourseData] = useState<any>(null);
+  const [sections, setSections] = useState<Section[]>([]);
+  const [progress, setProgress] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const hasFetchedRef = useRef(false);
-  const hasRequestedFlashcardsRef = useRef(false);
-
-  type Flashcard = { id: number; question: string; choices: string[]; correctAnswer: string };
-  const [flashcards, setFlashcards] = useState<Flashcard[] | null>(null);
-  const [showFlashcards, setShowFlashcards] = useState(false);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
-  const [answerState, setAnswerState] = useState<'idle' | 'correct' | 'incorrect'>('idle');
-  const [chapterFlashcard, setChapterFlashcard] = useState<Flashcard | null>(null);
-  const [showChapterFlashcard, setShowChapterFlashcard] = useState(false);
-  const [isGeneratingChapterFlashcard, setIsGeneratingChapterFlashcard] = useState(false);
-  const [isGeneratingFinalFlashcards, setIsGeneratingFinalFlashcards] = useState(false);
 
   const courseId = params.courseId as string;
 
@@ -52,10 +43,14 @@ export default function CoursePlayerPage() {
         // Try to get data from session storage first
         try {
           const cachedData = sessionStorage.getItem(`course_${courseId}`);
-          if (cachedData) {
+          const cachedSections = sessionStorage.getItem(`course_sections_${courseId}`);
+          
+          if (cachedData && cachedSections) {
             const parsedData = JSON.parse(cachedData);
-            console.log('Using cached course data');
+            const parsedSections = JSON.parse(cachedSections);
+            console.log('Using cached course data and sections');
             setCourseData(parsedData);
+            setSections(parsedSections);
             hasFetchedRef.current = true;
             setLoading(false);
             return;
@@ -66,11 +61,16 @@ export default function CoursePlayerPage() {
         }
         
         // If no cached data, fetch from API
-        console.log('Fetching course data from API');
+        console.log('Fetching course data and sections from API');
 
         // Admins can access any course without enrollment
         if (dbUser?.role === 'admin') {
-          const course = await getCourseById(courseId);
+          const [course, courseSections, userProgress] = await Promise.all([
+            getCourseById(courseId),
+            getCourseSections(courseId),
+            getUserCourseProgress(user.id, courseId)
+          ]);
+          
           if (!course) {
             setError('Course not found');
             setLoading(false);
@@ -84,25 +84,31 @@ export default function CoursePlayerPage() {
             thumbnail_url: course.thumbnail_url,
             created_at: course.created_at,
             creator_id: course.creator_id,
-            playbackId: (course as any).playback_id,
-            chapters: normalizeChaptersToVideo((course as any).chapters),
-            duration: (course as any).duration,
+            section_count: course.section_count,
+            creator: course.creator,
           } as any;
 
           // Cache the result in session storage
           try {
             sessionStorage.setItem(`course_${courseId}`, JSON.stringify(adminCourseData));
+            sessionStorage.setItem(`course_sections_${courseId}`, JSON.stringify(courseSections));
           } catch (e) {
             console.warn('Failed to cache course data:', e);
           }
 
           hasFetchedRef.current = true;
           setCourseData(adminCourseData);
+          setSections(courseSections);
+          setProgress(userProgress);
           setLoading(false);
           return;
         }
 
-        const result = await getEnrolledCourse(user.id, courseId);
+        const [result, courseSections, userProgress] = await Promise.all([
+          getEnrolledCourse(user.id, courseId),
+          getCourseSections(courseId),
+          getUserCourseProgress(user.id, courseId)
+        ]);
 
         if (result.error || !result.data) {
           setError(result.error || 'Course not found');
@@ -114,6 +120,7 @@ export default function CoursePlayerPage() {
         // Cache the result in session storage
         try {
           sessionStorage.setItem(`course_${courseId}`, JSON.stringify(result.data));
+          sessionStorage.setItem(`course_sections_${courseId}`, JSON.stringify(courseSections));
         } catch (e) {
           console.warn('Failed to cache course data:', e);
         }
@@ -121,6 +128,8 @@ export default function CoursePlayerPage() {
         // Mark as fetched and update state
         hasFetchedRef.current = true;
         setCourseData(result.data);
+        setSections(courseSections);
+        setProgress(userProgress);
       } catch (e) {
         setError(e instanceof Error ? e.message : 'An error occurred');
       } finally {
@@ -157,243 +166,84 @@ export default function CoursePlayerPage() {
     return null;
   }
 
-  // Render the VdoCipher video player with the course data
+  // Render the course overview with sections
   return (
-    <div className="flex flex-col gap-4">
-    <VdoCipherPlayer
-      videoId={courseData.playbackId || ''}
-      watermark={user?.email}
-      chapters={courseData.chapters || []}
-      className="w-full"
-      userId={user?.id}
-      courseId={courseId}
-      duration={courseData.duration}
-      onChapterComplete={async (chapter) => {
-        if (!chapter || chapter.flashcard !== true) {
-          return;
-        }
-        setShowChapterFlashcard(true);
-        setIsGeneratingChapterFlashcard(true);
-        try {
-          const startTime = chapter.startTime;
-          const duration = typeof chapter.duration === 'number' ? chapter.duration : undefined;
-          const res = await fetch('/api/video/generate-chapter-flashcard', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ courseId, startTime, duration }),
-          });
-          if (!res.ok) {
-            console.error('Failed to generate chapter flashcard', await res.text());
-            return;
-          }
-          const data = await res.json();
-          if (data?.flashcard) {
-            setChapterFlashcard(data.flashcard as Flashcard);
-            setSelectedChoice(null);
-            setAnswerState('idle');
-          }
-        } catch (e) {
-          console.error('Error generating chapter flashcard:', e);
-        } finally {
-          setIsGeneratingChapterFlashcard(false);
-        }
-      }}
-      onComplete={async () => {
-        // Prevent duplicate requests
-        if (hasRequestedFlashcardsRef.current) return;
-        hasRequestedFlashcardsRef.current = true;
-        setShowFlashcards(true);
-        setIsGeneratingFinalFlashcards(true);
-        try {
-          const res = await fetch('/api/video/generate-flashcards', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ courseId }),
-          });
-          if (!res.ok) {
-            console.error('Failed to generate flashcards', await res.text());
-            return;
-          }
-          const data = await res.json();
-          if (Array.isArray(data?.flashcards) && data.flashcards.length > 0) {
-            setFlashcards(data.flashcards as Flashcard[]);
-            setCurrentIndex(0);
-            setSelectedChoice(null);
-            setAnswerState('idle');
-          }
-        } catch (e) {
-          console.error('Error generating flashcards:', e);
-        } finally {
-          setIsGeneratingFinalFlashcards(false);
-        }
-      }}
-    />
-
-    {/* Chapter Flashcard Dialog */}
-    {showChapterFlashcard && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center">
-        <div className="absolute inset-0 bg-black/50" onClick={() => setShowChapterFlashcard(false)} />
-        <div className="relative z-10 w-full max-w-xl rounded-lg bg-white p-6 shadow-xl dark:bg-zinc-900">
-          {isGeneratingChapterFlashcard || !chapterFlashcard ? (
-            <div className="flex flex-col items-center">
-              <LoadingSpinner />
-              <p className="mt-3 text-sm text-gray-700 dark:text-gray-300">Génération de la révision rapide…</p>
-            </div>
-          ) : (
-            <>
-              <div className="mb-4 text-sm text-gray-500">Révision rapide</div>
-              <h3 className="mb-4 text-lg font-semibold">{chapterFlashcard.question}</h3>
-              <div className="grid grid-cols-1 gap-3">
-                {chapterFlashcard.choices.map((choice, idx) => {
-                  const isSelected = selectedChoice === choice;
-                  const isCorrect = answerState !== 'idle' && choice === chapterFlashcard.correctAnswer;
-                  const isIncorrect = answerState === 'incorrect' && isSelected && choice !== chapterFlashcard.correctAnswer;
-                  const base = 'w-full rounded border px-4 py-3 text-left transition-colors';
-                  const idle = 'border-gray-300 hover:bg-gray-50 dark:border-zinc-700 dark:hover:bg-zinc-800';
-                  const correct = 'border-emerald-600 bg-emerald-50 text-emerald-800 dark:border-emerald-500 dark:bg-emerald-900/30 dark:text-emerald-300';
-                  const incorrect = 'border-red-600 bg-red-50 text-red-800 dark:border-red-500 dark:bg-red-900/30 dark:text-red-300';
-                  let cls = base + ' ' + idle;
-                  if (isCorrect) cls = base + ' ' + correct;
-                  if (isIncorrect) cls = base + ' ' + incorrect;
-                  return (
-                    <button
-                      key={idx}
-                      className={cls}
-                      onClick={() => {
-                        if (answerState !== 'idle' || !chapterFlashcard) return;
-                        setSelectedChoice(choice);
-                        const correctNow = choice === chapterFlashcard.correctAnswer;
-                        if (correctNow) {
-                          setAnswerState('correct');
-                          setTimeout(() => {
-                            setAnswerState('idle');
-                            setSelectedChoice(null);
-                            setShowChapterFlashcard(false);
-                          }, 700);
-                        } else {
-                          setAnswerState('incorrect');
-                          setTimeout(() => {
-                            setAnswerState('idle');
-                            setSelectedChoice(null);
-                          }, 800);
-                        }
-                      }}
-                      disabled={answerState !== 'idle'}
-                    >
-                      <span className="mr-2 inline-block h-2 w-2 rounded-full bg-current opacity-50" />
-                      {choice}
-                    </button>
-                  );
-                })}
-              </div>
-              <div className="mt-6 flex items-center justify-end">
-                <button
-                  className="rounded px-4 py-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-zinc-800"
-                  onClick={() => setShowChapterFlashcard(false)}
-                >
-                  Skip
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-    )}
-
-    {/* Final Flashcards Dialog */}
-    {showFlashcards && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center">
-        <div className="absolute inset-0 bg-black/50" onClick={() => setShowFlashcards(false)} />
-        <div className="relative z-10 w-full max-w-xl rounded-lg bg-white p-6 shadow-xl dark:bg-zinc-900">
-          {isGeneratingFinalFlashcards || !flashcards || flashcards.length === 0 ? (
-            <div className="flex flex-col items-center">
-              <LoadingSpinner />
-              <p className="mt-3 text-sm text-gray-700 dark:text-gray-300">Génération des questions flash…</p>
-            </div>
-          ) : currentIndex >= flashcards.length ? (
-            <div className="text-center">
-              <h3 className="mb-4 text-xl font-semibold">Bravo! 🎉</h3>
-              <p className="mb-6 text-gray-600 dark:text-gray-300">Tu as terminé toutes les questions flash.</p>
-              <button
-                className="rounded bg-emerald-600 px-4 py-2 text-white hover:bg-emerald-700"
-                onClick={() => setShowFlashcards(false)}
-              >
-                Close
-              </button>
-            </div>
-          ) : (
-            (() => {
-              const card = flashcards[currentIndex];
-              return (
-                <div>
-                  <div className="mb-4 text-sm text-gray-500">Question {currentIndex + 1} of {flashcards.length}</div>
-                  <h3 className="mb-4 text-lg font-semibold">{card.question}</h3>
-                  <div className="grid grid-cols-1 gap-3">
-                    {card.choices.map((choice, idx) => {
-                      const isSelected = selectedChoice === choice;
-                      const isCorrect = answerState !== 'idle' && choice === card.correctAnswer;
-                      const isIncorrect = answerState === 'incorrect' && isSelected && choice !== card.correctAnswer;
-                      const base = 'w-full rounded border px-4 py-3 text-left transition-colors';
-                      const idle = 'border-gray-300 hover:bg-gray-50 dark:border-zinc-700 dark:hover:bg-zinc-800';
-                      const correct = 'border-emerald-600 bg-emerald-50 text-emerald-800 dark:border-emerald-500 dark:bg-emerald-900/30 dark:text-emerald-300';
-                      const incorrect = 'border-red-600 bg-red-50 text-red-800 dark:border-red-500 dark:bg-red-900/30 dark:text-red-300';
-                      let cls = base + ' ' + idle;
-                      if (isCorrect) cls = base + ' ' + correct;
-                      if (isIncorrect) cls = base + ' ' + incorrect;
-                      return (
-                        <button
-                          key={idx}
-                          className={cls}
-                          onClick={() => {
-                            if (answerState !== 'idle' || !flashcards) return;
-                            setSelectedChoice(choice);
-                            const current = flashcards[currentIndex];
-                            const correctNow = choice === current.correctAnswer;
-                            if (correctNow) {
-                              setAnswerState('correct');
-                              setTimeout(() => {
-                                setAnswerState('idle');
-                                setSelectedChoice(null);
-                                setCurrentIndex((i) => i + 1);
-                              }, 700);
-                            } else {
-                              setAnswerState('incorrect');
-                              setTimeout(() => {
-                                setFlashcards((cards) => {
-                                  if (!cards) return cards;
-                                  const next = cards.slice();
-                                  const [removed] = next.splice(currentIndex, 1);
-                                  next.push(removed);
-                                  return next;
-                                });
-                                setAnswerState('idle');
-                                setSelectedChoice(null);
-                              }, 800);
-                            }
-                          }}
-                          disabled={answerState !== 'idle'}
-                        >
-                          <span className="mr-2 inline-block h-2 w-2 rounded-full bg-current opacity-50" />
-                          {choice}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <div className="mt-6 flex items-center justify-end">
-                    <button
-                      className="rounded px-4 py-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-zinc-800"
-                      onClick={() => setShowFlashcards(false)}
-                    >
-                      Exit
-                    </button>
-                  </div>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Course Header */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 mb-8">
+          <div className="p-8">
+            <div className="flex items-start space-x-6">
+              {/* Course Thumbnail */}
+              {courseData.thumbnail_url && (
+                <div className="flex-shrink-0">
+                  <img
+                    src={courseData.thumbnail_url}
+                    alt={courseData.title}
+                    className="w-32 h-24 object-cover rounded-lg border border-gray-200 dark:border-gray-700"
+                  />
                 </div>
-              );
-            })()
-          )}
+              )}
+              
+              {/* Course Info */}
+              <div className="flex-1 min-w-0">
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                  {courseData.title}
+                </h1>
+                
+                {courseData.description && (
+                  <p className="text-gray-600 dark:text-gray-300 mb-4 text-lg">
+                    {courseData.description}
+                  </p>
+                )}
+                
+                {/* Course Stats */}
+                <div className="flex flex-wrap items-center text-sm text-gray-500 dark:text-gray-400 space-x-6">
+                  <div className="flex items-center">
+                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    {sections.length} section{sections.length !== 1 ? 's' : ''}
+                  </div>
+                  
+                  <div className="flex items-center">
+                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    {Math.round(sections.reduce((total, section) => total + (section.duration || 0), 0))} minutes total
+                  </div>
+                  
+                  {courseData.creator && (
+                    <div className="flex items-center">
+                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                      By {courseData.creator.name}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
+
+        {/* Sections List */}
+        <SectionList
+          sections={sections}
+          courseId={courseId}
+          className="shadow-sm"
+          progress={progress.map(p => ({
+            sectionId: p.section_id,
+            completed: p.completed,
+            progressPercentage: p.progress_percentage,
+            lastWatchedAt: p.last_watched_at
+          }))}
+          onSectionClick={(section) => {
+            // Navigate to specific section player
+            router.push(`/my-learning/${courseId}/section/${section.id}`);
+          }}
+        />
       </div>
-    )}
     </div>
   );
 }

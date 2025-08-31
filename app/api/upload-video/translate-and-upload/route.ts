@@ -20,7 +20,7 @@ function normalizeLanguage(input: string): 'fr' | 'en' | 'es' {
  */
 export async function POST(req: Request) {
   try {
-    const { courseId, videoId, sourceLanguage } = await req.json();
+    const { courseId, sectionId, videoId, sourceLanguage } = await req.json();
 
     if (!courseId || !videoId || !sourceLanguage) {
       return NextResponse.json({ error: 'Missing courseId, videoId or sourceLanguage' }, { status: 400 });
@@ -32,7 +32,8 @@ export async function POST(req: Request) {
     }
 
     const supabase = await createRouteHandlerClient();
-    const path = `${courseId}/captions.vtt`;
+    // Use sectionId-specific path if provided, otherwise fallback to course-level path
+    const path = sectionId ? `${courseId}/${sectionId}/captions.vtt` : `${courseId}/captions.vtt`;
     const { data: downloadData, error: downloadError } = await supabase.storage
       .from('translations')
       .download(path);

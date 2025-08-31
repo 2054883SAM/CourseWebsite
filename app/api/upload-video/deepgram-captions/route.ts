@@ -32,6 +32,7 @@ export async function POST(req: Request) {
     const formatField = (form.get('format') as string) || 'vtt';
     const langField = (form.get('language') as string) || undefined;
     const courseId = (form.get('courseId') as string) || undefined;
+    const sectionId = (form.get('sectionId') as string) || undefined; // New parameter for section-specific storage
     const videoId = (form.get('videoId') as string) || undefined;
     format = (formatField === 'srt' ? 'srt' : 'vtt');
     language = langField;
@@ -42,6 +43,7 @@ export async function POST(req: Request) {
       format,
       language,
       courseId,
+      sectionId,
       videoId,
     });
     if (!file) {
@@ -105,12 +107,13 @@ export async function POST(req: Request) {
     }
     console.log('[Deepgram Captions] Captions length:', captions?.length);
 
-    // If VTT and courseId provided, store file in Supabase Storage bucket 'translations' under <courseId>/captions.vtt
+    // If VTT and courseId provided, store file in Supabase Storage bucket 'translations' under path based on sectionId or fallback to courseId
     let storedPath: string | undefined;
     if (captions && format === 'vtt' && courseId) {
       try {
         const supabase = await createRouteHandlerClient();
-        const filePath = `${courseId}/captions.vtt`;
+        // Use sectionId-specific path if provided, otherwise fallback to course-level path
+        const filePath = sectionId ? `${courseId}/${sectionId}/captions.vtt` : `${courseId}/captions.vtt`;
         const body = new Blob([captions], { type: 'text/vtt' });
         const { error: uploadError } = await supabase.storage
           .from('translations')

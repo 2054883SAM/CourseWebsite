@@ -363,6 +363,7 @@ CREATE TABLE sections (
     section_number NUMERIC NOT NULL,
     title TEXT NOT NULL,
     duration NUMERIC NOT NULL,
+    playback_id TEXT,
     chapters JSONB DEFAULT '[]'::jsonb,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
 );
@@ -461,3 +462,73 @@ USING (
     WHERE u.id = auth.uid() AND u.role = 'admin'
   )
 );
+
+-- Section Progress: track user progress through course sections
+CREATE TABLE section_progress (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    course_id UUID NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+    section_id UUID NOT NULL REFERENCES sections(id) ON DELETE CASCADE,
+    progress_percentage NUMERIC NOT NULL DEFAULT 0 CHECK (progress_percentage >= 0 AND progress_percentage <= 100),
+    completed BOOLEAN NOT NULL DEFAULT FALSE,
+    last_watched_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    
+    -- Ensure one progress record per user per section
+    UNIQUE(user_id, section_id)
+);
+
+-- Indexes for section_progress
+CREATE INDEX idx_section_progress_user_id ON section_progress(user_id);
+CREATE INDEX idx_section_progress_course_id ON section_progress(course_id);
+CREATE INDEX idx_section_progress_section_id ON section_progress(section_id);
+CREATE INDEX idx_section_progress_user_course ON section_progress(user_id, course_id);
+CREATE INDEX idx_section_progress_completed ON section_progress(completed);
+
+-- Enable RLS on section_progress
+ALTER TABLE section_progress ENABLE ROW LEVEL SECURITY;
+
+-- Policies for section_progress
+-- Users can only view and update their own progress
+CREATE POLICY "section_progress_select_own"
+ON section_progress FOR SELECT
+TO authenticated
+USING (user_id = auth.uid());
+
+CREATE POLICY "section_progress_insert_own"
+ON section_progress FOR INSERT
+TO authenticated
+WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY "section_progress_update_own"
+ON section_progress FOR UPDATE
+TO authenticated
+USING (user_id = auth.uid())
+WITH CHECK (user_id = auth.uid());
+
+-- Admins can view all progress (for analytics/support)
+CREATE POLICY "section_progress_admin_select"
+ON section_progress FOR SELECT
+TO authenticated
+USING (
+  EXISTS (
+    SELECT 1 FROM public.users u
+    WHERE u.id = auth.uid() AND u.role = 'admin'
+  )
+);
+
+-- Function to update updated_at timestamp
+CREATE OR REPLACE FUNCTION update_section_progress_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger to automatically update updated_at
+CREATE TRIGGER section_progress_updated_at
+    BEFORE UPDATE ON section_progress
+    FOR EACH ROW
+    EXECUTE FUNCTION update_section_progress_updated_at();
