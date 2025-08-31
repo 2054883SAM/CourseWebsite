@@ -124,7 +124,7 @@ Auth Status:
           Ou{' '}
           <Link 
             href="/signup" 
-            className="font-semibold text-gold-600 hover:text-gold-500 dark:text-gold-400 transition-colors duration-200 hover:underline"
+            className="font-semibold text-blue-600 hover:text-blue-500 dark:text-blue-400 transition-colors duration-200 hover:underline"
           >
             créer un nouveau compte
           </Link>
@@ -157,7 +157,7 @@ Auth Status:
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:ring-2 focus:ring-gold-500 focus:border-gold-500 transition-all duration-200"
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                 placeholder="votre@email.com"
               />
               <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
@@ -180,7 +180,7 @@ Auth Status:
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:ring-2 focus:ring-gold-500 focus:border-gold-500 transition-all duration-200"
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                 placeholder="Votre mot de passe"
               />
               <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
@@ -195,7 +195,7 @@ Auth Status:
         <div className="flex items-center justify-between">
           <Link
             href="/reset-password"
-            className="text-sm font-medium text-gold-600 hover:text-gold-500 dark:text-gold-400 transition-colors duration-200 hover:underline"
+            className="text-sm font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 transition-colors duration-200 hover:underline"
           >
             Mot de passe oublié ?
           </Link>
@@ -205,7 +205,7 @@ Auth Status:
           <button
             type="submit"
             disabled={loading}
-            className="w-full flex justify-center items-center px-4 py-3 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white bg-gradient-to-r from-gray-600 to-gray-800 hover:from-gray-700 hover:to-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
+            className="w-full flex justify-center items-center px-4 py-3 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
           >
             {loading ? (
               <div className="flex items-center">
@@ -257,7 +257,7 @@ Auth Status:
                   setTimeout(() => window.location.reload(), 500);
                 });
               }}
-              className="text-xs text-gold-600 dark:text-gold-400 hover:text-gold-500 transition-colors duration-200 hover:underline"
+              className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-500 transition-colors duration-200 hover:underline"
             >
               Se déconnecter et effacer les données
             </button>
@@ -270,7 +270,7 @@ Auth Status:
                   `Résultats de la vérification d'authentification : ${status ? 'Session valide trouvée' : 'Aucune session valide'}\n\nInformations détaillées de la session : ${JSON.stringify(await supabase.auth.getSession(), null, 2)}`
                 );
               }}
-              className="text-xs text-gold-600 dark:text-gold-400 hover:text-gold-500 transition-colors duration-200 hover:underline"
+              className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-500 transition-colors duration-200 hover:underline"
             >
               Vérifier le statut d'authentification
             </button>

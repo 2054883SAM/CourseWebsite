@@ -6,7 +6,7 @@ import { MainContent } from './MainContent';
 interface PageLayoutProps {
   children: ReactNode;
   className?: string;
-  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
+  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '7xl' | 'full';
   withPadding?: boolean;
   withFooter?: boolean;
 }
