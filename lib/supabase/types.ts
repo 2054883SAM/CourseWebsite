@@ -42,9 +42,15 @@ export interface Section {
   id: string; // UUID
   course_id: string; // UUID linked to courses.id
   title: string;
-  order: number;
-  playback_id?: string; // Mux playbackId for video playback
-  duration?: number; // video duration in seconds
+  // Some code paths use section_number; older code used order
+  section_number?: number;
+  order?: number;
+  playback_id?: string; // video playback id
+  duration?: number; // duration in minutes
+  // JSON fields stored in DB as JSON/JSONB (may be serialized strings when fetched)
+  chapters?: any[];
+  questions?: any[];
+  created_at?: string;
   // Computed fields (not in DB)
   subtitles?: Subtitle[];
 }

@@ -365,6 +365,7 @@ CREATE TABLE sections (
     duration NUMERIC NOT NULL,
     playback_id TEXT,
     chapters JSONB DEFAULT '[]'::jsonb,
+    questions JSONB DEFAULT '[]'::jsonb,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
 );
 

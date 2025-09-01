@@ -6,7 +6,9 @@ import { PostgrestResponse, PostgrestSingleResponse } from '@supabase/supabase-j
 function handleTimeoutError(error: unknown, action: string): never {
   console.error(`Error while trying to ${action}:`, error);
   if (error instanceof Error && error.message === 'Request timed out') {
-    throw new Error(`Taking longer than expected to ${action}. Please check your connection and try again.`);
+    throw new Error(
+      `Taking longer than expected to ${action}. Please check your connection and try again.`
+    );
   }
   throw error;
 }
@@ -77,7 +79,7 @@ export async function getCourseById(id: string): Promise<Course | null> {
       .select('*, users!creator_id(id, name, email, photo_url, role, bio)')
       .eq('id', id)
       .single();
-    
+
     const { data: courseData, error: courseError } = courseResponse;
 
     if (courseError) throw courseError;
@@ -125,7 +127,16 @@ export async function getCourseSections(courseId: string): Promise<Section[]> {
       title: section.title,
       duration: section.duration,
       playback_id: section.playback_id,
-      chapters: section.chapters ? JSON.parse(section.chapters) : [],
+      chapters: section.chapters
+        ? Array.isArray(section.chapters)
+          ? section.chapters
+          : JSON.parse(section.chapters)
+        : [],
+      questions: section.questions
+        ? Array.isArray(section.questions)
+          ? section.questions
+          : JSON.parse(section.questions)
+        : [],
       created_at: section.created_at,
     }));
 
@@ -158,7 +169,16 @@ export async function getSectionById(sectionId: string): Promise<Section | null>
       title: sectionData.title,
       duration: sectionData.duration,
       playback_id: sectionData.playback_id,
-      chapters: sectionData.chapters ? JSON.parse(sectionData.chapters) : [],
+      chapters: sectionData.chapters
+        ? Array.isArray(sectionData.chapters)
+          ? sectionData.chapters
+          : JSON.parse(sectionData.chapters)
+        : [],
+      questions: sectionData.questions
+        ? Array.isArray(sectionData.questions)
+          ? sectionData.questions
+          : JSON.parse(sectionData.questions)
+        : [],
       created_at: sectionData.created_at,
     };
 
@@ -196,7 +216,7 @@ export async function isUserEnrolled(userId: string, courseId: string): Promise<
       .eq('course_id', courseId)
       .eq('payment_status', 'paid')
       .maybeSingle();
-    
+
     const { data, error } = response;
 
     if (error) throw error;

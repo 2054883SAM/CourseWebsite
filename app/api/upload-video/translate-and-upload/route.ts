@@ -14,7 +14,7 @@ function normalizeLanguage(input: string): 'fr' | 'en' | 'es' {
 /**
  * POST /api/upload-video/translate-and-upload
  * Body: { courseId: number|string, videoId: string, sourceLanguage: 'fr'|'en'|'es' }
- * - Reads original VTT from Supabase storage bucket 'translations' at `${courseId}/captions.vtt`
+ * - Reads original VTT from Supabase storage bucket 'translations' at `${sectionId}/captions.vtt`
  * - Translates to the two other languages using DeepL
  * - Uploads both translated files to VdoCipher via files API
  */
@@ -23,7 +23,10 @@ export async function POST(req: Request) {
     const { courseId, sectionId, videoId, sourceLanguage } = await req.json();
 
     if (!courseId || !videoId || !sourceLanguage) {
-      return NextResponse.json({ error: 'Missing courseId, videoId or sourceLanguage' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Missing courseId, videoId or sourceLanguage' },
+        { status: 400 }
+      );
     }
 
     const API_SECRET = process.env.VDO_API_SECRET;
@@ -32,13 +35,19 @@ export async function POST(req: Request) {
     }
 
     const supabase = await createRouteHandlerClient();
-    // Use sectionId-specific path if provided, otherwise fallback to course-level path
-    const path = sectionId ? `${courseId}/${sectionId}/captions.vtt` : `${courseId}/captions.vtt`;
+    // New storage scheme: section-level path only
+    const path = sectionId ? `${sectionId}/captions.vtt` : undefined;
+    if (!path) {
+      return NextResponse.json({ error: 'Missing sectionId for captions lookup' }, { status: 400 });
+    }
     const { data: downloadData, error: downloadError } = await supabase.storage
       .from('translations')
       .download(path);
     if (downloadError || !downloadData) {
-      return NextResponse.json({ error: `Unable to download original captions: ${downloadError?.message || 'unknown'}` }, { status: 404 });
+      return NextResponse.json(
+        { error: `Unable to download original captions: ${downloadError?.message || 'unknown'}` },
+        { status: 404 }
+      );
     }
     const originalVtt = await downloadData.text();
 
@@ -65,7 +74,10 @@ export async function POST(req: Request) {
       });
       if (!res.ok) {
         const body = await res.text();
-        return NextResponse.json({ error: `VdoCipher upload failed for ${lang}: ${res.status} ${body}` }, { status: 502 });
+        return NextResponse.json(
+          { error: `VdoCipher upload failed for ${lang}: ${res.status} ${body}` },
+          { status: 502 }
+        );
       }
       const json = await res.json();
       results.push({ lang, data: json });
@@ -74,12 +86,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true, uploaded: results }, { status: 200 });
   } catch (err) {
     console.error('[Translate and Upload] Unexpected error', err);
-    return NextResponse.json({ error: err instanceof Error ? err.message : 'Unknown error' }, { status: 500 });
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : 'Unknown error' },
+      { status: 500 }
+    );
   }
 }
 
 export async function OPTIONS() {
   return NextResponse.json({}, { status: 200 });
 }
-
-

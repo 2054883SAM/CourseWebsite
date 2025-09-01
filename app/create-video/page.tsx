@@ -32,14 +32,14 @@ export default function CreateVideoPage() {
     prerequis: '',
     publicCible: '',
     dureeEstimee: '',
-    niveauDifficulte: 'debutant' as 'debutant' | 'intermediaire' | 'avance'
+    niveauDifficulte: 'debutant' as 'debutant' | 'intermediaire' | 'avance',
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [selectedThumbnail, setSelectedThumbnail] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string>('');
-  
+
   // Replace single video management with sections management
   const [sections, setSections] = useState<VideoSection[]>([
     {
@@ -50,10 +50,9 @@ export default function CreateVideoPage() {
       chapters: [],
       uploadProgress: 0,
       status: 'pending',
-      currentStep: 'En attente'
-    }
+      currentStep: 'En attente',
+    },
   ]);
-  
 
   const [translationProgress, setTranslationProgress] = useState(0);
   const translationProgressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -76,8 +75,8 @@ export default function CreateVideoPage() {
       <PageLayout>
         <Section className="py-8">
           <Container>
-            <div className="flex justify-center items-center min-h-[400px]">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
+            <div className="flex min-h-[400px] items-center justify-center">
+              <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-t-2 border-blue-600"></div>
             </div>
           </Container>
         </Section>
@@ -90,8 +89,8 @@ export default function CreateVideoPage() {
       <PageLayout>
         <Section className="py-8">
           <Container>
-            <div className="text-center p-8">
-              <div className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">
+            <div className="p-8 text-center">
+              <div className="mb-2 text-xl font-semibold text-gray-700 dark:text-gray-300">
                 Non authentifié
               </div>
               <p className="text-gray-600 dark:text-gray-400">
@@ -109,14 +108,14 @@ export default function CreateVideoPage() {
       <PageLayout>
         <Section className="py-8">
           <Container>
-            <div className="text-center p-8">
-              <div className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">
+            <div className="p-8 text-center">
+              <div className="mb-2 text-xl font-semibold text-gray-700 dark:text-gray-300">
                 Accès non autorisé
               </div>
               <p className="text-gray-600 dark:text-gray-400">
                 Seuls les administrateurs et les enseignants peuvent créer des cours.
               </p>
-              <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
+              <p className="mt-2 text-sm text-gray-500 dark:text-gray-500">
                 Votre rôle actuel: {dbUser.role}
               </p>
             </div>
@@ -126,13 +125,15 @@ export default function CreateVideoPage() {
     );
   }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
 
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === 'checkbox' ? checked : value,
     }));
   };
 
@@ -146,19 +147,19 @@ export default function CreateVideoPage() {
       chapters: [],
       uploadProgress: 0,
       status: 'pending',
-      currentStep: 'En attente'
+      currentStep: 'En attente',
     };
-    setSections(prev => [...prev, newSection]);
+    setSections((prev) => [...prev, newSection]);
   };
 
   const removeSection = (index: number) => {
     if (sections.length > 1) {
-      setSections(prev => prev.filter((_, i) => i !== index));
+      setSections((prev) => prev.filter((_, i) => i !== index));
     }
   };
 
   const updateSection = (index: number, updatedSection: VideoSection) => {
-    setSections(prev => prev.map((section, i) => i === index ? updatedSection : section));
+    setSections((prev) => prev.map((section, i) => (i === index ? updatedSection : section)));
   };
 
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -173,9 +174,11 @@ export default function CreateVideoPage() {
     }
   };
 
-
-
-  const uploadVideoToVdoCipher = async (file: File, title: string, onProgress: (progress: number) => void): Promise<string> => {
+  const uploadVideoToVdoCipher = async (
+    file: File,
+    title: string,
+    onProgress: (progress: number) => void
+  ): Promise<string> => {
     try {
       // STEP 1: Obtain upload credentials (align with test page behavior)
       console.log('VDOCIPHER: Requesting upload credentials...');
@@ -243,19 +246,29 @@ export default function CreateVideoPage() {
         onProgress(progressPercent);
 
         if (attempts > 1) {
-          await new Promise(resolve => setTimeout(resolve, checkInterval));
+          await new Promise((resolve) => setTimeout(resolve, checkInterval));
         }
 
-        const statusResponse = await fetch(`/api/upload-video/vdocipher-status?videoId=${videoId}`, { method: 'GET' });
+        const statusResponse = await fetch(
+          `/api/upload-video/vdocipher-status?videoId=${videoId}`,
+          { method: 'GET' }
+        );
 
         if (!statusResponse.ok) {
           const errorText = await statusResponse.text();
-          console.warn('VDOCIPHER: Status check failed', { status: statusResponse.status, error: errorText });
+          console.warn('VDOCIPHER: Status check failed', {
+            status: statusResponse.status,
+            error: errorText,
+          });
           continue;
         }
 
         const statusData = await statusResponse.json();
-        console.log('VDOCIPHER: Status check', { attempt: attempts, ...statusData, elapsedMinutes });
+        console.log('VDOCIPHER: Status check', {
+          attempt: attempts,
+          ...statusData,
+          elapsedMinutes,
+        });
 
         if (statusData.isReady) {
           videoReady = true;
@@ -263,12 +276,13 @@ export default function CreateVideoPage() {
         } else if (statusData.status === 'Error' || statusData.status === 'Failed') {
           throw new Error(`Video processing failed with status: ${statusData.status}`);
         }
-
       }
 
       if (!videoReady) {
         const elapsedMinutes = ((Date.now() - startTime) / (1000 * 60)).toFixed(1);
-        console.warn(`VDOCIPHER: Video still processing after ${elapsedMinutes} minutes. Proceeding with course creation; processing continues in background.`);
+        console.warn(
+          `VDOCIPHER: Video still processing after ${elapsedMinutes} minutes. Proceeding with course creation; processing continues in background.`
+        );
       }
 
       onProgress(100);
@@ -281,7 +295,7 @@ export default function CreateVideoPage() {
 
   const uploadThumbnail = async (file: File): Promise<string> => {
     console.log('Starting thumbnail upload for file:', file.name, 'Size:', file.size);
-    
+
     // Validate file type
     if (!file.type.startsWith('image/')) {
       throw new Error('Le fichier doit être une image');
@@ -290,7 +304,7 @@ export default function CreateVideoPage() {
     // Validate file size (max 5MB)
     const maxSize = 5 * 1024 * 1024; // 5MB
     if (file.size > maxSize) {
-      throw new Error('L\'image doit faire moins de 5MB');
+      throw new Error("L'image doit faire moins de 5MB");
     }
 
     const fileExt = file.name.split('.').pop();
@@ -312,18 +326,18 @@ export default function CreateVideoPage() {
 
     console.log('Upload successful:', data);
 
-    const { data: { publicUrl } } = supabase.storage
-      .from('course-thumbnails')
-      .getPublicUrl(filePath);
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from('course-thumbnails').getPublicUrl(filePath);
 
     console.log('Generated public URL:', publicUrl);
     return publicUrl;
   };
 
   const updateSectionStatus = (sectionIndex: number, updates: Partial<VideoSection>) => {
-    setSections(prev => prev.map((section, i) => 
-      i === sectionIndex ? { ...section, ...updates } : section
-    ));
+    setSections((prev) =>
+      prev.map((section, i) => (i === sectionIndex ? { ...section, ...updates } : section))
+    );
   };
 
   const getVideoDurationFromFile = async (file: File): Promise<number> => {
@@ -337,7 +351,10 @@ export default function CreateVideoPage() {
           URL.revokeObjectURL(url);
           if (!isNaN(durationSec) && isFinite(durationSec) && durationSec > 0) {
             const durationMinutes = Math.max(1, Math.round(durationSec / 60));
-            console.log('LOCAL DURATION: Extracted from file', { seconds: durationSec, minutes: durationMinutes });
+            console.log('LOCAL DURATION: Extracted from file', {
+              seconds: durationSec,
+              minutes: durationMinutes,
+            });
             resolve(durationMinutes);
           } else {
             resolve(1); // Fallback: 1 minute
@@ -355,7 +372,11 @@ export default function CreateVideoPage() {
     });
   };
 
-  const processSection = async (section: VideoSection, sectionIndex: number, totalSections: number): Promise<{ playbackId: string; chapters: VideoChapter[]; duration?: number }> => {
+  const processSection = async (
+    section: VideoSection,
+    sectionIndex: number,
+    totalSections: number
+  ): Promise<{ playbackId: string; chapters: VideoChapter[]; duration?: number }> => {
     if (!section.videoFile) {
       throw new Error('Aucun fichier vidéo sélectionné');
     }
@@ -368,7 +389,7 @@ export default function CreateVideoPage() {
       updateSectionStatus(sectionIndex, {
         status: 'uploading',
         currentStep: 'Upload de la vidéo...',
-        uploadProgress: 0
+        uploadProgress: 0,
       });
 
       const videoPlaybackId = await uploadVideoToVdoCipher(
@@ -377,7 +398,7 @@ export default function CreateVideoPage() {
         (progress) => {
           updateSectionStatus(sectionIndex, {
             uploadProgress: Math.round(progress * 0.4), // 40% for video upload
-            currentStep: `Upload de la vidéo... ${Math.round(progress)}%`
+            currentStep: `Upload de la vidéo... ${Math.round(progress)}%`,
           });
         }
       );
@@ -386,41 +407,53 @@ export default function CreateVideoPage() {
         playbackId: videoPlaybackId,
         status: 'processing',
         currentStep: 'Vidéo uploadée, obtention de la durée...',
-        uploadProgress: 40
+        uploadProgress: 40,
       });
 
       // Step 1.5: Get video duration (prefer local, fallback to VdoCipher)
       let videoDurationMinutes: number = localDurationMinutes; // Use local duration as primary
-      
+
       // If local duration is the fallback value (1), try to get from VdoCipher
       if (localDurationMinutes === 1) {
         try {
-          const statusResponse = await fetch(`/api/upload-video/vdocipher-status?videoId=${videoPlaybackId}`, { method: 'GET' });
+          const statusResponse = await fetch(
+            `/api/upload-video/vdocipher-status?videoId=${videoPlaybackId}`,
+            { method: 'GET' }
+          );
           if (statusResponse.ok) {
             const statusData = await statusResponse.json();
             if (typeof statusData.duration === 'number' && statusData.duration > 0) {
               // Convert from seconds to minutes and ensure minimum of 1 minute
               videoDurationMinutes = Math.max(1, Math.round(statusData.duration / 60));
-              console.log('DURATION: Got duration from VdoCipher', { seconds: statusData.duration, minutes: videoDurationMinutes });
+              console.log('DURATION: Got duration from VdoCipher', {
+                seconds: statusData.duration,
+                minutes: videoDurationMinutes,
+              });
             }
           }
         } catch (durationError) {
-          console.warn('DURATION: Could not get duration from VdoCipher, using local duration', durationError);
+          console.warn(
+            'DURATION: Could not get duration from VdoCipher, using local duration',
+            durationError
+          );
         }
       }
-      
-      console.log('DURATION: Final duration for section', { minutes: videoDurationMinutes, source: localDurationMinutes > 1 ? 'local' : 'vdocipher' });
+
+      console.log('DURATION: Final duration for section', {
+        minutes: videoDurationMinutes,
+        source: localDurationMinutes > 1 ? 'local' : 'vdocipher',
+      });
 
       updateSectionStatus(sectionIndex, {
         currentStep: 'Durée obtenue, génération des sous-titres...',
-        uploadProgress: 45
+        uploadProgress: 45,
       });
 
       // Step 2: Generate captions via Deepgram
       updateSectionStatus(sectionIndex, {
         status: 'transcribing',
         currentStep: 'Génération des sous-titres...',
-        uploadProgress: 50
+        uploadProgress: 50,
       });
 
       // We need a temporary courseId for storage path - we'll use a placeholder
@@ -434,12 +467,12 @@ export default function CreateVideoPage() {
       form.append('courseId', tempCourseId);
       form.append('sectionId', tempSectionId);
       form.append('videoId', videoPlaybackId);
-      
+
       const capRes = await fetch('/api/upload-video/deepgram-captions', {
         method: 'POST',
         body: form,
       });
-      
+
       if (!capRes.ok) {
         const t = await capRes.text();
         throw new Error(`Erreur lors de la génération des sous-titres: ${t}`);
@@ -450,16 +483,16 @@ export default function CreateVideoPage() {
 
       updateSectionStatus(sectionIndex, {
         currentStep: 'Sous-titres générés...',
-        uploadProgress: 65
+        uploadProgress: 65,
       });
 
       // Step 3: Generate AI chapters if requested
       let generatedChapters: VideoChapter[] = section.chapters;
-      
+
       if (section.aiGeneratedChapters && captionData?.captions) {
         updateSectionStatus(sectionIndex, {
           currentStep: 'Génération des chapitres IA...',
-          uploadProgress: 70
+          uploadProgress: 70,
         });
 
         try {
@@ -471,7 +504,7 @@ export default function CreateVideoPage() {
               language: formData.primary_language,
             }),
           });
-          
+
           if (genRes.ok) {
             const { chapters: aiChapters } = await genRes.json();
             if (Array.isArray(aiChapters)) {
@@ -479,11 +512,12 @@ export default function CreateVideoPage() {
                 id: crypto.randomUUID(),
                 title: String(c.title || '').trim(),
                 startTime: Math.max(0, Math.floor(Number(c.startTime) || 0)),
-                duration: c.duration != null ? Math.max(1, Math.floor(Number(c.duration))) : undefined,
+                duration:
+                  c.duration != null ? Math.max(1, Math.floor(Number(c.duration))) : undefined,
                 description: c.description != null ? String(c.description) : undefined,
                 flashcard: typeof c.flashcard === 'boolean' ? c.flashcard : false,
               }));
-              
+
               // Update the section with AI-generated chapters
               updateSectionStatus(sectionIndex, { chapters: generatedChapters });
               console.log('CHAPTERS: AI chapters generated for section', section.title);
@@ -496,14 +530,14 @@ export default function CreateVideoPage() {
 
       updateSectionStatus(sectionIndex, {
         currentStep: 'Chapitres traités...',
-        uploadProgress: 80
+        uploadProgress: 80,
       });
 
       // Step 4: Translate captions
       updateSectionStatus(sectionIndex, {
         status: 'translating',
         currentStep: 'Traduction des sous-titres...',
-        uploadProgress: 85
+        uploadProgress: 85,
       });
 
       try {
@@ -517,7 +551,7 @@ export default function CreateVideoPage() {
             sourceLanguage: formData.primary_language,
           }),
         });
-        
+
         if (translateRes.ok) {
           console.log('CAPTIONS: Translation completed for section', section.title);
         }
@@ -529,21 +563,20 @@ export default function CreateVideoPage() {
       updateSectionStatus(sectionIndex, {
         status: 'completed',
         currentStep: 'Section terminée',
-        uploadProgress: 100
+        uploadProgress: 100,
       });
 
       return {
         playbackId: videoPlaybackId,
         chapters: generatedChapters,
-        duration: videoDurationMinutes // Duration in minutes for database
+        duration: videoDurationMinutes, // Duration in minutes for database
       };
-
     } catch (error) {
       updateSectionStatus(sectionIndex, {
         status: 'error',
         currentStep: 'Erreur',
         uploadProgress: 0,
-        error: error instanceof Error ? error.message : 'Erreur inconnue'
+        error: error instanceof Error ? error.message : 'Erreur inconnue',
       });
       throw error;
     }
@@ -554,9 +587,7 @@ export default function CreateVideoPage() {
     if (!user) return;
 
     // Validate sections
-    const validSections = sections.filter(section => 
-      section.title.trim() && section.videoFile
-    );
+    const validSections = sections.filter((section) => section.title.trim() && section.videoFile);
 
     if (validSections.length === 0) {
       error('Au moins une section avec un titre et une vidéo est requise');
@@ -593,24 +624,25 @@ export default function CreateVideoPage() {
 
       for (let i = 0; i < validSections.length; i++) {
         const section = validSections[i];
-        const sectionIndex = sections.findIndex(s => s.id === section.id);
-        
+        const sectionIndex = sections.findIndex((s) => s.id === section.id);
+
         console.log(`Processing section ${i + 1}/${validSections.length}: ${section.title}`);
-        
+
         try {
           const result = await processSection(section, sectionIndex, validSections.length);
           processedSections.push({
             originalSection: section,
-            ...result
+            ...result,
           });
 
           // Update overall progress
           const currentProgress = 10 + (i + 1) * sectionProgressWeight;
           setUploadProgress(Math.round(currentProgress));
-
         } catch (sectionError) {
           console.error(`Error processing section ${section.title}:`, sectionError);
-          error(`Erreur lors du traitement de la section "${section.title}": ${sectionError instanceof Error ? sectionError.message : 'Erreur inconnue'}`);
+          error(
+            `Erreur lors du traitement de la section "${section.title}": ${sectionError instanceof Error ? sectionError.message : 'Erreur inconnue'}`
+          );
           throw sectionError;
         }
       }
@@ -645,16 +677,22 @@ export default function CreateVideoPage() {
 
       // Step 4: Create all sections in database
       const sectionInserts = processedSections.map((processedSection, index) => {
-        const duration = processedSection.duration && processedSection.duration > 0 ? processedSection.duration : 1;
-        console.log(`SECTION INSERT: Section ${index + 1} - Duration: ${duration} minutes (original: ${processedSection.duration})`);
-        
+        const duration =
+          processedSection.duration && processedSection.duration > 0
+            ? processedSection.duration
+            : 1;
+        console.log(
+          `SECTION INSERT: Section ${index + 1} - Duration: ${duration} minutes (original: ${processedSection.duration})`
+        );
+
         return {
           course_id: course.id,
           title: processedSection.originalSection.title,
           section_number: index + 1,
           playback_id: processedSection.playbackId,
-          chapters: processedSection.chapters.length > 0 ? JSON.stringify(processedSection.chapters) : '[]',
-          duration: duration // Duration in minutes, guaranteed to be a positive number
+          chapters:
+            processedSection.chapters.length > 0 ? JSON.stringify(processedSection.chapters) : '[]',
+          duration: duration, // Duration in minutes, guaranteed to be a positive number
         };
       });
 
@@ -670,12 +708,90 @@ export default function CreateVideoPage() {
 
       console.log(`Created ${createdSections.length} sections in database`);
 
+      // Step 4.5: Move captions from temporary sectionId to real DB sectionId
+      try {
+        console.log('Attempting to move captions from temp sectionIds to DB sectionIds...');
+        for (let i = 0; i < processedSections.length; i++) {
+          const tempSectionId = processedSections[i].originalSection.id; // temporary client-side id
+          const dbSection = createdSections[i]; // assumes same order
+          if (!dbSection?.id) continue;
+          const fromPath = `${tempSectionId}/captions.vtt`;
+          const toPath = `${dbSection.id}/captions.vtt`;
+          if (fromPath === toPath) continue;
+          const { data: moveResult, error: moveError } = await supabase.storage
+            .from('translations')
+            .move(fromPath, toPath);
+          if (moveError) {
+            console.warn('CAPTIONS MOVE: Failed to move captions', {
+              fromPath,
+              toPath,
+              error: moveError.message,
+            });
+          } else {
+            console.log('CAPTIONS MOVE: Moved captions', { fromPath, toPath, result: moveResult });
+          }
+        }
+      } catch (moveErr) {
+        console.warn('CAPTIONS MOVE: Error while moving captions to DB section ids', moveErr);
+      }
+
+      // Step 4.6: Generate and store mixed questions for each section (max 8)
+      try {
+        console.log('QUESTIONS: Generating mixed questions for each section...');
+        for (let i = 0; i < createdSections.length; i++) {
+          const dbSection = createdSections[i];
+          if (!dbSection?.id) continue;
+          try {
+            const res = await fetch('/api/video/generate-questions', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ sectionId: dbSection.id, maxQuestions: 8 }),
+            });
+            if (!res.ok) {
+              console.warn(
+                'QUESTIONS: Generation failed for section',
+                dbSection.id,
+                await res.text()
+              );
+              continue;
+            }
+            const data = await res.json();
+            const questions = Array.isArray(data?.questions) ? data.questions : [];
+            const payload = {
+              questions: questions.length > 0 ? JSON.stringify(questions.slice(0, 8)) : '[]',
+            } as Record<string, any>;
+            const { error: qUpdateError } = await supabase
+              .from('sections')
+              .update(payload)
+              .eq('id', dbSection.id);
+            if (qUpdateError) {
+              console.warn('QUESTIONS: Failed to save questions', {
+                sectionId: dbSection.id,
+                error: qUpdateError.message,
+              });
+            } else {
+              console.log('QUESTIONS: Saved questions for section', dbSection.id);
+            }
+          } catch (qErr) {
+            console.warn(
+              'QUESTIONS: Error generating/saving questions for section',
+              dbSection?.id,
+              qErr
+            );
+          }
+        }
+      } catch (allQErr) {
+        console.warn('QUESTIONS: Batch generation encountered an error', allQErr);
+      }
+
       setUploadProgress(100);
-      success(`Cours créé avec succès ! ${validSections.length} section(s) ont été uploadées sur VdoCipher et seront bientôt disponibles.`);
-      
+      success(
+        `Cours créé avec succès ! ${validSections.length} section(s) ont été uploadées sur VdoCipher et seront bientôt disponibles.`
+      );
+
       // Redirect to courses page after successful creation
       router.push('/courses');
-      
+
       // Reset form
       setFormData({
         title: '',
@@ -689,22 +805,23 @@ export default function CreateVideoPage() {
         prerequis: '',
         publicCible: '',
         dureeEstimee: '',
-        niveauDifficulte: 'debutant'
+        niveauDifficulte: 'debutant',
       });
       setSelectedThumbnail(null);
       setThumbnailPreview('');
-      setSections([{
-        id: crypto.randomUUID(),
-        title: '',
-        videoFile: null,
-        aiGeneratedChapters: false,
-        chapters: [],
-        uploadProgress: 0,
-        status: 'pending',
-        currentStep: 'En attente'
-      }]);
+      setSections([
+        {
+          id: crypto.randomUUID(),
+          title: '',
+          videoFile: null,
+          aiGeneratedChapters: false,
+          chapters: [],
+          uploadProgress: 0,
+          status: 'pending',
+          currentStep: 'En attente',
+        },
+      ]);
       setTranslationProgress(0);
-
     } catch (err) {
       console.error('Erreur lors de la création du cours:', err);
       const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
@@ -717,12 +834,12 @@ export default function CreateVideoPage() {
 
   return (
     <PageLayout>
-      <Section className="py-8 bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <Section className="bg-gradient-to-br from-blue-50 via-white to-purple-50 py-8 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         <Container>
-          <div className="max-w-4xl mx-auto">
+          <div className="mx-auto max-w-4xl">
             {/* Header */}
-            <div className="text-center mb-12">
-              <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+            <div className="mb-12 text-center">
+              <h1 className="mb-4 text-4xl font-bold text-gray-900 dark:text-white">
                 Créer un nouveau cours
               </h1>
               <p className="text-lg text-gray-600 dark:text-gray-300">
@@ -732,8 +849,8 @@ export default function CreateVideoPage() {
 
             {/* Enhanced Progress Bar */}
             {isSubmitting && (
-              <div className="mb-8 p-6 bg-white rounded-2xl shadow-lg dark:bg-gray-800">
-                <div className="flex items-center justify-between mb-2">
+              <div className="mb-8 rounded-2xl bg-white p-6 shadow-lg dark:bg-gray-800">
+                <div className="mb-2 flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                     Création du cours en cours...
                   </span>
@@ -741,47 +858,53 @@ export default function CreateVideoPage() {
                     {uploadProgress}%
                   </span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-3 dark:bg-gray-700">
-                  <div 
-                    className="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full transition-all duration-300"
+                <div className="h-3 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                  <div
+                    className="h-3 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300"
                     style={{ width: `${uploadProgress}%` }}
                   ></div>
                 </div>
 
                 {/* Section Status Overview */}
-                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                  {sections.filter(s => s.title.trim() && s.videoFile).map((section, index) => (
-                    <div key={section.id} className={`flex items-center text-xs p-2 rounded border ${
-                      section.status === 'completed' ? 'bg-green-50 border-green-200 text-green-700 dark:bg-green-900/20 dark:border-green-800 dark:text-green-300' :
-                      section.status === 'error' ? 'bg-red-50 border-red-200 text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-300' :
-                      section.status === 'pending' ? 'bg-gray-50 border-gray-200 text-gray-600 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400' :
-                      'bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300'
-                    }`}>
-                      <div className="mr-2">
-                        {section.status === 'pending' && '⏳'}
-                        {section.status === 'uploading' && '📤'}
-                        {section.status === 'processing' && '⚙️'}
-                        {section.status === 'transcribing' && '🎤'}
-                        {section.status === 'translating' && '🌍'}
-                        {section.status === 'completed' && '✅'}
-                        {section.status === 'error' && '❌'}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="truncate font-medium">Section {index + 1}</div>
-                        <div className="truncate text-xs opacity-75">{section.currentStep}</div>
-                      </div>
-                      {section.status !== 'pending' && section.status !== 'completed' && (
-                        <div className="ml-2 text-xs font-medium">
-                          {section.uploadProgress}%
+                <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                  {sections
+                    .filter((s) => s.title.trim() && s.videoFile)
+                    .map((section, index) => (
+                      <div
+                        key={section.id}
+                        className={`flex items-center rounded border p-2 text-xs ${
+                          section.status === 'completed'
+                            ? 'border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-900/20 dark:text-green-300'
+                            : section.status === 'error'
+                              ? 'border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300'
+                              : section.status === 'pending'
+                                ? 'border-gray-200 bg-gray-50 text-gray-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400'
+                                : 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-300'
+                        }`}
+                      >
+                        <div className="mr-2">
+                          {section.status === 'pending' && '⏳'}
+                          {section.status === 'uploading' && '📤'}
+                          {section.status === 'processing' && '⚙️'}
+                          {section.status === 'transcribing' && '🎤'}
+                          {section.status === 'translating' && '🌍'}
+                          {section.status === 'completed' && '✅'}
+                          {section.status === 'error' && '❌'}
                         </div>
-                      )}
-                    </div>
-                  ))}
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate font-medium">Section {index + 1}</div>
+                          <div className="truncate text-xs opacity-75">{section.currentStep}</div>
+                        </div>
+                        {section.status !== 'pending' && section.status !== 'completed' && (
+                          <div className="ml-2 text-xs font-medium">{section.uploadProgress}%</div>
+                        )}
+                      </div>
+                    ))}
                 </div>
 
                 {translationProgress > 0 && translationProgress < 100 && (
                   <div className="mt-4">
-                    <div className="flex items-center justify-between mb-1">
+                    <div className="mb-1 flex items-center justify-between">
                       <span className="text-xs text-gray-600 dark:text-gray-400">
                         Traduction des sous-titres...
                       </span>
@@ -789,9 +912,9 @@ export default function CreateVideoPage() {
                         {translationProgress}%
                       </span>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-1 dark:bg-gray-700">
-                      <div 
-                        className="bg-purple-500 h-1 rounded-full transition-all duration-300"
+                    <div className="h-1 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                      <div
+                        className="h-1 rounded-full bg-purple-500 transition-all duration-300"
                         style={{ width: `${translationProgress}%` }}
                       ></div>
                     </div>
@@ -803,15 +926,15 @@ export default function CreateVideoPage() {
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-8">
               {/* Basic Information Section */}
-              <div className="bg-white rounded-2xl shadow-lg p-8 dark:bg-gray-800">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
+              <div className="rounded-2xl bg-white p-8 shadow-lg dark:bg-gray-800">
+                <h2 className="mb-6 flex items-center text-2xl font-bold text-gray-900 dark:text-white">
                   <span className="mr-3">📝</span>
                   Informations de base
                 </h2>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Titre du cours *
                     </label>
                     <input
@@ -820,13 +943,13 @@ export default function CreateVideoPage() {
                       value={formData.title}
                       onChange={handleInputChange}
                       required
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all duration-200"
+                      className="w-full rounded-xl border border-gray-300 px-4 py-3 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                       placeholder="Ex: Introduction à React"
                     />
                   </div>
 
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Description *
                     </label>
                     <textarea
@@ -835,7 +958,7 @@ export default function CreateVideoPage() {
                       onChange={handleInputChange}
                       required
                       rows={4}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all duration-200"
+                      className="w-full rounded-xl border border-gray-300 px-4 py-3 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                       placeholder="Décrivez votre cours..."
                     />
                   </div>
@@ -843,14 +966,14 @@ export default function CreateVideoPage() {
                   {/* Price field removed from schema */}
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Langue principale du cours *
                     </label>
                     <select
                       name="primary_language"
                       value={formData.primary_language}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all duration-200"
+                      className="w-full rounded-xl border border-gray-300 px-4 py-3 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                     >
                       <option value="fr">Français</option>
                       <option value="en">Anglais</option>
@@ -859,14 +982,14 @@ export default function CreateVideoPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Niveau de difficulté
                     </label>
                     <select
                       name="niveauDifficulte"
                       value={formData.niveauDifficulte}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all duration-200"
+                      className="w-full rounded-xl border border-gray-300 px-4 py-3 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                     >
                       <option value="debutant">Débutant</option>
                       <option value="intermediaire">Intermédiaire</option>
@@ -892,15 +1015,15 @@ export default function CreateVideoPage() {
               </div>
 
               {/* Detailed Information Section */}
-              <div className="bg-white rounded-2xl shadow-lg p-8 dark:bg-gray-800">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
+              <div className="rounded-2xl bg-white p-8 shadow-lg dark:bg-gray-800">
+                <h2 className="mb-6 flex items-center text-2xl font-bold text-gray-900 dark:text-white">
                   <span className="mr-3">📋</span>
                   Informations détaillées
                 </h2>
-                
+
                 <div className="space-y-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Ce que vous allez apprendre
                     </label>
                     <textarea
@@ -908,13 +1031,13 @@ export default function CreateVideoPage() {
                       value={formData.ceQueVousAllezApprendre}
                       onChange={handleInputChange}
                       rows={3}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all duration-200"
+                      className="w-full rounded-xl border border-gray-300 px-4 py-3 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                       placeholder="Listez les compétences que les étudiants acquerront..."
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Prérequis
                     </label>
                     <textarea
@@ -922,13 +1045,13 @@ export default function CreateVideoPage() {
                       value={formData.prerequis}
                       onChange={handleInputChange}
                       rows={3}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all duration-200"
+                      className="w-full rounded-xl border border-gray-300 px-4 py-3 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                       placeholder="Quelles connaissances préalables sont nécessaires ?"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Public cible
                     </label>
                     <textarea
@@ -936,7 +1059,7 @@ export default function CreateVideoPage() {
                       value={formData.publicCible}
                       onChange={handleInputChange}
                       rows={2}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all duration-200"
+                      className="w-full rounded-xl border border-gray-300 px-4 py-3 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                       placeholder="À qui s'adresse ce cours ?"
                     />
                   </div>
@@ -944,15 +1067,15 @@ export default function CreateVideoPage() {
               </div>
 
               {/* Thumbnail Section */}
-              <div className="bg-white rounded-2xl shadow-lg p-8 dark:bg-gray-800">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
+              <div className="rounded-2xl bg-white p-8 shadow-lg dark:bg-gray-800">
+                <h2 className="mb-6 flex items-center text-2xl font-bold text-gray-900 dark:text-white">
                   <span className="mr-3">🖼️</span>
                   Image de couverture
                 </h2>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                       URL de l&apos;image
                     </label>
                     <input
@@ -960,13 +1083,13 @@ export default function CreateVideoPage() {
                       name="thumbnailUrl"
                       value={formData.thumbnailUrl}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all duration-200"
+                      className="w-full rounded-xl border border-gray-300 px-4 py-3 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                       placeholder="https://example.com/image.jpg"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Ou télécharger une image
                     </label>
                     <input
@@ -974,13 +1097,13 @@ export default function CreateVideoPage() {
                       ref={thumbnailInputRef}
                       onChange={handleThumbnailChange}
                       accept="image/*"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all duration-200"
+                      className="w-full rounded-xl border border-gray-300 px-4 py-3 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                     />
                   </div>
 
                   {thumbnailPreview && (
                     <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                         Aperçu
                       </label>
                       <div className="relative w-full max-w-md">
@@ -989,7 +1112,7 @@ export default function CreateVideoPage() {
                           alt="Aperçu de la thumbnail"
                           width={400}
                           height={200}
-                          className="w-full h-48 object-cover rounded-xl border border-gray-300 dark:border-gray-600"
+                          className="h-48 w-full rounded-xl border border-gray-300 object-cover dark:border-gray-600"
                         />
                       </div>
                     </div>
@@ -998,21 +1121,21 @@ export default function CreateVideoPage() {
               </div>
 
               {/* Sections Management */}
-              <div className="bg-white rounded-2xl shadow-lg p-8 dark:bg-gray-800">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
+              <div className="rounded-2xl bg-white p-8 shadow-lg dark:bg-gray-800">
+                <div className="mb-6 flex items-center justify-between">
+                  <h2 className="flex items-center text-2xl font-bold text-gray-900 dark:text-white">
                     <span className="mr-3">🎬</span>
                     Sections du cours
                   </h2>
                   <button
                     type="button"
                     onClick={addSection}
-                    className="px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors duration-200"
+                    className="rounded-lg bg-green-600 px-4 py-2 font-medium text-white transition-colors duration-200 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
                   >
                     ➕ Ajouter une section
                   </button>
                 </div>
-                
+
                 <div className="space-y-6">
                   {sections.map((section, index) => (
                     <SectionForm
@@ -1032,13 +1155,29 @@ export default function CreateVideoPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-full shadow-lg hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105"
+                  className="inline-flex transform items-center rounded-full bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-4 font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {isSubmitting ? (
                     <>
-                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      <svg
+                        className="-ml-1 mr-3 h-5 w-5 animate-spin text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
                       </svg>
                       Création en cours...
                     </>
@@ -1056,4 +1195,4 @@ export default function CreateVideoPage() {
       {/* <ToastContainer toasts={toasts} onRemove={removeToast} /> */}
     </PageLayout>
   );
-} 
+}

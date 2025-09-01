@@ -4,8 +4,8 @@ import { createRouteHandlerClient } from '@/lib/supabase/server';
 
 /**
  * POST /api/video/generate-flashcards
- * Body: { courseId: string | number }
- * - Downloads `${courseId}/captions.vtt` from Supabase storage bucket `translations`
+ * Body: { courseId: string | number, sectionId: string | number }
+ * - Downloads `${sectionId}/captions.vtt` from Supabase storage bucket `translations`
  * - Sends captions to OpenAI to generate flashcards matching flashcard-json-structure.txt
  * Returns: { flashcards: Array<{ id: number, question: string, choices: string[], correctAnswer: string }>, raw?: string }
  */
@@ -16,20 +16,29 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Missing OPENAI_API_KEY' }, { status: 500 });
     }
 
-    const body = await req.json().catch(() => null) as null | { courseId?: string | number };
+    const body = (await req.json().catch(() => null)) as null | {
+      courseId?: string | number;
+      sectionId?: string | number;
+    };
     const courseId = body?.courseId;
-    if (!courseId) {
-      return NextResponse.json({ error: 'Missing courseId' }, { status: 400 });
+    const sectionId = body?.sectionId;
+    if (!courseId || !sectionId) {
+      return NextResponse.json({ error: 'Missing courseId or sectionId' }, { status: 400 });
     }
 
     // Download captions.vtt from Supabase storage
     const supabase = await createRouteHandlerClient();
-    const path = `${courseId}/captions.vtt`;
+    const normalizedSectionId = String(sectionId);
+    const path = `${normalizedSectionId}/captions.vtt`;
+    console.log('Path : ', path);
     const { data: vttBlob, error: downloadError } = await supabase.storage
       .from('translations')
       .download(path);
     if (downloadError || !vttBlob) {
-      return NextResponse.json({ error: `Unable to download captions: ${downloadError?.message || 'not found'}` }, { status: 404 });
+      return NextResponse.json(
+        { error: `Unable to download captions: ${downloadError?.message || 'not found'}` },
+        { status: 404 }
+      );
     }
     const captionsVtt = await vttBlob.text();
 
@@ -55,7 +64,7 @@ export async function POST(req: Request) {
       '- Choices should be plausible, similar length, and clearly distinct; include exactly one correct answer.',
       '- Sensory-friendly wording: avoid intense or overwhelming language.',
       '- Ensure 5–20 items depending on transcript length.',
-      '- Do not include explanations, metadata, or commentary.'
+      '- Do not include explanations, metadata, or commentary.',
     ].join('\n');
 
     const user = [
@@ -88,7 +97,10 @@ export async function POST(req: Request) {
     }
 
     if (!Array.isArray(parsed)) {
-      return NextResponse.json({ error: 'Model did not return a JSON array', raw }, { status: 502 });
+      return NextResponse.json(
+        { error: 'Model did not return a JSON array', raw },
+        { status: 502 }
+      );
     }
 
     // Sanitize to desired shape
@@ -97,11 +109,21 @@ export async function POST(req: Request) {
       .map((fc, idx) => {
         const id = Number(fc?.id ?? idx + 1);
         const question = String(fc?.question || '').trim();
-        const choices = Array.isArray(fc?.choices) ? fc.choices.map((c: any) => String(c)).slice(0, 6) : [];
+        const choices = Array.isArray(fc?.choices)
+          ? fc.choices.map((c: any) => String(c)).slice(0, 6)
+          : [];
         const correctAnswer = String(fc?.correctAnswer || '').trim();
         return { id, question, choices, correctAnswer } as Flashcard;
       })
-      .filter((fc) => fc.id > 0 && fc.question && Array.isArray(fc.choices) && fc.choices.length >= 3 && fc.correctAnswer && fc.choices.includes(fc.correctAnswer));
+      .filter(
+        (fc) =>
+          fc.id > 0 &&
+          fc.question &&
+          Array.isArray(fc.choices) &&
+          fc.choices.length >= 3 &&
+          fc.correctAnswer &&
+          fc.choices.includes(fc.correctAnswer)
+      );
 
     if (flashcards.length === 0) {
       return NextResponse.json({ error: 'No valid flashcards parsed', raw }, { status: 502 });
@@ -110,12 +132,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ flashcards }, { status: 200 });
   } catch (err) {
     console.error('[generate-flashcards] Error:', err);
-    return NextResponse.json({ error: err instanceof Error ? err.message : 'Unknown error' }, { status: 500 });
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : 'Unknown error' },
+      { status: 500 }
+    );
   }
 }
 
 export async function OPTIONS() {
   return NextResponse.json({}, { status: 200 });
 }
-
-

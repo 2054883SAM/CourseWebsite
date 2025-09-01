@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+import { createRouteHandlerClient } from '@/lib/supabase/server';
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,17 +13,17 @@ export async function POST(request: NextRequest) {
     }
 
     // Create authenticated supabase client
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = await createRouteHandlerClient();
 
     // Get the current user
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
+
     if (sessionError || !session) {
       console.error('Authentication error:', sessionError);
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     console.log('User authenticated:', session.user.id);
@@ -61,15 +60,14 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data
+      data,
     });
-
   } catch (error) {
     console.error('Error updating section progress:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Internal server error',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );
@@ -83,23 +81,20 @@ export async function GET(request: NextRequest) {
     const sectionId = searchParams.get('sectionId');
 
     if (!courseId) {
-      return NextResponse.json(
-        { error: 'Missing courseId parameter' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Missing courseId parameter' }, { status: 400 });
     }
 
     // Create authenticated supabase client
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = await createRouteHandlerClient();
 
     // Get the current user
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
+
     if (sessionError || !session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     let query = supabase
@@ -124,15 +119,14 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: sectionId ? (data[0] || null) : data
+      data: sectionId ? data[0] || null : data,
     });
-
   } catch (error) {
     console.error('Error fetching section progress:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Internal server error',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );

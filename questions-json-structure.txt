@@ -1,0 +1,57 @@
+[
+  {
+    "id": 1,
+    "type":"flashcard"
+    "question": "What is 5 + 3?",
+    "choices": [
+      "6",
+      "8",
+      "9"
+    ],
+    "correctAnswer": "8"
+  },
+  {
+    "id": 2,
+    "type":"fillBlank"
+    "title": "Complete the sentence"
+    "instructions": "Drag the correct word into the blank.",
+    "sentence": "The sun is very ____."
+    "choices": [
+      "hot", 
+      "cold", 
+      "dark"
+    ],
+    "correct_answer": "hot"
+    "feedback": {
+      "correct": "Yes! The sun is hot.",
+      "incorrect": "Not quite. Think about the sun in the sky."
+    }
+  },
+  {
+    "id": 3,
+    "type":"flashcard"
+    "question": "What is the capital of Canada?",
+    "choices": [
+      "Toronto",
+      "Ottawa",
+      "Vancouver"
+    ],
+    "correctAnswer": "Ottawa"
+  },
+  {
+    "id": 4,
+    "type": "matching",
+    "title": "Match the animals to their sounds",
+    "instructions": "Drag each animal to the sound it makes.",
+    "pairs": [
+    { "left": "🐶 Dog", "right": "Woof" },
+    { "left": "🐱 Cat", "right": "Meow" },
+    { "left": "🐮 Cow", "right": "Moo" }
+    ],
+    "feedback": {
+      "correct": "Great job! You matched them all!",
+      "incorrect": "Try again! Listen carefully to the sounds."
+    }
+  },
+
+]
