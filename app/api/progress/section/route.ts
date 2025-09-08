@@ -3,7 +3,8 @@ import { createRouteHandlerClient } from '@/lib/supabase/server';
 
 export async function POST(request: NextRequest) {
   try {
-    const { courseId, sectionId, progressPercentage, completed } = await request.json();
+    const { courseId, sectionId, progressPercentage, completed, quizScore, quizPassed } =
+      await request.json();
 
     if (!courseId || !sectionId || typeof progressPercentage !== 'number') {
       return NextResponse.json(
@@ -30,7 +31,7 @@ export async function POST(request: NextRequest) {
     console.log('Progress data:', { courseId, sectionId, progressPercentage, completed });
 
     // Prepare progress data
-    const progressData = {
+    const progressData: any = {
       user_id: session.user.id,
       course_id: courseId,
       section_id: sectionId,
@@ -39,12 +40,18 @@ export async function POST(request: NextRequest) {
       last_watched_at: new Date().toISOString(),
     };
 
+    // Add quiz data if provided
+    if (typeof quizScore === 'number') {
+      progressData.quiz_score = Math.min(100, Math.max(0, quizScore));
+      progressData.quiz_passed = quizPassed !== undefined ? quizPassed : quizScore >= 70;
+    }
+
     console.log('Upserting progress data:', progressData);
 
     // Upsert progress data
     const { data, error } = await supabase
       .from('section_progress')
-      .upsert(progressData)
+      .upsert(progressData, { onConflict: 'user_id,section_id' })
       .select()
       .single();
 

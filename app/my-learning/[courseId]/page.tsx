@@ -23,6 +23,24 @@ export default function CourseOverviewPage() {
 
   const courseId = params.courseId as string;
 
+  // Add focus event listener to refresh data when returning to page
+  useEffect(() => {
+    const handleFocus = () => {
+      // Reset the fetch flag to allow fresh data when returning from section player
+      hasFetchedRef.current = false;
+      // Clear cached data to force fresh fetch
+      try {
+        sessionStorage.removeItem(`course_${courseId}`);
+        sessionStorage.removeItem(`course_sections_${courseId}`);
+      } catch (e) {
+        console.warn('Failed to clear cache on focus:', e);
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [courseId]);
+
   useEffect(() => {
     // Prevent fetching course data multiple times
     if (hasFetchedRef.current || courseData) return;
@@ -39,12 +57,12 @@ export default function CourseOverviewPage() {
 
       try {
         setLoading(true);
-        
+
         // Try to get data from session storage first
         try {
           const cachedData = sessionStorage.getItem(`course_${courseId}`);
           const cachedSections = sessionStorage.getItem(`course_sections_${courseId}`);
-          
+
           if (cachedData && cachedSections) {
             const parsedData = JSON.parse(cachedData);
             const parsedSections = JSON.parse(cachedSections);
@@ -59,7 +77,7 @@ export default function CourseOverviewPage() {
           console.warn('Failed to read from session storage:', e);
           // Continue with API fetch if session storage fails
         }
-        
+
         // If no cached data, fetch from API
         console.log('Fetching course data and sections from API');
 
@@ -68,9 +86,9 @@ export default function CourseOverviewPage() {
           const [course, courseSections, userProgress] = await Promise.all([
             getCourseById(courseId),
             getCourseSections(courseId),
-            getUserCourseProgress(user.id, courseId)
+            getUserCourseProgress(user.id, courseId),
           ]);
-          
+
           if (!course) {
             setError('Course not found');
             setLoading(false);
@@ -107,7 +125,7 @@ export default function CourseOverviewPage() {
         const [result, courseSections, userProgress] = await Promise.all([
           getEnrolledCourse(user.id, courseId),
           getCourseSections(courseId),
-          getUserCourseProgress(user.id, courseId)
+          getUserCourseProgress(user.id, courseId),
         ]);
 
         if (result.error || !result.data) {
@@ -168,10 +186,10 @@ export default function CourseOverviewPage() {
 
   // Render the course overview with sections
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 py-8 dark:bg-gray-900">
+      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
         {/* Course Header */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 mb-8">
+        <div className="mb-8 rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
           <div className="p-8">
             <div className="flex items-start space-x-6">
               {/* Course Thumbnail */}
@@ -180,43 +198,76 @@ export default function CourseOverviewPage() {
                   <img
                     src={courseData.thumbnail_url}
                     alt={courseData.title}
-                    className="w-32 h-24 object-cover rounded-lg border border-gray-200 dark:border-gray-700"
+                    className="h-24 w-32 rounded-lg border border-gray-200 object-cover dark:border-gray-700"
                   />
                 </div>
               )}
-              
+
               {/* Course Info */}
-              <div className="flex-1 min-w-0">
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              <div className="min-w-0 flex-1">
+                <h1 className="mb-2 text-3xl font-bold text-gray-900 dark:text-white">
                   {courseData.title}
                 </h1>
-                
+
                 {courseData.description && (
-                  <p className="text-gray-600 dark:text-gray-300 mb-4 text-lg">
+                  <p className="mb-4 text-lg text-gray-600 dark:text-gray-300">
                     {courseData.description}
                   </p>
                 )}
-                
+
                 {/* Course Stats */}
-                <div className="flex flex-wrap items-center text-sm text-gray-500 dark:text-gray-400 space-x-6">
+                <div className="flex flex-wrap items-center space-x-6 text-sm text-gray-500 dark:text-gray-400">
                   <div className="flex items-center">
-                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    <svg
+                      className="mr-1 h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+                      />
                     </svg>
                     {sections.length} section{sections.length !== 1 ? 's' : ''}
                   </div>
-                  
+
                   <div className="flex items-center">
-                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <svg
+                      className="mr-1 h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
                     </svg>
-                    {Math.round(sections.reduce((total, section) => total + (section.duration || 0), 0))} minutes total
+                    {Math.round(
+                      sections.reduce((total, section) => total + (section.duration || 0), 0)
+                    )}{' '}
+                    minutes total
                   </div>
-                  
+
                   {courseData.creator && (
                     <div className="flex items-center">
-                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      <svg
+                        className="mr-1 h-4 w-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                        />
                       </svg>
                       By {courseData.creator.name}
                     </div>
@@ -232,13 +283,23 @@ export default function CourseOverviewPage() {
           sections={sections}
           courseId={courseId}
           className="shadow-sm"
-          progress={progress.map(p => ({
+          progress={progress.map((p) => ({
             sectionId: p.section_id,
             completed: p.completed,
             progressPercentage: p.progress_percentage,
-            lastWatchedAt: p.last_watched_at
+            lastWatchedAt: p.last_watched_at,
+            quizScore: p.quiz_score,
+            quizPassed: p.quiz_passed,
           }))}
           onSectionClick={(section) => {
+            // Clear cached data before navigation to ensure fresh data on return
+            try {
+              sessionStorage.removeItem(`course_${courseId}`);
+              sessionStorage.removeItem(`course_sections_${courseId}`);
+            } catch (e) {
+              console.warn('Failed to clear cache:', e);
+            }
+
             // Navigate to specific section player
             router.push(`/my-learning/${courseId}/section/${section.id}`);
           }}

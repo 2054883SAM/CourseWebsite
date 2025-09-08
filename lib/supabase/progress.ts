@@ -1,21 +1,13 @@
 import { supabase } from './client';
-
-export interface SectionProgress {
-  id?: string;
-  user_id: string;
-  course_id: string;
-  section_id: string;
-  progress_percentage: number; // 0-100
-  completed: boolean;
-  last_watched_at: string;
-  created_at?: string;
-  updated_at?: string;
-}
+import { SectionProgress } from './types';
 
 /**
  * Get progress for all sections in a course for a user
  */
-export async function getUserCourseProgress(userId: string, courseId: string): Promise<SectionProgress[]> {
+export async function getUserCourseProgress(
+  userId: string,
+  courseId: string
+): Promise<SectionProgress[]> {
   try {
     const { data, error } = await supabase
       .from('section_progress')
@@ -34,7 +26,10 @@ export async function getUserCourseProgress(userId: string, courseId: string): P
 /**
  * Get progress for a specific section for a user
  */
-export async function getUserSectionProgress(userId: string, sectionId: string): Promise<SectionProgress | null> {
+export async function getUserSectionProgress(
+  userId: string,
+  sectionId: string
+): Promise<SectionProgress | null> {
   try {
     const { data, error } = await supabase
       .from('section_progress')
@@ -62,23 +57,32 @@ export async function updateSectionProgress(
   completed: boolean = false
 ): Promise<SectionProgress | null> {
   try {
-    console.log('updateSectionProgress called with:', { userId, courseId, sectionId, progressPercentage, completed });
-    
+    console.log('updateSectionProgress called with:', {
+      userId,
+      courseId,
+      sectionId,
+      progressPercentage,
+      completed,
+    });
+
     // Check if user is authenticated
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
     if (sessionError || !session) {
       console.error('Authentication error:', sessionError);
       throw new Error('User not authenticated');
     }
-    
+
     console.log('User is authenticated:', session.user.id);
-    
+
     // Ensure the userId matches the authenticated user
     if (session.user.id !== userId) {
       console.error('User ID mismatch:', { sessionUserId: session.user.id, passedUserId: userId });
       throw new Error('User ID mismatch');
     }
-    
+
     const progressData = {
       user_id: session.user.id, // Use the authenticated user ID
       course_id: courseId,
@@ -89,7 +93,7 @@ export async function updateSectionProgress(
     };
 
     console.log('Attempting to upsert progress data:', progressData);
-    
+
     const { data, error } = await supabase
       .from('section_progress')
       .upsert(progressData)
@@ -100,7 +104,7 @@ export async function updateSectionProgress(
       console.error('Supabase upsert error:', error);
       throw error;
     }
-    
+
     console.log('Progress updated successfully:', data);
     return data;
   } catch (error) {
@@ -123,7 +127,10 @@ export async function completeSectionProgress(
 /**
  * Get overall course completion percentage for a user
  */
-export async function getCourseCompletionPercentage(userId: string, courseId: string): Promise<number> {
+export async function getCourseCompletionPercentage(
+  userId: string,
+  courseId: string
+): Promise<number> {
   try {
     // Get total sections in course
     const { count: totalSections } = await supabase

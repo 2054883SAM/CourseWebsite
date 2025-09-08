@@ -24,6 +24,8 @@ export interface Course {
   creator_id: string; // UUID linked to users.id
   created_at: string;
   is_featured?: boolean;
+  // New: official Québec elementary categories
+  categorie?: import('@/types/supabase').CourseCategory | null;
   // Nouveaux champs pour les informations détaillées
   ce_que_vous_allez_apprendre?: string;
   prerequis?: string;
@@ -71,6 +73,21 @@ export interface Enrollment {
   created_at: string;
   updated_at: string;
   status: 'active' | 'refunded' | 'disputed'; // Updated to match schema
+}
+
+// Section Progress model
+export interface SectionProgress {
+  id?: string;
+  user_id: string;
+  course_id: string;
+  section_id: string;
+  progress_percentage: number; // 0-100
+  completed: boolean;
+  last_watched_at: string;
+  quiz_score?: number | null; // 0-100, null if quiz not attempted
+  quiz_passed?: boolean | null; // true if score >= 70%, false if < 70%, null if not attempted
+  created_at?: string;
+  updated_at?: string;
 }
 
 // Search params for course filtering

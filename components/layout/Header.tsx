@@ -98,19 +98,19 @@ export function Header() {
   // Get navigation items based on authentication
   const getNavItems = () => {
     const baseItems = [...navigation];
-    
+
     // Add "My Learning" only for authenticated non-admin users with an active (subscribed) membership
     if (user && dbUser?.role !== 'admin' && dbUser?.membership === 'subscribed') {
       baseItems.splice(2, 0, { name: 'Mes formations', href: '/my-learning' });
     }
-    
+
     // Add "Membership" for users not signed in or students with free membership
     if (!user || (dbUser?.role === 'student' && dbUser?.membership === 'free')) {
       if (!baseItems.some((item) => item.href === '/payment')) {
         baseItems.push({ name: 'Membership', href: '/payment' });
       }
     }
-    
+
     return baseItems;
   };
 
@@ -118,8 +118,8 @@ export function Header() {
     <header
       className={`sticky top-0 z-40 transition-all duration-300 ${
         isScrolled
-          ? 'bg-white/90 shadow-lg backdrop-blur-sm border-b border-blue-200 dark:bg-black/90 dark:border-blue-800'
-          : 'bg-white dark:bg-black border-b border-blue-200 dark:border-blue-800'
+          ? 'border-b border-blue-200 bg-white/90 shadow-lg backdrop-blur-sm dark:border-blue-800 dark:bg-black/90'
+          : 'border-b border-blue-200 bg-white dark:border-blue-800 dark:bg-black'
       }`}
       role="banner"
     >
@@ -136,7 +136,7 @@ export function Header() {
                 <ActiveLink
                   key={item.name}
                   href={item.href}
-                  className="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 transition-colors duration-200"
+                  className="text-gray-700 transition-colors duration-200 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400"
                   activeClassName="text-blue-600 dark:text-blue-400 font-medium"
                 >
                   {item.name}
@@ -154,14 +154,14 @@ export function Header() {
                   trigger={
                     <button
                       type="button"
-                      className="flex items-center text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 transition-colors duration-200"
+                      className="flex items-center text-gray-700 transition-colors duration-200 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400"
                       aria-label="Menu utilisateur"
                       aria-haspopup="true"
                     >
                       <span className="sr-only">Ouvrir le menu utilisateur</span>
                       <div className="relative">
                         {dbUser?.photo_url ? (
-                          <div className="h-10 w-10 rounded-full overflow-hidden border-2 border-blue-300 dark:border-blue-600 hover:border-blue-500 dark:hover:border-blue-400 transition-colors duration-200">
+                          <div className="h-10 w-10 overflow-hidden rounded-full border-2 border-blue-300 transition-colors duration-200 hover:border-blue-500 dark:border-blue-600 dark:hover:border-blue-400">
                             <Image
                               src={dbUser.photo_url}
                               alt={`Photo de profil de ${dbUser.name}`}
@@ -171,23 +171,23 @@ export function Header() {
                             />
                           </div>
                         ) : (
-                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900 dark:to-blue-800 border-2 border-blue-300 dark:border-blue-600 hover:border-blue-500 dark:hover:border-blue-400 transition-colors duration-200">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-blue-300 bg-gradient-to-br from-blue-100 to-blue-200 transition-colors duration-200 hover:border-blue-500 dark:border-blue-600 dark:from-blue-900 dark:to-blue-800 dark:hover:border-blue-400">
                             <span className="text-lg font-semibold text-blue-700 dark:text-blue-300">
                               {dbUser?.name?.[0]?.toUpperCase() || 'U'}
                             </span>
                           </div>
                         )}
                         {/* Indicateur de rôle */}
-                        <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-blue-500 border-2 border-white dark:border-black"></div>
+                        <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-white bg-blue-500 dark:border-black"></div>
                       </div>
                     </button>
                   }
                 >
-                  <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+                  <div className="border-b border-gray-200 px-4 py-2 dark:border-gray-700">
                     <p className="text-sm font-medium text-gray-900 dark:text-white">
                       {dbUser?.name || 'Utilisateur'}
                     </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
+                    <p className="text-xs capitalize text-gray-500 dark:text-gray-400">
                       {dbUser?.role || 'student'}
                     </p>
                   </div>
@@ -199,6 +199,26 @@ export function Header() {
                     <span className="mr-2">⚙️</span>
                     Paramètres
                   </DropdownMenuItem>
+                  {dbUser?.role === 'student' && dbUser?.membership === 'subscribed' && (
+                    <DropdownMenuItem
+                      onClick={async () => {
+                        try {
+                          const res = await fetch('/api/stripe/billing-portal', { method: 'POST' });
+                          const data = await res.json();
+                          if (res.ok && data.url) {
+                            window.location.href = data.url as string;
+                          } else {
+                            console.error('Failed to create billing portal session', data?.error);
+                          }
+                        } catch (e) {
+                          console.error('Billing portal error', e);
+                        }
+                      }}
+                    >
+                      <span className="mr-2">💳</span>
+                      Abonnement
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem
                     onClick={() => {
                       signOut().then(() => {
@@ -214,13 +234,13 @@ export function Header() {
                 <div className="flex items-center space-x-4">
                   <Link
                     href="/signin"
-                    className="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 transition-colors duration-200"
+                    className="text-gray-700 transition-colors duration-200 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400"
                   >
                     Se connecter
                   </Link>
                   <Link
                     href="/signup"
-                    className="inline-flex h-10 items-center justify-center rounded-full bg-black text-white hover:bg-gray-800 border border-blue-500 hover:border-blue-400 px-6 text-sm font-semibold transition-all duration-300 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    className="inline-flex h-10 items-center justify-center rounded-full border border-blue-500 bg-black px-6 text-sm font-semibold text-white transition-all duration-300 hover:border-blue-400 hover:bg-gray-800 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                   >
                     S&apos;inscrire
                   </Link>
@@ -234,13 +254,15 @@ export function Header() {
             <ThemeToggle />
             <button
               type="button"
-              className="ml-4 text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 transition-colors duration-200"
+              className="ml-4 text-gray-700 transition-colors duration-200 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-expanded={mobileMenuOpen}
               aria-controls="mobile-menu"
               aria-label={mobileMenuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
             >
-              <span className="sr-only">{mobileMenuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}</span>
+              <span className="sr-only">
+                {mobileMenuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
+              </span>
               {mobileMenuOpen ? (
                 <svg
                   className="h-6 w-6"
@@ -291,12 +313,12 @@ export function Header() {
         aria-modal="true"
         aria-labelledby="mobile-menu-title"
       >
-        <div className="flex justify-between items-center p-4 border-b border-blue-200 dark:border-blue-800">
+        <div className="flex items-center justify-between border-b border-blue-200 p-4 dark:border-blue-800">
           <div className="flex items-center space-x-3">
             {user && (
               <>
                 {dbUser?.photo_url ? (
-                  <div className="h-10 w-10 rounded-full overflow-hidden border-2 border-blue-300 dark:border-blue-600">
+                  <div className="h-10 w-10 overflow-hidden rounded-full border-2 border-blue-300 dark:border-blue-600">
                     <Image
                       src={dbUser.photo_url}
                       alt={`Photo de profil de ${dbUser.name}`}
@@ -306,7 +328,7 @@ export function Header() {
                     />
                   </div>
                 ) : (
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900 dark:to-blue-800 border-2 border-blue-300 dark:border-blue-600">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-blue-300 bg-gradient-to-br from-blue-100 to-blue-200 dark:border-blue-600 dark:from-blue-900 dark:to-blue-800">
                     <span className="text-lg font-semibold text-blue-700 dark:text-blue-300">
                       {dbUser?.name?.[0]?.toUpperCase() || 'U'}
                     </span>
@@ -316,7 +338,7 @@ export function Header() {
                   <p className="text-sm font-medium text-gray-900 dark:text-white">
                     {dbUser?.name || 'Utilisateur'}
                   </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
+                  <p className="text-xs capitalize text-gray-500 dark:text-gray-400">
                     {dbUser?.role || 'student'}
                   </p>
                 </div>
@@ -325,7 +347,7 @@ export function Header() {
           </div>
           <button
             type="button"
-            className="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400 transition-colors duration-200"
+            className="text-gray-700 transition-colors duration-200 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400"
             onClick={() => setMobileMenuOpen(false)}
             aria-label="Fermer le menu"
           >
@@ -357,7 +379,7 @@ export function Header() {
               <Link
                 key={item.name}
                 href={item.href}
-                className="block border-b border-blue-200 py-3 text-base font-medium text-gray-900 dark:border-blue-800 dark:text-gray-100 transition-colors duration-200"
+                className="block border-b border-blue-200 py-3 text-base font-medium text-gray-900 transition-colors duration-200 dark:border-blue-800 dark:text-gray-100"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 {item.name}
@@ -367,14 +389,14 @@ export function Header() {
               <>
                 <Link
                   href="/profile"
-                  className="block border-b border-blue-200 py-3 text-base font-medium text-gray-900 dark:border-blue-800 dark:text-gray-100 transition-colors duration-200"
+                  className="block border-b border-blue-200 py-3 text-base font-medium text-gray-900 transition-colors duration-200 dark:border-blue-800 dark:text-gray-100"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   👤 Mon Profil
                 </Link>
                 <Link
                   href="/settings"
-                  className="block border-b border-blue-200 py-3 text-base font-medium text-gray-900 dark:border-blue-800 dark:text-gray-100 transition-colors duration-200"
+                  className="block border-b border-blue-200 py-3 text-base font-medium text-gray-900 transition-colors duration-200 dark:border-blue-800 dark:text-gray-100"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   ⚙️ Paramètres
@@ -386,7 +408,7 @@ export function Header() {
             <div className="mt-8 space-y-4">
               <Link
                 href="/signin"
-                className="flex h-12 w-full items-center justify-center rounded-full bg-black text-white border border-blue-500 hover:bg-gray-800 hover:border-blue-400 px-4 text-sm font-semibold transition-all duration-300 hover:shadow-lg"
+                className="flex h-12 w-full items-center justify-center rounded-full border border-blue-500 bg-black px-4 text-sm font-semibold text-white transition-all duration-300 hover:border-blue-400 hover:bg-gray-800 hover:shadow-lg"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Se connecter
@@ -403,11 +425,10 @@ export function Header() {
             <div className="mt-8">
               <button
                 onClick={() => {
-                  signOut()
-                    .then(() => {
-                      setMobileMenuOpen(false);
-                      router.push('/signin');
-                    });
+                  signOut().then(() => {
+                    setMobileMenuOpen(false);
+                    router.push('/signin');
+                  });
                 }}
                 className="flex h-12 w-full items-center justify-center rounded-full border-2 border-red-300 px-4 text-sm font-semibold text-red-600 transition-all duration-300 hover:border-red-500 hover:bg-red-50 dark:border-red-600 dark:text-red-400 dark:hover:border-red-500 dark:hover:bg-red-900/20"
               >

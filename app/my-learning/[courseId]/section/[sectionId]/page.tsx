@@ -4,7 +4,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { getEnrolledCourse } from '@/lib/supabase/learning';
-import { getCourseById, getSectionById } from '@/lib/supabase/courses';
+import { getCourseById, getSectionById, getCourseSections } from '@/lib/supabase/courses';
 import { updateSectionProgress, completeSectionProgress } from '@/lib/supabase/progress';
 import { Section } from '@/lib/supabase/types';
 import { normalizeChaptersToVideo } from '@/lib/utils/chapters';
@@ -56,13 +56,102 @@ export default function SectionPlayerPage() {
     {}
   );
   const [matchErrors, setMatchErrors] = useState<Record<number, boolean>>({});
+  const [matchSubmitted, setMatchSubmitted] = useState<Record<number, boolean>>({});
   const [chapterFlashcard, setChapterFlashcard] = useState<Flashcard | null>(null);
   const [showChapterFlashcard, setShowChapterFlashcard] = useState(false);
   const [isGeneratingChapterFlashcard, setIsGeneratingChapterFlashcard] = useState(false);
   const [isGeneratingFinalFlashcards, setIsGeneratingFinalFlashcards] = useState(false);
 
+  // Quiz scoring state
+  const [correctAnswers, setCorrectAnswers] = useState(0);
+  const [totalAnswered, setTotalAnswered] = useState(0);
+  const [quizCompleted, setQuizCompleted] = useState(false);
+  const [showScoreResult, setShowScoreResult] = useState(false);
+
   const courseId = params.courseId as string;
   const sectionId = params.sectionId as string;
+
+  // Helper functions for quiz scoring
+  const handleCorrectAnswer = () => {
+    setCorrectAnswers((prev) => prev + 1);
+    setTotalAnswered((prev) => prev + 1);
+  };
+
+  const handleIncorrectAnswer = () => {
+    setTotalAnswered((prev) => prev + 1);
+  };
+
+  const calculateScore = () => {
+    if (totalAnswered === 0) return 0;
+    return Math.round((correctAnswers / totalAnswered) * 100);
+  };
+
+  const getScoreMessage = (score: number) => {
+    if (score >= 90)
+      return {
+        emoji: '🌟',
+        message: 'Incroyable ! Tu es une superstar !',
+        className: 'kid-result-success',
+      };
+    if (score >= 80)
+      return {
+        emoji: '🎉',
+        message: 'Excellent travail ! Continue comme ça !',
+        className: 'kid-result-success',
+      };
+    if (score >= 70)
+      return {
+        emoji: '👍',
+        message: 'Bravo ! Tu peux continuer !',
+        className: 'kid-result-success',
+      };
+    return {
+      emoji: '💪',
+      message: "Continue à t'entraîner ! Essaie d'obtenir 70% ou plus.",
+      className: 'kid-result-failure',
+    };
+  };
+
+  const resetQuiz = () => {
+    setCurrentIndex(0);
+    setCorrectAnswers(0);
+    setTotalAnswered(0);
+    setQuizCompleted(false);
+    setShowScoreResult(false);
+    setSelectedChoice(null);
+    setAnswerState('idle');
+    setMatchSubmitted({});
+  };
+
+  const saveQuizScore = async (score: number, passed: boolean) => {
+    if (!user || !courseId || !sectionId) return;
+
+    try {
+      const response = await fetch('/api/progress/section', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          courseId,
+          sectionId,
+          progressPercentage: 100, // Video should be at 100% to take quiz
+          completed: passed, // Only mark as completed if quiz is passed
+          quizScore: score,
+          quizPassed: passed,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Failed to save quiz score:', errorData);
+      } else {
+        console.log('Quiz score saved successfully');
+      }
+    } catch (error) {
+      console.error('Failed to save quiz score:', error);
+    }
+  };
 
   useEffect(() => {
     // Prevent fetching data multiple times
@@ -291,12 +380,12 @@ export default function SectionPlayerPage() {
           userId={user?.id}
           courseId={courseId}
           duration={sectionData.duration}
-          onProgress={async (progress) => {
+          onProgress={async (progressPercentage) => {
             // Update progress in database every 5% or when significant progress is made
             if (
               user &&
-              progress.percentage > 0 &&
-              (progress.percentage % 5 === 0 || progress.percentage >= 95)
+              progressPercentage > 0 &&
+              (progressPercentage % 5 === 0 || progressPercentage >= 95)
             ) {
               try {
                 const response = await fetch('/api/progress/section', {
@@ -307,8 +396,8 @@ export default function SectionPlayerPage() {
                   body: JSON.stringify({
                     courseId,
                     sectionId,
-                    progressPercentage: progress.percentage,
-                    completed: progress.percentage >= 95,
+                    progressPercentage,
+                    completed: progressPercentage >= 95,
                   }),
                 });
 
@@ -362,7 +451,8 @@ export default function SectionPlayerPage() {
             }
           }}
           onComplete={async () => {
-            // Mark section as completed
+            // Mark video as 100% watched but NOT completed
+            // Section is only completed when quiz is passed with 70%+
             if (user) {
               try {
                 const response = await fetch('/api/progress/section', {
@@ -374,18 +464,18 @@ export default function SectionPlayerPage() {
                     courseId,
                     sectionId,
                     progressPercentage: 100,
-                    completed: true,
+                    completed: false, // Don't mark as completed until quiz is passed
                   }),
                 });
 
                 if (!response.ok) {
                   const errorData = await response.json();
-                  console.error('Failed to mark section as completed:', errorData);
+                  console.error('Failed to update video progress:', errorData);
                 } else {
-                  console.log('Section marked as completed');
+                  console.log('Video progress updated to 100%');
                 }
               } catch (error) {
-                console.error('Failed to mark section as completed:', error);
+                console.error('Failed to update video progress:', error);
               }
             }
 
@@ -481,9 +571,7 @@ export default function SectionPlayerPage() {
               const qs = normalizeQuestions((sectionData as any).questions);
               if (qs.length > 0) {
                 setQuestions(qs);
-                setCurrentIndex(0);
-                setSelectedChoice(null);
-                setAnswerState('idle');
+                resetQuiz(); // Reset quiz state for new attempt
                 setShowQuestions(true);
                 setIsGeneratingFinalFlashcards(false);
                 return;
@@ -504,10 +592,16 @@ export default function SectionPlayerPage() {
               }
               const data = await res.json();
               if (Array.isArray(data?.flashcards) && data.flashcards.length > 0) {
-                setFlashcards(data.flashcards as Flashcard[]);
-                setCurrentIndex(0);
-                setSelectedChoice(null);
-                setAnswerState('idle');
+                // Convert flashcards to questions format
+                const convertedQuestions = data.flashcards.map((card: any, index: number) => ({
+                  id: index + 1,
+                  type: 'flashcard',
+                  question: card.question,
+                  choices: card.choices,
+                  correctAnswer: card.correctAnswer,
+                }));
+                setQuestions(convertedQuestions);
+                resetQuiz(); // Reset quiz state for new attempt
               }
             } catch (e) {
               console.error('Error generating flashcards:', e);
@@ -601,289 +695,470 @@ export default function SectionPlayerPage() {
         </div>
       )}
 
-      {/* Final Questions Dialog (stored questions with mixed types) */}
+      {/* Final Questions Dialog (Kid-Friendly Quiz Design) */}
       {showQuestions && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setShowQuestions(false)} />
-          <div className="relative z-10 w-full max-w-xl rounded-lg bg-white p-6 shadow-xl dark:bg-zinc-900">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-900/80 to-pink-900/80" />
+          <div className="relative z-10 w-full max-w-2xl">
             {isGeneratingFinalFlashcards || !questions ? (
-              <div className="flex flex-col items-center">
-                <LoadingSpinner />
-                <p className="mt-3 text-sm text-gray-700 dark:text-gray-300">
-                  Chargement des questions…
-                </p>
-              </div>
-            ) : currentIndex >= questions.length ? (
-              <div className="text-center">
-                <h3 className="mb-4 text-xl font-semibold">Bravo! 🎉</h3>
-                <p className="mb-6 text-gray-600 dark:text-gray-300">
-                  Tu as terminé toutes les questions.
-                </p>
-                <div className="flex justify-center space-x-4">
-                  <button
-                    className="rounded bg-emerald-600 px-4 py-2 text-white hover:bg-emerald-700"
-                    onClick={() => setShowQuestions(false)}
-                  >
-                    Close
-                  </button>
-                  <button
-                    className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-                    onClick={() => router.push(`/my-learning/${courseId}`)}
-                  >
-                    Back to Course
-                  </button>
+              <div className="kid-quiz-container">
+                <div className="flex flex-col items-center">
+                  <LoadingSpinner />
+                  <p className="mt-3 text-lg font-semibold text-white">
+                    <span className="kid-emoji">🧠</span> Préparation de ton quiz amusant...
+                  </p>
                 </div>
               </div>
-            ) : (
-              (() => {
-                const q: any = questions[currentIndex];
-                if (q.type === 'flashcard') {
-                  const card = q as any;
-                  return (
-                    <div>
-                      <div className="mb-4 text-sm text-gray-500">
-                        Question {currentIndex + 1} of {questions.length}
-                      </div>
-                      <h3 className="mb-4 text-lg font-semibold">{card.question}</h3>
-                      <div className="grid grid-cols-1 gap-3">
-                        {card.choices.map((choice: string, idx: number) => {
-                          const base =
-                            'w-full rounded border px-4 py-3 text-left transition-colors';
-                          const idle =
-                            'border-gray-300 hover:bg-gray-50 dark:border-zinc-700 dark:hover:bg-zinc-800';
-                          const correct =
-                            'border-emerald-600 bg-emerald-50 text-emerald-800 dark:border-emerald-500 dark:bg-emerald-900/30 dark:text-emerald-300';
-                          const incorrect =
-                            'border-red-600 bg-red-50 text-red-800 dark:border-red-500 dark:bg-red-900/30 dark:text-red-300';
-                          const isSel = selectedChoice === choice;
-                          const isCor = answerState !== 'idle' && choice === card.correctAnswer;
-                          const isInc =
-                            answerState === 'incorrect' && isSel && choice !== card.correctAnswer;
-                          let cls = base + ' ' + idle;
-                          if (isCor) cls = base + ' ' + correct;
-                          if (isInc) cls = base + ' ' + incorrect;
-                          return (
-                            <button
-                              key={idx}
-                              className={cls}
-                              onClick={() => {
-                                if (answerState !== 'idle') return;
-                                setSelectedChoice(choice);
-                                const correctNow = choice === card.correctAnswer;
-                                if (correctNow) {
-                                  setAnswerState('correct');
-                                  setTimeout(() => {
-                                    setAnswerState('idle');
-                                    setSelectedChoice(null);
-                                    setCurrentIndex((i) => i + 1);
-                                  }, 700);
-                                } else {
-                                  setAnswerState('incorrect');
-                                  setTimeout(() => {
-                                    setAnswerState('idle');
-                                    setSelectedChoice(null);
-                                  }, 800);
-                                }
-                              }}
-                              disabled={answerState !== 'idle'}
-                            >
-                              <span className="mr-2 inline-block h-2 w-2 rounded-full bg-current opacity-50" />
-                              {choice}
-                            </button>
-                          );
-                        })}
-                      </div>
-                      <div className="mt-6 flex items-center justify-end">
-                        <button
-                          className="rounded px-4 py-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-zinc-800"
-                          onClick={() => setShowQuestions(false)}
+            ) : showScoreResult ? (
+              <div className="kid-quiz-container">
+                <div className="kid-confetti"></div>
+                <div className="kid-confetti"></div>
+                <div className="kid-confetti"></div>
+                <div className="kid-confetti"></div>
+
+                <div className="text-center">
+                  {(() => {
+                    const score = calculateScore();
+                    const scoreData = getScoreMessage(score);
+                    return (
+                      <div className={`kid-result-message ${scoreData.className}`}>
+                        <div
+                          className="kid-emoji bounce"
+                          style={{ fontSize: '4rem', marginBottom: '1rem' }}
                         >
-                          Exit
-                        </button>
+                          {scoreData.emoji}
+                        </div>
+                        <div className="kid-score-display mb-6 justify-center">
+                          <span>Score : {score}%</span>
+                          <span>
+                            ({correctAnswers}/{totalAnswered})
+                          </span>
+                        </div>
+                        <h3 className="mb-4 text-2xl font-bold">{scoreData.message}</h3>
+                        <div className="mt-6 flex flex-col justify-center gap-4 sm:flex-row">
+                          {score >= 70 ? (
+                            <>
+                              <button
+                                className="kid-btn-secondary"
+                                onClick={async () => {
+                                  try {
+                                    setShowQuestions(false);
+                                    const sections = await getCourseSections(courseId);
+                                    if (Array.isArray(sections) && sections.length > 0) {
+                                      const idx = sections.findIndex(
+                                        (s: any) => s.id === sectionData.id
+                                      );
+                                      const next = idx >= 0 ? sections[idx + 1] : undefined;
+                                      if (next) {
+                                        router.push(`/my-learning/${courseId}/section/${next.id}`);
+                                        return;
+                                      }
+                                    }
+                                    router.push(`/my-learning/${courseId}`);
+                                  } catch (e) {
+                                    console.error('Navigate to next section error:', e);
+                                    router.push(`/my-learning/${courseId}`);
+                                  }
+                                }}
+                              >
+                                <span className="kid-emoji">✨</span> Continuer à apprendre
+                              </button>
+                              <button
+                                className="kid-btn-primary"
+                                onClick={() => router.push(`/my-learning/${courseId}`)}
+                              >
+                                <span className="kid-emoji">🏠</span> Retour au cours
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                className="kid-btn-primary"
+                                onClick={async () => {
+                                  try {
+                                    // Show loading and prepare for a new quiz
+                                    setShowScoreResult(false);
+                                    setIsGeneratingFinalFlashcards(true);
+                                    resetQuiz();
+
+                                    const res = await fetch('/api/video/new-quiz', {
+                                      method: 'POST',
+                                      headers: { 'Content-Type': 'application/json' },
+                                      body: JSON.stringify({
+                                        sectionId,
+                                        maxQuestions: 8,
+                                        previous: Array.isArray(questions) ? questions : undefined,
+                                      }),
+                                    });
+                                    if (res.ok) {
+                                      const data = await res.json();
+                                      if (
+                                        Array.isArray(data?.questions) &&
+                                        data.questions.length > 0
+                                      ) {
+                                        setQuestions(data.questions);
+                                        resetQuiz();
+                                      } else {
+                                        console.error('No new questions returned');
+                                      }
+                                    } else {
+                                      console.error('Failed to fetch new quiz', await res.text());
+                                    }
+                                  } catch (e) {
+                                    console.error('Error regenerating quiz:', e);
+                                  } finally {
+                                    setIsGeneratingFinalFlashcards(false);
+                                  }
+                                }}
+                              >
+                                <span className="kid-emoji">🔄</span> Réessayer
+                              </button>
+                              <button
+                                className="kid-btn-secondary"
+                                onClick={() => setShowQuestions(false)}
+                              >
+                                <span className="kid-emoji">📚</span> Étudier plus
+                              </button>
+                            </>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  );
-                }
-                if (q.type === 'fillBlank') {
-                  const fb = q as any;
-                  const displayed = String(fb.sentence || '').replace('____', '_____');
-                  return (
-                    <div>
-                      <div className="mb-2 text-sm text-gray-500">
-                        Question {currentIndex + 1} of {questions.length}
-                      </div>
-                      {fb.title && <h3 className="mb-1 text-lg font-semibold">{fb.title}</h3>}
-                      {fb.instructions && (
-                        <p className="mb-3 text-sm text-gray-600 dark:text-gray-300">
-                          {fb.instructions}
-                        </p>
-                      )}
-                      <p className="mb-4 text-base font-medium text-gray-900 dark:text-gray-100">
-                        {displayed}
-                      </p>
-                      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                        {fb.choices.map((choice: string, idx: number) => {
-                          const base =
-                            'w-full rounded border px-3 py-2 text-center text-sm transition-colors';
-                          const idle =
-                            'border-gray-300 hover:bg-gray-50 dark:border-zinc-700 dark:hover:bg-zinc-800';
-                          const correct =
-                            'border-emerald-600 bg-emerald-50 text-emerald-800 dark:border-emerald-500 dark:bg-emerald-900/30 dark:text-emerald-300';
-                          const incorrect =
-                            'border-red-600 bg-red-50 text-red-800 dark:border-red-500 dark:bg-red-900/30 dark:text-red-300';
-                          const isSel = selectedChoice === choice;
-                          const isCor = answerState !== 'idle' && choice === fb.correctAnswer;
-                          const isInc =
-                            answerState === 'incorrect' && isSel && choice !== fb.correctAnswer;
-                          let cls = base + ' ' + idle;
-                          if (isCor) cls = base + ' ' + correct;
-                          if (isInc) cls = base + ' ' + incorrect;
-                          return (
-                            <button
-                              key={idx}
-                              className={cls}
-                              onClick={() => {
-                                if (answerState !== 'idle') return;
-                                setSelectedChoice(choice);
-                                const correctNow = choice === fb.correctAnswer;
-                                if (correctNow) {
-                                  setAnswerState('correct');
-                                  setTimeout(() => {
-                                    setAnswerState('idle');
-                                    setSelectedChoice(null);
-                                    setCurrentIndex((i) => i + 1);
-                                  }, 700);
-                                } else {
-                                  setAnswerState('incorrect');
-                                  setTimeout(() => {
-                                    setAnswerState('idle');
-                                    setSelectedChoice(null);
-                                  }, 800);
-                                }
-                              }}
-                              disabled={answerState !== 'idle'}
-                            >
-                              {choice}
-                            </button>
-                          );
-                        })}
-                      </div>
-                      {answerState !== 'idle' && fb.feedback && (
-                        <p
-                          className={`mt-4 text-sm ${answerState === 'correct' ? 'text-emerald-600' : 'text-red-600'} dark:${answerState === 'correct' ? 'text-emerald-400' : 'text-red-400'}`}
-                        >
-                          {answerState === 'correct'
-                            ? fb.feedback.correct || 'Correct!'
-                            : fb.feedback.incorrect || 'Try again!'}
-                        </p>
-                      )}
-                      <div className="mt-6 flex items-center justify-end">
-                        <button
-                          className="rounded px-4 py-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-zinc-800"
-                          onClick={() => setShowQuestions(false)}
-                        >
-                          Exit
-                        </button>
-                      </div>
-                    </div>
-                  );
-                }
-                if (q.type === 'matchingGame') {
-                  const mg = q as any;
-                  const lefts: string[] = mg.pairs.map((p: any) => p.left);
-                  const rights: string[] = mg.pairs.map((p: any) => p.right);
-                  const sel: Record<number, string> = (matchSelections as any)[currentIndex] || {};
-                  const handleSelect = (idx: number, value: string) => {
-                    setMatchSelections(
-                      (prev) =>
-                        ({
-                          ...prev,
-                          [currentIndex]: { ...(prev as any)[currentIndex], [idx]: value },
-                        }) as any
                     );
-                  };
-                  const handleSubmit = () => {
-                    const errs: Record<number, boolean> = {};
-                    mg.pairs.forEach((pair: any, idx: number) => {
-                      const chosen = sel[idx];
-                      errs[idx] = !chosen || chosen !== pair.right;
-                    });
-                    setMatchErrors(errs);
-                    const allCorrect = Object.values(errs).every((v) => v === false);
-                    if (allCorrect) {
-                      setTimeout(() => {
-                        setMatchErrors({});
-                        setMatchSelections((prev) => ({ ...prev, [currentIndex]: {} }) as any);
-                        setCurrentIndex((i) => i + 1);
-                      }, 400);
-                    }
-                  };
-                  return (
-                    <div>
-                      <div className="mb-2 text-sm text-gray-500">
-                        Question {currentIndex + 1} of {questions.length}
-                      </div>
-                      {mg.title && <h3 className="mb-1 text-lg font-semibold">{mg.title}</h3>}
-                      {mg.instructions && (
-                        <p className="mb-3 text-sm text-gray-600 dark:text-gray-300">
-                          {mg.instructions}
-                        </p>
-                      )}
-                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        {lefts.map((left, idx) => (
-                          <div
-                            key={idx}
-                            className="rounded border border-gray-200 p-3 dark:border-zinc-700"
-                          >
-                            <div className="mb-2 text-sm font-medium text-gray-800 dark:text-gray-200">
-                              {left}
-                            </div>
-                            <select
-                              className={`w-full rounded border px-3 py-2 text-sm dark:border-zinc-700 ${matchErrors[idx] ? 'border-red-500' : 'border-gray-300'}`}
-                              value={sel[idx] || ''}
-                              onChange={(e) => handleSelect(idx, e.target.value)}
-                            >
-                              <option value="" disabled>
-                                Choisir…
-                              </option>
-                              {rights.map((r, rIdx) => (
-                                <option key={rIdx} value={r}>
-                                  {r}
-                                </option>
-                              ))}
-                            </select>
-                            {matchErrors[idx] && (
-                              <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-                                Incorrect
-                              </p>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                      {mg.feedback && (
-                        <p className="mt-4 text-sm text-gray-600 dark:text-gray-400">
-                          {mg.feedback.incorrect || mg.feedback.correct}
-                        </p>
-                      )}
-                      <div className="mt-6 flex items-center justify-between">
-                        <button
-                          className="rounded px-4 py-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-zinc-800"
-                          onClick={() => setShowQuestions(false)}
-                        >
-                          Exit
-                        </button>
-                        <button
-                          className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-                          onClick={handleSubmit}
-                        >
-                          Valider
-                        </button>
-                      </div>
-                    </div>
-                  );
+                  })()}
+                </div>
+              </div>
+            ) : currentIndex >= questions.length ? (
+              (() => {
+                // Quiz completed, show score
+                if (!quizCompleted) {
+                  setQuizCompleted(true);
+                  setShowScoreResult(true);
+
+                  // Save quiz score to database
+                  const score = calculateScore();
+                  const passed = score >= 70;
+                  saveQuizScore(score, passed);
                 }
                 return null;
               })()
+            ) : (
+              <div className="kid-quiz-container">
+                <div className="kid-confetti"></div>
+                <div className="kid-confetti"></div>
+                <div className="kid-confetti"></div>
+                <div className="kid-confetti"></div>
+
+                {/* Progress Bar */}
+                <div className="mb-6">
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="text-lg font-bold text-white">
+                      <span className="kid-emoji">🎯</span> Question {currentIndex + 1} sur{' '}
+                      {questions.length}
+                    </span>
+                    <div className="kid-score-display">
+                      <span className="kid-emoji">⭐</span>
+                      <span>
+                        {correctAnswers}/{totalAnswered}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="kid-progress-bar">
+                    <div
+                      className="kid-progress-fill"
+                      style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}
+                    />
+                  </div>
+                </div>
+                {/* Question Content */}
+                <div className="kid-question-card">
+                  {(() => {
+                    const q: any = questions[currentIndex];
+                    if (q.type === 'flashcard') {
+                      const card = q as any;
+                      return (
+                        <div>
+                          <h3 className="mb-6 text-center text-2xl font-bold text-gray-800">
+                            <span className="kid-emoji">🤔</span> {card.question}
+                          </h3>
+                          <div className="grid grid-cols-1 gap-4">
+                            {card.choices.map((choice: string, idx: number) => {
+                              const isSelected = selectedChoice === choice;
+                              const isCorrect =
+                                answerState !== 'idle' && choice === card.correctAnswer;
+                              const isIncorrect =
+                                answerState === 'incorrect' &&
+                                isSelected &&
+                                choice !== card.correctAnswer;
+
+                              let className = 'kid-answer-btn';
+                              if (isCorrect) className += ' correct';
+                              if (isIncorrect) className += ' incorrect';
+
+                              const emojis = ['🅰️', '🅱️', '🅰️', '🅱️']; // Simple alternating pattern
+
+                              return (
+                                <button
+                                  key={idx}
+                                  className={className}
+                                  onClick={() => {
+                                    if (answerState !== 'idle') return;
+                                    setSelectedChoice(choice);
+                                    const correctNow = choice === card.correctAnswer;
+                                    if (correctNow) {
+                                      handleCorrectAnswer();
+                                      setAnswerState('correct');
+                                      setTimeout(() => {
+                                        setAnswerState('idle');
+                                        setSelectedChoice(null);
+                                        setCurrentIndex((i) => i + 1);
+                                      }, 1200);
+                                    } else {
+                                      handleIncorrectAnswer();
+                                      setAnswerState('incorrect');
+                                      setTimeout(() => {
+                                        setAnswerState('idle');
+                                        setSelectedChoice(null);
+                                        setCurrentIndex((i) => i + 1);
+                                      }, 1200);
+                                    }
+                                  }}
+                                  disabled={answerState !== 'idle'}
+                                >
+                                  <span className="text-2xl">{emojis[idx % emojis.length]}</span>
+                                  <span className="flex-1 text-left">{choice}</span>
+                                  {isCorrect && <span className="text-2xl">✅</span>}
+                                  {isIncorrect && <span className="text-2xl">❌</span>}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    }
+                    if (q.type === 'fillBlank') {
+                      const fb = q as any;
+                      const displayed = String(fb.sentence || '').replace('____', '______');
+                      return (
+                        <div>
+                          {fb.title && (
+                            <h3 className="mb-4 text-center text-2xl font-bold text-gray-800">
+                              <span className="kid-emoji">✏️</span> {fb.title}
+                            </h3>
+                          )}
+                          {fb.instructions && (
+                            <p className="mb-4 text-center text-lg font-medium text-gray-700">
+                              {fb.instructions}
+                            </p>
+                          )}
+                          <div className="border-3 mb-6 rounded-2xl border-dashed border-blue-300 bg-gradient-to-r from-blue-50 to-purple-50 p-6">
+                            <p className="text-center text-xl font-bold leading-relaxed text-gray-800">
+                              <span className="kid-emoji">📝</span> {displayed}
+                            </p>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+                            {fb.choices.map((choice: string, idx: number) => {
+                              const isSelected = selectedChoice === choice;
+                              const isCorrect =
+                                answerState !== 'idle' && choice === fb.correctAnswer;
+                              const isIncorrect =
+                                answerState === 'incorrect' &&
+                                isSelected &&
+                                choice !== fb.correctAnswer;
+
+                              let className = 'kid-answer-btn text-center';
+                              if (isCorrect) className += ' correct';
+                              if (isIncorrect) className += ' incorrect';
+
+                              return (
+                                <button
+                                  key={idx}
+                                  className={className}
+                                  onClick={() => {
+                                    if (answerState !== 'idle') return;
+                                    setSelectedChoice(choice);
+                                    const correctNow = choice === fb.correctAnswer;
+                                    if (correctNow) {
+                                      handleCorrectAnswer();
+                                      setAnswerState('correct');
+                                      setTimeout(() => {
+                                        setAnswerState('idle');
+                                        setSelectedChoice(null);
+                                        setCurrentIndex((i) => i + 1);
+                                      }, 1200);
+                                    } else {
+                                      handleIncorrectAnswer();
+                                      setAnswerState('incorrect');
+                                      setTimeout(() => {
+                                        setAnswerState('idle');
+                                        setSelectedChoice(null);
+                                        setCurrentIndex((i) => i + 1);
+                                      }, 1200);
+                                    }
+                                  }}
+                                  disabled={answerState !== 'idle'}
+                                >
+                                  <span className="font-bold">{choice}</span>
+                                  {isCorrect && <span className="ml-2">✅</span>}
+                                  {isIncorrect && <span className="ml-2">❌</span>}
+                                </button>
+                              );
+                            })}
+                          </div>
+                          {answerState !== 'idle' && fb.feedback && (
+                            <div
+                              className={`mt-6 rounded-xl p-4 text-center font-semibold ${
+                                answerState === 'correct'
+                                  ? 'border-2 border-green-300 bg-green-100 text-green-800'
+                                  : 'border-2 border-orange-300 bg-orange-100 text-orange-800'
+                              }`}
+                            >
+                              <span className="kid-emoji">
+                                {answerState === 'correct' ? '🎉' : '💪'}
+                              </span>{' '}
+                              {answerState === 'correct'
+                                ? fb.feedback.correct || 'Fantastique !'
+                                : fb.feedback.incorrect || 'Continue à essayer !'}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    }
+                    if (q.type === 'matchingGame') {
+                      const mg = q as any;
+                      const lefts: string[] = mg.pairs.map((p: any) => p.left);
+                      const rights: string[] = mg.pairs.map((p: any) => p.right);
+                      const sel: Record<number, string> =
+                        (matchSelections as any)[currentIndex] || {};
+                      const handleSelect = (idx: number, value: string) => {
+                        setMatchSelections(
+                          (prev) =>
+                            ({
+                              ...prev,
+                              [currentIndex]: { ...(prev as any)[currentIndex], [idx]: value },
+                            }) as any
+                        );
+                      };
+                      const handleSubmit = () => {
+                        const errs: Record<number, boolean> = {};
+                        let correctCount = 0;
+                        mg.pairs.forEach((pair: any, idx: number) => {
+                          const chosen = sel[idx];
+                          if (!chosen || chosen !== pair.right) {
+                            errs[idx] = true;
+                          } else {
+                            correctCount++;
+                          }
+                        });
+                        setMatchErrors(errs);
+                        const allCorrect = Object.values(errs).every((v) => v === false);
+
+                        // Mark this question as submitted
+                        setMatchSubmitted((prev) => ({ ...prev, [currentIndex]: true }));
+
+                        if (allCorrect) {
+                          handleCorrectAnswer();
+                          setTimeout(() => {
+                            setMatchErrors({});
+                            setMatchSelections((prev) => ({ ...prev, [currentIndex]: {} }) as any);
+                            setMatchSubmitted((prev) => ({ ...prev, [currentIndex]: false }));
+                            setCurrentIndex((i) => i + 1);
+                          }, 1500);
+                        } else {
+                          handleIncorrectAnswer();
+                        }
+                      };
+
+                      return (
+                        <div>
+                          {mg.title && (
+                            <h3 className="mb-4 text-center text-2xl font-bold text-gray-800">
+                              <span className="kid-emoji">🔗</span> {mg.title}
+                            </h3>
+                          )}
+                          {mg.instructions && (
+                            <p className="mb-6 text-center text-lg font-medium text-gray-700">
+                              {mg.instructions}
+                            </p>
+                          )}
+                          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                            {lefts.map((left, idx) => (
+                              <div
+                                key={idx}
+                                className={`border-3 rounded-2xl p-4 transition-all ${
+                                  matchSubmitted[currentIndex] && matchErrors[idx]
+                                    ? 'animate-wiggle border-red-400 bg-red-50'
+                                    : matchSubmitted[currentIndex] && sel[idx] && !matchErrors[idx]
+                                      ? 'border-green-400 bg-green-50'
+                                      : sel[idx]
+                                        ? 'border-blue-400 bg-blue-100'
+                                        : 'border-blue-300 bg-blue-50'
+                                }`}
+                              >
+                                <div className="mb-3 text-center text-lg font-bold text-gray-800">
+                                  <span className="kid-emoji">🎯</span> {left}
+                                </div>
+                                <select
+                                  className={`w-full rounded-xl border-2 px-4 py-3 text-center text-lg font-semibold ${
+                                    matchSubmitted[currentIndex] && matchErrors[idx]
+                                      ? 'border-red-500 bg-red-100'
+                                      : matchSubmitted[currentIndex] &&
+                                          sel[idx] &&
+                                          !matchErrors[idx]
+                                        ? 'border-green-500 bg-green-100'
+                                        : 'border-blue-400 bg-white'
+                                  }`}
+                                  value={sel[idx] || ''}
+                                  onChange={(e) => handleSelect(idx, e.target.value)}
+                                >
+                                  <option value="" disabled>
+                                    Choisir... 🤔
+                                  </option>
+                                  {rights.map((r, rIdx) => (
+                                    <option key={rIdx} value={r}>
+                                      {r}
+                                    </option>
+                                  ))}
+                                </select>
+                                {matchSubmitted[currentIndex] && matchErrors[idx] && (
+                                  <p className="mt-2 text-center font-bold text-red-600">
+                                    <span className="kid-emoji">❌</span> Réessaie !
+                                  </p>
+                                )}
+                                {matchSubmitted[currentIndex] && sel[idx] && !matchErrors[idx] && (
+                                  <p className="mt-2 text-center font-bold text-green-600">
+                                    <span className="kid-emoji">✅</span> Excellent choix !
+                                  </p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+
+                          <div className="mt-8 text-center">
+                            <button
+                              className="kid-btn-primary px-8 py-4 text-xl"
+                              onClick={handleSubmit}
+                              disabled={Object.keys(sel).length < lefts.length}
+                            >
+                              <span className="kid-emoji">🎪</span> Vérifier mes associations !
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
+                </div>
+
+                {/* Exit Button */}
+                <div className="mt-6 text-center">
+                  <button
+                    className="kid-btn-secondary opacity-75 hover:opacity-100"
+                    onClick={() => setShowQuestions(false)}
+                  >
+                    <span className="kid-emoji">🚪</span> Quitter le quiz
+                  </button>
+                </div>
+              </div>
             )}
           </div>
         </div>
