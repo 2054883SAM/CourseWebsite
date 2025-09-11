@@ -19,7 +19,7 @@ interface AuthContextType {
     name: string
   ) => Promise<{ error: Error | null; requiresEmailConfirmation: boolean; email?: string | null }>;
   signInWithProvider: (
-    provider: 'google' | 'apple',
+    provider: 'google',
     redirectTo?: string
   ) => Promise<{ error: Error | null }>;
   checkPermission: (requiredRole: string) => boolean;
@@ -215,7 +215,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signInWithProvider = async (
-    provider: 'google' | 'apple',
+    provider: 'google',
     redirectTo?: string
   ): Promise<{ error: Error | null }> => {
     try {
@@ -223,7 +223,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         provider,
         options: {
           redirectTo: redirectTo ?? `${window.location.origin}/`,
-          queryParams: provider === 'google' ? { prompt: 'select_account' } : undefined,
+          queryParams: { prompt: 'select_account' },
         },
       });
 

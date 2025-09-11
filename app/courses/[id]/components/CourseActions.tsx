@@ -511,72 +511,119 @@ export function CourseActions({ course, initialEnrollmentStatus = 'not-enrolled'
   }
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-md">
-      {/* Price removed from schema; consider showing category or duration instead */}
-
-      {/* Error message display */}
-      {errorMessage && (
-        <div className="mb-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-          <p>{errorMessage}</p>
+    <>
+      <div className="sticky top-6">
+        <div className="rounded-2xl border-2 border-orange-200 bg-gradient-to-br from-orange-50 to-yellow-50 p-6 shadow-lg">
+        {/* Titre de la section */}
+        <div className="flex items-center gap-3 mb-6">
+          <span className="text-3xl">🚀</span>
+          <h3 className="text-xl font-bold text-orange-700">Commencer l'aventure</h3>
         </div>
-      )}
 
-      <div className="mb-4 w-full">
-        <EnrollButton
-          status={enrollmentStatus}
-          onClick={handleEnrollClick}
-          disabled={authLoading || enrollmentStatus === 'processing'}
-          tooltipText={enrollmentStatus === 'enrolled' ? 'Aller au cours' : (!paddleLoaded ? 'Chargement du système de paiement...' : tooltipMessage)}
-          enrolledText="Regarder maintenant"
-          className="w-full"
-        />
-        {enrollmentStatus === 'enrolled' && dbUser?.role !== 'admin' && (
-          <button
-            onClick={async () => {
-              try {
-                console.log('Unenrolling from course');
-                setErrorMessage(null);
-                setEnrollmentStatus('processing');
-                const res = await fetch('/api/enrollments/delete', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ courseId: course.id }),
-                });
-                const data = await res.json().catch(() => ({}));
-                console.log('Unenrollment response:', data);
-                if (!res.ok || !data?.success) {
-                  throw new Error(data?.error || 'Failed to unenroll from course');
-                }
-                setEnrollmentStatus('not-enrolled');
-                setTooltipMessage('Cliquez pour vous inscrire à ce cours');
-                router.refresh();
-              } catch (e: any) {
-                setEnrollmentStatus('enrolled');
-                setErrorMessage(e?.message || 'Impossible de vous désinscrire pour le moment.');
-              }
-            }}
-            className="mt-3 w-full rounded border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-          >
-            Se désinscrire du cours
-          </button>
-        )}
-      </div>
-
-      <div className="space-y-4 text-sm">
-        <div className="flex justify-between">
-          <span className="text-gray-600">Durée totale :</span>
-          <span className="font-semibold">{totalDuration} min</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-gray-600">Créé par :</span>
-          <span className="font-semibold">{course.creator?.name || 'Inconnu'}</span>
-        </div>
-        {course.playback_id && (
-          <div className="flex justify-between">
-            <span className="text-gray-600">Statut vidéo :</span>
-            <span className="font-semibold text-green-600">Disponible</span>
+        {/* Error message display */}
+        {errorMessage && (
+          <div className="mb-6 rounded-xl border-2 border-red-200 bg-red-50 p-4 shadow-sm">
+            <div className="flex items-center gap-2">
+              <span className="text-xl">⚠️</span>
+              <p className="text-sm text-red-700 font-medium">{errorMessage}</p>
+            </div>
           </div>
         )}
+
+        <div className="mb-6 w-full">
+          <div className="relative group">
+            <EnrollButton
+              status={enrollmentStatus}
+              onClick={handleEnrollClick}
+              disabled={authLoading || enrollmentStatus === 'processing'}
+              tooltipText={enrollmentStatus === 'enrolled' ? 'Aller au cours' : (!paddleLoaded ? 'Chargement du système de paiement...' : tooltipMessage)}
+              enrolledText="🎯 Commencer à apprendre"
+              className="w-full text-lg py-4 px-6 rounded-xl font-bold shadow-lg bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white border-2 border-green-400 hover:border-green-500 transform hover:scale-105 transition-all duration-200 hover:shadow-xl"
+            />
+            {/* Effet de brillance */}
+            <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 group-hover:animate-pulse transition-opacity duration-300 pointer-events-none"></div>
+          </div>
+          
+          {enrollmentStatus === 'enrolled' && dbUser?.role !== 'admin' && (
+            <button
+              onClick={async () => {
+                try {
+                  console.log('Unenrolling from course');
+                  setErrorMessage(null);
+                  setEnrollmentStatus('processing');
+                  const res = await fetch('/api/enrollments/delete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ courseId: course.id }),
+                  });
+                  const data = await res.json().catch(() => ({}));
+                  console.log('Unenrollment response:', data);
+                  if (!res.ok || !data?.success) {
+                    throw new Error(data?.error || 'Failed to unenroll from course');
+                  }
+                  setEnrollmentStatus('not-enrolled');
+                  setTooltipMessage('Cliquez pour vous inscrire à ce cours');
+                  router.refresh();
+                } catch (e: any) {
+                  setEnrollmentStatus('enrolled');
+                  setErrorMessage(e?.message || 'Impossible de vous désinscrire pour le moment.');
+                }
+              }}
+              className="mt-4 w-full rounded-xl border-2 border-gray-300 bg-white px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
+            >
+              Se désinscrire du cours
+            </button>
+          )}
+        </div>
+
+        {/* Informations du cours */}
+        <div className="space-y-4">
+          <div className="bg-white/60 rounded-xl p-4 border border-orange-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">⏰</span>
+                <span className="text-gray-700 font-medium">Durée totale</span>
+              </div>
+              <span className="font-bold text-gray-800">{totalDuration} min</span>
+            </div>
+          </div>
+          
+          <div className="bg-white/60 rounded-xl p-4 border border-orange-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">👨‍🏫</span>
+                <span className="text-gray-700 font-medium">Enseignant</span>
+              </div>
+              <span className="font-bold text-gray-800">{course.creator?.name || 'Inconnu'}</span>
+            </div>
+          </div>
+          
+          {course.playback_id && (
+            <div className="bg-white/60 rounded-xl p-4 border border-orange-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">📹</span>
+                  <span className="text-gray-700 font-medium">Vidéos</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                  <span className="font-bold text-green-600">Disponibles</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Message d'encouragement */}
+        <div className="mt-6 p-4 bg-gradient-to-r from-sky-100 to-blue-100 rounded-xl border border-sky-200">
+          <div className="text-center">
+            <div className="text-2xl mb-2">🌟</div>
+            <p className="text-sm text-sky-800 font-medium">
+              Rejoins des milliers d'élèves qui apprennent en s'amusant !
+            </p>
+          </div>
+        </div>
+        </div>
       </div>
 
       {/* Enrollment progress overlay */}
@@ -622,7 +669,7 @@ export function CourseActions({ course, initialEnrollmentStatus = 'not-enrolled'
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
 
