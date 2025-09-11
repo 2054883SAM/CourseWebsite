@@ -94,6 +94,7 @@ export interface SectionProgress {
 export interface CourseSearchParams {
   query?: string;
   creator_id?: string;
+  category?: string;
   sort_by?: 'title' | 'created_at';
   sort_order?: 'asc' | 'desc';
   page?: number;

@@ -61,34 +61,24 @@ export const useAuthActions = (supabaseClient: SupabaseClient) => {
         .single();
 
       if (existingUser) {
-        return { error: new Error('An account with this email already exists. Please sign in instead.') };
+        return {
+          error: new Error('An account with this email already exists. Please sign in instead.'),
+        };
       }
 
       // Create auth user
       const { data, error: signUpError } = await supabaseClient.auth.signUp({
         email,
         password,
-        options: { data: { name } }
+        options: { data: { name }, emailRedirectTo: `${window.location.origin}/signin` },
       });
 
       if (signUpError) throw signUpError;
 
-      if (data.user) {
-        // Create user profile with student role
-        const { error: profileError } = await supabaseClient
-          .from('users')
-          .insert({
-            id: data.user.id,
-            email,
-            name,
-            role: 'student'
-          });
-
-        if (profileError) throw profileError;
-
-        console.log('User signed up successfully');
-        return { error: null };
-      }
+      // Profile row is now created automatically via DB trigger
+      const requiresEmailConfirmation = !data.session;
+      if (data.user)
+        return { error: null, requiresEmailConfirmation, email: data.user.email ?? email } as any;
 
       throw new Error('Signup failed. Please try again.');
     } catch (err) {
@@ -103,7 +93,7 @@ export const useAuthActions = (supabaseClient: SupabaseClient) => {
     try {
       const { error } = await supabaseClient.auth.signInWithPassword({
         email,
-        password
+        password,
       });
       if (error) throw error;
       return { error: null };
@@ -131,7 +121,7 @@ export const useAuthActions = (supabaseClient: SupabaseClient) => {
   const resetPassword = async (email: string) => {
     try {
       const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`
+        redirectTo: `${window.location.origin}/reset-password`,
       });
       if (error) throw error;
       return { error: null };
@@ -141,4 +131,4 @@ export const useAuthActions = (supabaseClient: SupabaseClient) => {
   };
 
   return { signUp, signIn, signOut, resetPassword };
-}; 
+};

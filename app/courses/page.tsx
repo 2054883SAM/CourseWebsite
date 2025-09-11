@@ -7,18 +7,21 @@ import { ViewToggle } from './components/ViewToggle';
 import { CourseListSkeleton } from './components/CourseListSkeleton';
 import { CourseGridSkeleton } from './components/CourseGridSkeleton';
 import { SearchBar } from './components/SearchBar';
-import { getCourses, shouldUseMockData, mockData } from '@/lib/supabase';
+import { getCourses, getCategories, shouldUseMockData, mockData } from '@/lib/supabase';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Section } from '@/components/layout/Section';
 import { withAuth } from '@/components/auth/withAuth';
 import { Course } from '@/lib/supabase/types';
+import { CategoryGridView } from './components/CategoryGridView';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 type SearchParams = {
   view?: 'grid' | 'list';
   query?: string;
   creator?: string;
+  category?: string;
   min_price?: string;
   max_price?: string;
   sort?: string;
@@ -30,6 +33,7 @@ function CoursesPage() {
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [courses, setCourses] = useState<Course[]>([]);
+  const [categories, setCategories] = useState<{ categorie: string; count: number }[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [lastFetchTime, setLastFetchTime] = useState(0);
 
@@ -43,53 +47,92 @@ function CoursesPage() {
   const view = searchParams.get('view') || 'grid';
   const query = searchParams.get('query') || '';
   const creator = searchParams.get('creator') || undefined;
+  const category = searchParams.get('category') || undefined;
   const sort = searchParams.get('sort') || undefined;
   const order = (searchParams.get('order') as 'asc' | 'desc') || undefined;
   const page = searchParams.get('page') || '1';
 
+  // Determine if we should show categories or courses
+  const showCategories = !category && !query && !creator;
+
   // Memoize the fetch function to prevent unnecessary recreations
-  const fetchCourses = useCallback(async (mounted: boolean) => {
-    if (!mounted) return;
-    
-
-    try {
-      // Fetch courses based on mock data or real data
-      const coursesData = shouldUseMockData()
-        ? mockData.mockCourses.filter(course =>
-          !query || course.title.toLowerCase().includes(query.toLowerCase()) ||
-          course.description.toLowerCase().includes(query.toLowerCase())
-        )
-        : await getCourses({
-          query,
-          creator_id: creator,
-          // price-based filters removed
-          sort_by: sort as any,
-          sort_order: order,
-          page: parseInt(page),
-          limit: 12,
-        });
-
+  const fetchData = useCallback(
+    async (mounted: boolean) => {
       if (!mounted) return;
-      setCourses(coursesData);
-      setError(null);
-      setLastFetchTime(Date.now());
-    } catch (err) {
-      console.error('Error fetching courses:', err);
-      if (!mounted) return;
-      setError('Failed to load courses. Please try again.');
-      setCourses([]);
-    } finally {
-      if (mounted) setLoading(false);
-    }
-  }, [query, creator, sort, order, page]);
+
+      try {
+        if (showCategories) {
+          // Fetch categories with course counts
+          const categoriesData = shouldUseMockData()
+            ? [
+                { categorie: 'Français', count: 2 },
+                { categorie: 'Mathématiques', count: 1 },
+                { categorie: 'Science et technologie', count: 1 },
+                { categorie: 'Géographie et histoire', count: 1 },
+              ]
+            : await getCategories();
+
+          if (!mounted) return;
+          setCategories(categoriesData);
+          setCourses([]);
+        } else {
+          // Fetch courses based on filters
+          const coursesData = shouldUseMockData()
+            ? mockData.mockCourses.filter((course) => {
+                let matches = true;
+                if (query) {
+                  matches =
+                    matches &&
+                    (course.title.toLowerCase().includes(query.toLowerCase()) ||
+                      course.description.toLowerCase().includes(query.toLowerCase()));
+                }
+                if (category && course.categorie) {
+                  matches = matches && course.categorie === category;
+                }
+                if (creator) {
+                  matches = matches && course.creator_id === creator;
+                }
+                return matches;
+              })
+            : await getCourses({
+                query,
+                creator_id: creator,
+                category,
+                sort_by: sort as any,
+                sort_order: order,
+                page: parseInt(page),
+                limit: 12,
+              });
+
+          if (!mounted) return;
+          setCourses(coursesData);
+          setCategories([]);
+        }
+
+        setError(null);
+        setLastFetchTime(Date.now());
+      } catch (err) {
+        console.error('Error fetching data:', err);
+        if (!mounted) return;
+        setError('Failed to load data. Please try again.');
+        setCourses([]);
+        setCategories([]);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    },
+    [showCategories, query, creator, category, sort, order, page]
+  );
 
   // Effect for initial load and filter changes
   useEffect(() => {
     let mounted = true;
     setLoading(true);
-    fetchCourses(mounted);
-    return () => { mounted = false; };
-  }, [fetchCourses]);
+    fetchData(mounted);
+    return () => {
+      mounted = false;
+    };
+  }, [fetchData]);
 
   // Effect for handling tab visibility changes
   useEffect(() => {
@@ -97,7 +140,7 @@ function CoursesPage() {
 
     const handleVisibilityChange = () => {
       if (!document.hidden && Date.now() - lastFetchTime > 5 * 60 * 1000) {
-        fetchCourses(true);
+        fetchData(true);
         setLoading(true);
       }
     };
@@ -106,7 +149,7 @@ function CoursesPage() {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [fetchCourses, lastFetchTime]);
+  }, [fetchData, lastFetchTime]);
 
   if (loading) {
     return view === 'grid' ? <CourseGridSkeleton /> : <CourseListSkeleton />;
@@ -118,23 +161,31 @@ function CoursesPage() {
         <Section className="bg-gradient-gray py-20">
           <div className="container mx-auto px-4">
             <div className="text-center">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20 mb-4">
-                <svg className="h-8 w-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20">
+                <svg
+                  className="h-8 w-8 text-red-600 dark:text-red-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                  />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+              <h3 className="mb-2 text-xl font-semibold text-gray-900 dark:text-white">
                 Erreur de chargement
               </h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">
-                {error}
-              </p>
+              <p className="mb-6 text-gray-600 dark:text-gray-400">{error}</p>
               <button
                 onClick={() => {
                   setLoading(true);
-                  fetchCourses(true);
+                  fetchData(true);
                 }}
-                className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-gray-600 to-gray-800 text-white font-semibold rounded-full shadow-lg hover:from-gray-700 hover:to-gray-900 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:ring-offset-2 transition-all duration-300 transform hover:scale-105"
+                className="inline-flex transform items-center rounded-full bg-gradient-to-r from-gray-600 to-gray-800 px-6 py-3 font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-gray-700 hover:to-gray-900 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:ring-offset-2"
               >
                 🔄 Réessayer
               </button>
@@ -168,70 +219,127 @@ function CoursesPage() {
       <Section className="bg-gradient-gray py-20">
         <div className="container mx-auto px-4">
           {/* Header avec animations */}
-          <div className="text-center mb-16 animate-fade-in-up">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 mb-6">
+          <div className="animate-fade-in-up mb-16 text-center">
+            <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700">
               <span className="text-2xl">📚</span>
             </div>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white mb-4 bg-gradient-to-r from-gray-900 via-gold-600 to-gray-800 bg-clip-text text-transparent dark:from-white dark:via-gold-400 dark:to-gray-300">
-              Catalogue de Cours
+            <h1 className="mb-4 bg-gradient-to-r from-gray-900 via-gold-600 to-gray-800 bg-clip-text text-4xl font-bold text-gray-900 text-transparent dark:from-white dark:via-gold-400 dark:to-gray-300 dark:text-white md:text-5xl lg:text-6xl">
+              {showCategories
+                ? 'Matières Scolaires'
+                : category
+                  ? `Cours de ${category}`
+                  : 'Catalogue de Cours'}
             </h1>
-            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-              Découvrez notre collection de cours de qualité pour développer vos compétences et atteindre vos objectifs
+            <p className="mx-auto max-w-3xl text-xl text-gray-600 dark:text-gray-300">
+              {showCategories
+                ? 'Explorez nos matières conformes au programme scolaire québécois'
+                : category
+                  ? `Découvrez tous nos cours de ${category}`
+                  : 'Découvrez notre collection de cours de qualité pour développer vos compétences et atteindre vos objectifs'}
             </p>
           </div>
 
           {/* Barre de recherche améliorée */}
-          <div className="mb-12 animate-fade-in-up relative z-10" style={{ animationDelay: '0.2s' }}>
-            <div className="max-w-3xl mx-auto">
+          <div
+            className="animate-fade-in-up relative z-10 mb-12"
+            style={{ animationDelay: '0.2s' }}
+          >
+            <div className="mx-auto max-w-3xl">
               <SearchBar initialQuery={query} className="w-full" />
             </div>
           </div>
 
           {/* Statistiques et contrôles */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+          <div
+            className="animate-fade-in-up mb-8 flex flex-col justify-between md:flex-row md:items-center"
+            style={{ animationDelay: '0.4s' }}
+          >
             <div className="mb-4 md:mb-0">
               <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <div className="h-2 w-2 animate-pulse rounded-full bg-green-500"></div>
                 <p className="text-gray-600 dark:text-gray-400">
-                  {query ? (
+                  {showCategories ? (
                     <>
-                      <span className="font-semibold text-gray-900 dark:text-white">{courses.length}</span>
-                      {' '}cours trouvé{courses.length !== 1 && 's'} pour
-                      {' '}<span className="font-semibold text-gold-600 dark:text-gold-400">&ldquo;{query}&rdquo;</span>
+                      <span className="font-semibold text-gray-900 dark:text-white">
+                        {categories.length}
+                      </span>{' '}
+                      matières disponibles
+                    </>
+                  ) : query ? (
+                    <>
+                      <span className="font-semibold text-gray-900 dark:text-white">
+                        {courses.length}
+                      </span>{' '}
+                      cours trouvé{courses.length !== 1 && 's'} pour{' '}
+                      <span className="font-semibold text-gold-600 dark:text-gold-400">
+                        &ldquo;{query}&rdquo;
+                      </span>
                     </>
                   ) : (
                     <>
-                      <span className="font-semibold text-gray-900 dark:text-white">{courses.length}</span> cours disponibles
+                      <span className="font-semibold text-gray-900 dark:text-white">
+                        {courses.length}
+                      </span>{' '}
+                      cours disponibles
+                      {category && (
+                        <>
+                          {' '}
+                          en{' '}
+                          <span className="font-semibold text-gold-600 dark:text-gold-400">
+                            {category}
+                          </span>
+                        </>
+                      )}
                     </>
                   )}
                 </p>
               </div>
             </div>
-            
-            <div className="flex items-center space-x-4">
-              <div className="hidden md:flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
-                <span>Vue :</span>
+
+            {!showCategories && (
+              <div className="flex items-center space-x-4">
+                <div className="hidden items-center space-x-2 text-sm text-gray-500 dark:text-gray-400 md:flex">
+                  <span>Vue :</span>
+                </div>
+                <ViewToggle currentView={view as 'grid' | 'list'} />
               </div>
-              <ViewToggle currentView={view as 'grid' | 'list'} />
-            </div>
+            )}
           </div>
+
+          {/* Breadcrumb pour navigation */}
+          {category && (
+            <div className="mb-8">
+              <nav className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
+                <Link
+                  href="/courses"
+                  className="transition-colors hover:text-gold-600 dark:hover:text-gold-400"
+                >
+                  Matières
+                </Link>
+                <span>/</span>
+                <span className="font-medium text-gray-900 dark:text-white">{category}</span>
+              </nav>
+            </div>
+          )}
 
           {/* Contenu principal */}
           <div className="animate-fade-in-up relative z-0" style={{ animationDelay: '0.6s' }}>
             <Suspense fallback={view === 'grid' ? <CourseGridSkeleton /> : <CourseListSkeleton />}>
-              {view === 'grid' ? (
-                <CourseGridView 
-                  courses={courses} 
-                  searchQuery={query} 
+              {showCategories ? (
+                <CategoryGridView categories={categories} />
+              ) : view === 'grid' ? (
+                <CourseGridView
+                  courses={courses}
+                  searchQuery={query}
                   onCourseDeleted={handleCourseDeleted}
                   onDeleteStart={handleDeleteStart}
                   onDeleteEnd={handleDeleteEnd}
                   onDeleteError={handleDeleteError}
                 />
               ) : (
-                <CourseListView 
-                  courses={courses} 
-                  searchQuery={query} 
+                <CourseListView
+                  courses={courses}
+                  searchQuery={query}
                   onCourseDeleted={handleCourseDeleted}
                   onDeleteStart={handleDeleteStart}
                   onDeleteEnd={handleDeleteEnd}
@@ -241,20 +349,19 @@ function CoursesPage() {
             </Suspense>
           </div>
 
-          {/* Message si aucun cours trouvé */}
-          {courses.length === 0 && !loading && (
-            <div className="text-center py-16 animate-fade-in-up">
-              <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 mb-6">
+          {/* Message si aucune donnée trouvée */}
+          {!showCategories && courses.length === 0 && !loading && (
+            <div className="animate-fade-in-up py-16 text-center">
+              <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
                 <span className="text-3xl">🔍</span>
               </div>
-              <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">
+              <h3 className="mb-4 text-2xl font-semibold text-gray-900 dark:text-white">
                 Aucun cours trouvé
               </h3>
-              <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
-                {query ? 
-                  `Aucun résultat ne correspond à votre recherche "${query}". Essayez d'autres mots-clés.` : 
-                  'Essayez d\'ajuster vos critères de recherche ou de filtres.'
-                }
+              <p className="mx-auto max-w-md text-gray-600 dark:text-gray-400">
+                {query
+                  ? `Aucun résultat ne correspond à votre recherche "${query}". Essayez d'autres mots-clés.`
+                  : "Essayez d'ajuster vos critères de recherche ou de filtres."}
               </p>
               {query && (
                 <button
@@ -263,7 +370,7 @@ function CoursesPage() {
                     params.delete('query');
                     window.location.search = params.toString();
                   }}
-                  className="mt-6 inline-flex items-center px-6 py-3 bg-gradient-to-r from-gray-600 to-gray-700 text-white font-semibold rounded-full shadow-lg hover:from-gray-700 hover:to-gray-800 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:ring-offset-2 transition-all duration-300 transform hover:scale-105"
+                  className="mt-6 inline-flex transform items-center rounded-full bg-gradient-to-r from-gray-600 to-gray-700 px-6 py-3 font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-gray-700 hover:to-gray-800 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:ring-offset-2"
                 >
                   ✨ Voir tous les cours
                 </button>
@@ -276,18 +383,26 @@ function CoursesPage() {
       {/* Deletion loading overlay */}
       {isDeleting && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="flex flex-col items-center gap-4 p-6 rounded-xl bg-white/90 dark:bg-gray-800/90 shadow-xl">
+          <div className="flex flex-col items-center gap-4 rounded-xl bg-white/90 p-6 shadow-xl dark:bg-gray-800/90">
             <LoadingSpinner size="large" color="blue" />
             {/* Spinning bar */}
-            <div className="w-56 h-2 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
-              <div className="h-full rounded-full bg-gradient-to-r from-gray-300 via-gray-500 to-gray-300 loading-bar"></div>
+            <div className="h-2 w-56 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+              <div className="loading-bar h-full rounded-full bg-gradient-to-r from-gray-300 via-gray-500 to-gray-300"></div>
             </div>
-            <p className="text-sm text-gray-700 dark:text-gray-300">Suppression du cours en cours…</p>
+            <p className="text-sm text-gray-700 dark:text-gray-300">
+              Suppression du cours en cours…
+            </p>
             <style jsx>{`
               @keyframes indeterminate {
-                0% { transform: translateX(-100%); }
-                50% { transform: translateX(0%); }
-                100% { transform: translateX(100%); }
+                0% {
+                  transform: translateX(-100%);
+                }
+                50% {
+                  transform: translateX(0%);
+                }
+                100% {
+                  transform: translateX(100%);
+                }
               }
               .loading-bar {
                 width: 40%;
@@ -301,23 +416,38 @@ function CoursesPage() {
       {/* Deletion error friendly modal */}
       {deleteError && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="max-w-md w-full mx-4 rounded-2xl bg-white dark:bg-gray-800 p-6 shadow-2xl text-center">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20 mb-4">
-              <svg className="h-8 w-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+          <div className="mx-4 w-full max-w-md rounded-2xl bg-white p-6 text-center shadow-2xl dark:bg-gray-800">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20">
+              <svg
+                className="h-8 w-8 text-red-600 dark:text-red-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                />
               </svg>
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Impossible de supprimer le cours</h3>
-            <p className="text-gray-600 dark:text-gray-300 mb-3">
-              {deleteError.status >= 500 || deleteError.status === -1 ? 'Une erreur serveur est survenue.' : 'Une erreur est survenue.'}
+            <h3 className="mb-2 text-xl font-semibold text-gray-900 dark:text-white">
+              Impossible de supprimer le cours
+            </h3>
+            <p className="mb-3 text-gray-600 dark:text-gray-300">
+              {deleteError.status >= 500 || deleteError.status === -1
+                ? 'Une erreur serveur est survenue.'
+                : 'Une erreur est survenue.'}
             </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-6">
-              {deleteError.status > 0 ? `Code ${deleteError.status}` : 'Code inconnu'} · {deleteError.message}
+            <p className="mb-6 text-xs text-gray-500 dark:text-gray-400">
+              {deleteError.status > 0 ? `Code ${deleteError.status}` : 'Code inconnu'} ·{' '}
+              {deleteError.message}
             </p>
             <div className="flex items-center justify-center gap-3">
               <button
                 onClick={() => setDeleteError(null)}
-                className="px-5 py-2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+                className="rounded-full bg-gray-200 px-5 py-2 text-gray-800 transition hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600"
               >
                 Fermer
               </button>
@@ -325,9 +455,9 @@ function CoursesPage() {
                 onClick={() => {
                   setDeleteError(null);
                   setLoading(true);
-                  fetchCourses(true);
+                  fetchData(true);
                 }}
-                className="px-5 py-2 rounded-full bg-gradient-to-r from-gray-600 to-gray-800 text-white font-semibold shadow hover:from-gray-700 hover:to-gray-900 transition"
+                className="rounded-full bg-gradient-to-r from-gray-600 to-gray-800 px-5 py-2 font-semibold text-white shadow transition hover:from-gray-700 hover:to-gray-900"
               >
                 Rafraîchir la liste
               </button>
@@ -340,4 +470,4 @@ function CoursesPage() {
 }
 
 // Export the wrapped component - no auth required for course listing
-export default withAuth(CoursesPage, { requireAuth: false }); 
+export default withAuth(CoursesPage, { requireAuth: false });

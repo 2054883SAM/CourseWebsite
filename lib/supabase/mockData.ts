@@ -13,7 +13,7 @@ export const mockUsers: User[] = [
     name: 'Admin User',
     email: 'admin@example.com',
     photo_url: 'https://i.pravatar.cc/150?u=admin@example.com',
-    created_at: '2023-01-01T00:00:00Z'
+    created_at: '2023-01-01T00:00:00Z',
   },
   {
     id: '2',
@@ -21,7 +21,7 @@ export const mockUsers: User[] = [
     name: 'Jane Smith',
     email: 'jane@example.com',
     photo_url: 'https://i.pravatar.cc/150?u=jane@example.com',
-    created_at: '2023-01-02T00:00:00Z'
+    created_at: '2023-01-02T00:00:00Z',
   },
   {
     id: '3',
@@ -29,7 +29,7 @@ export const mockUsers: User[] = [
     name: 'John Doe',
     email: 'john@example.com',
     photo_url: 'https://i.pravatar.cc/150?u=john@example.com',
-    created_at: '2023-01-03T00:00:00Z'
+    created_at: '2023-01-03T00:00:00Z',
   },
   {
     id: '4',
@@ -37,67 +37,67 @@ export const mockUsers: User[] = [
     name: 'Student User',
     email: 'student@example.com',
     photo_url: 'https://i.pravatar.cc/150?u=student@example.com',
-    created_at: '2023-01-04T00:00:00Z'
-  }
+    created_at: '2023-01-04T00:00:00Z',
+  },
 ];
 
 // Mock Courses
 export const mockCourses: Course[] = [
   {
     id: '1',
-    title: 'Introduction to Web Development',
-    description: 'A comprehensive introduction to HTML, CSS, and JavaScript for beginners.',
+    title: 'Grammaire française avancée',
+    description: 'Maîtrisez les règles de grammaire française avec des exercices pratiques.',
     thumbnail_url: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97',
-    // price removed
+    categorie: 'Français',
     creator_id: '2',
     created_at: '2023-02-01T00:00:00Z',
-    creator: mockUsers.find(user => user.id === '2'),
-    section_count: 3
+    creator: mockUsers.find((user) => user.id === '2'),
+    section_count: 3,
   },
   {
     id: '2',
-    title: 'Advanced React Patterns',
-    description: 'Deep dive into advanced React patterns, hooks, and state management.',
+    title: 'Orthographe et conjugaison',
+    description: 'Perfectionnez votre orthographe et maîtrisez les temps de conjugaison.',
     thumbnail_url: 'https://images.unsplash.com/photo-1633356122102-3fe601e05bd2',
-    // price removed
+    categorie: 'Français',
     creator_id: '2',
     created_at: '2023-02-15T00:00:00Z',
-    creator: mockUsers.find(user => user.id === '2'),
-    section_count: 4
+    creator: mockUsers.find((user) => user.id === '2'),
+    section_count: 4,
   },
   {
     id: '3',
-    title: 'Node.js Backend Development',
-    description: 'Learn server-side JavaScript with Node.js, Express, and MongoDB.',
+    title: 'Mathématiques 6e année',
+    description: 'Fractions, décimaux, géométrie et résolution de problèmes.',
     thumbnail_url: 'https://images.unsplash.com/photo-1618477247222-acbdb0e159b3',
-    // price removed
+    categorie: 'Mathématiques',
     creator_id: '3',
     created_at: '2023-03-01T00:00:00Z',
-    creator: mockUsers.find(user => user.id === '3'),
-    section_count: 5
+    creator: mockUsers.find((user) => user.id === '3'),
+    section_count: 5,
   },
   {
     id: '4',
-    title: 'Python for Data Science',
-    description: 'Introduction to Python programming for data analysis and visualization.',
+    title: 'Sciences de la nature',
+    description: 'Découverte du vivant, de la matière et des phénomènes naturels.',
     thumbnail_url: 'https://images.unsplash.com/photo-1526379095098-d400fd0bf935',
-    // price removed
+    categorie: 'Science et technologie',
     creator_id: '3',
     created_at: '2023-03-15T00:00:00Z',
-    creator: mockUsers.find(user => user.id === '3'),
-    section_count: 4
+    creator: mockUsers.find((user) => user.id === '3'),
+    section_count: 4,
   },
   {
     id: '5',
-    title: 'Full Stack JavaScript Development',
-    description: 'Build complete web applications with modern JavaScript frameworks.',
+    title: 'Histoire du Québec',
+    description: "Découvrez l'histoire fascinante du Québec, de la Nouvelle-France à aujourd'hui.",
     thumbnail_url: 'https://images.unsplash.com/photo-1593720213428-28a5b9e94613',
-    // price removed
+    categorie: 'Géographie et histoire',
     creator_id: '2',
     created_at: '2023-04-01T00:00:00Z',
-    creator: mockUsers.find(user => user.id === '2'),
-    section_count: 6
-  }
+    creator: mockUsers.find((user) => user.id === '2'),
+    section_count: 6,
+  },
 ];
 
 // Mock Sections
@@ -169,26 +169,26 @@ export const mockSubtitles: Subtitle[] = [
     id: '1001',
     section_id: '101',
     language_code: 'en',
-    subtitle_url: '/mock-subtitles/101-en.vtt'
+    subtitle_url: '/mock-subtitles/101-en.vtt',
   },
   {
     id: '1002',
     section_id: '101',
     language_code: 'es',
-    subtitle_url: '/mock-subtitles/101-es.vtt'
+    subtitle_url: '/mock-subtitles/101-es.vtt',
   },
   // Section 102 Subtitles
   {
     id: '1003',
     section_id: '102',
     language_code: 'en',
-    subtitle_url: '/mock-subtitles/102-en.vtt'
+    subtitle_url: '/mock-subtitles/102-en.vtt',
   },
   {
     id: '1004',
     section_id: '102',
     language_code: 'es',
-    subtitle_url: '/mock-subtitles/102-es.vtt'
+    subtitle_url: '/mock-subtitles/102-es.vtt',
   },
 ];
 
@@ -199,13 +199,13 @@ export const mockEnrollments: Enrollment[] = [
     user_id: '4',
     course_id: '1',
     enrolled_at: '2023-05-01T00:00:00Z',
-    payment_status: 'paid'
+    payment_status: 'paid',
   },
   {
     id: '1002',
     user_id: '4',
     course_id: '2',
     enrolled_at: '2023-05-02T00:00:00Z',
-    payment_status: 'paid'
+    payment_status: 'paid',
   },
-]; 
+];

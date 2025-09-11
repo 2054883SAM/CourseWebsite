@@ -51,7 +51,7 @@ const getProjectRef = () => {
 const projectRef = getProjectRef();
 console.log('Supabase project ref for cookies:', projectRef);
 
-// Create different client configs for server and browser environments
+// Create client config
 const clientOptions = {
   auth: {
     autoRefreshToken: true,
@@ -68,12 +68,6 @@ const clientOptions = {
       maxAge: 60 * 60 * 24 * 7, // 7 days
     },
   },
-  // Only add fetch timeout in browser context
-  global: isServer
-    ? undefined
-    : {
-        fetch: createFetchWithTimeout(),
-      },
 };
 
 console.log('Supabase client initialized with cookie config:', {

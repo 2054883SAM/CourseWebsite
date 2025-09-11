@@ -14,6 +14,39 @@ function handleTimeoutError(error: unknown, action: string): never {
 }
 
 /**
+ * Fetch distinct categories from courses
+ */
+export async function getCategories(): Promise<{ categorie: string; count: number }[]> {
+  try {
+    const response = await supabase
+      .from('courses')
+      .select('categorie')
+      .not('categorie', 'is', null);
+
+    const { data, error } = response;
+
+    if (error) throw error;
+    if (!data) return [];
+
+    // Count categories
+    const categoryCount = data.reduce((acc: { [key: string]: number }, course) => {
+      if (course.categorie) {
+        acc[course.categorie] = (acc[course.categorie] || 0) + 1;
+      }
+      return acc;
+    }, {});
+
+    // Convert to array with count
+    return Object.entries(categoryCount).map(([categorie, count]) => ({
+      categorie,
+      count,
+    }));
+  } catch (error) {
+    handleTimeoutError(error, 'load categories');
+  }
+}
+
+/**
  * Fetch all courses with optional filtering
  */
 export async function getCourses(params?: CourseSearchParams): Promise<Course[]> {
@@ -21,6 +54,7 @@ export async function getCourses(params?: CourseSearchParams): Promise<Course[]>
     const {
       query = '',
       creator_id,
+      category,
       sort_by = 'created_at',
       sort_order = 'desc',
       page = 1,
@@ -40,6 +74,10 @@ export async function getCourses(params?: CourseSearchParams): Promise<Course[]>
 
     if (creator_id) {
       queryBuilder = queryBuilder.eq('creator_id', creator_id);
+    }
+
+    if (category) {
+      queryBuilder = queryBuilder.eq('categorie', category);
     }
 
     // Price fields removed from schema; skip price filters

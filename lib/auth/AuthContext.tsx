@@ -13,7 +13,11 @@ interface AuthContextType {
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
-  signUp: (email: string, password: string, name: string) => Promise<{ error: Error | null }>;
+  signUp: (
+    email: string,
+    password: string,
+    name: string
+  ) => Promise<{ error: Error | null; requiresEmailConfirmation: boolean; email?: string | null }>;
   checkPermission: (requiredRole: string) => boolean;
 }
 
@@ -174,34 +178,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         password,
         options: {
           data: { name },
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo: `${window.location.origin}/signin`,
         },
       });
 
       if (signUpError) throw signUpError;
 
-      console.log('Sign up response:', {
+      const debugInfo = {
         success: !signUpError,
         user: data.user ? `${data.user.email}` : 'Missing',
         session: data.session ? 'Present' : 'Missing (email confirmation may be required)',
-      });
+      };
+      console.log('Sign up response:', debugInfo);
 
+      // Determine if email confirmation is required (no session returned)
+      const requiresEmailConfirmation = !data.session;
+
+      // Profile row is now created automatically via DB trigger.
       if (data.user) {
-        const { error: profileError } = await supabase.from('users').insert({
-          id: data.user.id,
-          email,
-          name,
-          role: 'student',
-        });
-
-        if (profileError) throw profileError;
-        return { error: null };
+        return {
+          error: null,
+          requiresEmailConfirmation,
+          email: data.user.email ?? email,
+        };
       }
 
       throw new Error('Signup failed. Please try again.');
     } catch (error) {
       console.error('Error during sign up:', error);
-      return { error: error as Error };
+      return { error: error as Error, requiresEmailConfirmation: false };
     }
   };
 

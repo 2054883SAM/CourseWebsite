@@ -12,6 +12,7 @@ function Home() {
   const { user, dbUser } = useAuth();
   const [featuredCourses, setFeaturedCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
+  const isStudent = dbUser?.role === 'student';
 
   // Fetch featured courses on component mount
   useEffect(() => {
@@ -25,7 +26,7 @@ function Home() {
           const courses = await getCourses({
             limit: 3,
             sort_by: 'created_at',
-            sort_order: 'desc'
+            sort_order: 'desc',
           });
           setFeaturedCourses(courses);
         }
@@ -42,18 +43,20 @@ function Home() {
   return (
     <PageLayout maxWidth="full">
       {/* Hero Section with Blue Gradient Background */}
-      <Section className="relative overflow-hidden bg-gradient-to-br from-blue-50 to-blue-100 py-20 text-center md:py-32 dark:from-blue-900 dark:to-blue-800">
+      <Section className="relative overflow-hidden bg-gradient-to-br from-blue-50 to-blue-100 py-20 text-center dark:from-blue-900 dark:to-blue-800 md:py-32">
         {/* Background decoration */}
-        <div className="absolute -top-40 -right-40 h-80 w-80 rounded-full bg-gradient-to-r from-blue-400 to-blue-600 opacity-20 blur-3xl"></div>
+        <div className="absolute -right-40 -top-40 h-80 w-80 rounded-full bg-gradient-to-r from-blue-400 to-blue-600 opacity-20 blur-3xl"></div>
         <div className="absolute -bottom-40 -left-40 h-80 w-80 rounded-full bg-gradient-to-r from-blue-300 to-blue-500 opacity-20 blur-3xl"></div>
-        
+
         <Container maxWidth="2xl" className="relative z-10">
           <div className="animate-fade-in-up">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white mb-4 bg-gradient-to-r from-gray-900 via-blue-600 to-gray-800 bg-clip-text text-transparent dark:from-white dark:via-blue-400 dark:to-gray-300">
+            <h1 className="mb-4 bg-gradient-to-r from-gray-900 via-blue-600 to-gray-800 bg-clip-text text-4xl font-bold text-gray-900 text-transparent dark:from-white dark:via-blue-400 dark:to-gray-300 dark:text-white md:text-5xl lg:text-6xl">
               {user ? `Bon retour, ${dbUser?.name}!` : 'Apprendre devient amusant!'}
             </h1>
             <p className="mx-auto mb-10 max-w-3xl text-xl text-gray-600 dark:text-gray-300">
-              Une plateforme éducative conçue spécialement pour les élèves du primaire. Des cours créés par des enseignants passionnés pour rendre l'apprentissage captivant et accessible.
+              Une plateforme éducative conçue spécialement pour les élèves du primaire. Des cours
+              créés par des enseignants passionnés pour rendre l'apprentissage captivant et
+              accessible.
             </p>
             <div className="flex flex-col justify-center gap-4 sm:flex-row">
               <Link
@@ -79,12 +82,14 @@ function Home() {
                   </Link>
                 </>
               ) : (
-                <Link
-                  href="/payment"
-                  className="inline-flex h-12 items-center justify-center rounded-full bg-gradient-to-r from-green-500 to-green-600 px-8 text-base font-semibold text-white transition-all duration-300 hover:from-green-600 hover:to-green-700 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-                >
-                  Mon abonnement
-                </Link>
+                isStudent && (
+                  <Link
+                    href="/payment"
+                    className="inline-flex h-12 items-center justify-center rounded-full bg-gradient-to-r from-green-500 to-green-600 px-8 text-base font-semibold text-white transition-all duration-300 hover:from-green-600 hover:to-green-700 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                  >
+                    Mon abonnement
+                  </Link>
+                )
               )}
             </div>
           </div>
@@ -92,68 +97,74 @@ function Home() {
       </Section>
 
       {/* Featured Courses Section */}
-      <Section className="py-16 bg-white dark:bg-gray-900">
+      <Section className="bg-white py-16 dark:bg-gray-900">
         <Container maxWidth="7xl">
-          <div className="text-center mb-16">
-            <h2 className="mb-4 text-4xl font-bold text-gray-900 dark:text-white">Cours populaires pour le primaire</h2>
+          <div className="mb-16 text-center">
+            <h2 className="mb-4 text-4xl font-bold text-gray-900 dark:text-white">
+              Cours populaires pour le primaire
+            </h2>
             <p className="mx-auto max-w-2xl text-lg text-gray-600 dark:text-gray-300">
-              Découvrez nos cours les plus appréciés par les élèves et leurs parents. Apprentissage ludique garanti !
+              Découvrez nos cours les plus appréciés par les élèves et leurs parents. Apprentissage
+              ludique garanti !
             </p>
           </div>
 
           <GridLayout columns={{ default: 1, sm: 2, lg: 3 }} className="mb-12 gap-8">
-            {loading ? (
-              // Enhanced loading placeholders with shimmer effect
-              Array(3).fill(0).map((_, i) => (
-                <div key={`loading-${i}`} className="group relative overflow-hidden rounded-2xl bg-white p-6 shadow-lg transition-all duration-300 hover:shadow-xl dark:bg-gray-800">
-                  <div className="mb-4 aspect-video rounded-xl bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse dark:from-gray-700 dark:to-gray-600"></div>
-                  <div className="mb-3 h-6 w-3/4 rounded-md bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse dark:from-gray-700 dark:to-gray-600"></div>
-                  <div className="mb-4 h-16 rounded-md bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse dark:from-gray-700 dark:to-gray-600"></div>
-                  <div className="flex items-center justify-between">
-                    <div className="h-6 w-16 rounded-md bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse dark:from-gray-700 dark:to-gray-600"></div>
-                    <div className="h-10 w-24 rounded-full bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse dark:from-gray-700 dark:to-gray-600"></div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              // Enhanced course cards
-              featuredCourses.map((course: Course, index: number) => (
-                <div 
-                  key={course.id} 
-                  className="group relative overflow-hidden rounded-2xl bg-white p-6 shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-1 dark:bg-gray-800"
-                  style={{ animationDelay: `${index * 100}ms` }}
-                >
-                  <div className="mb-4 aspect-video overflow-hidden rounded-xl">
-                    {course.thumbnail_url ? (
-                      <img 
-                        src={course.thumbnail_url} 
-                        alt={course.title} 
-                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-800 dark:to-blue-700">
-                        <div className="text-4xl text-blue-400 dark:text-blue-500">🎓</div>
-                      </div>
-                    )}
-                  </div>
-                  <h3 className="mb-3 text-xl font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                    {course.title}
-                  </h3>
-                  <p className="mb-4 line-clamp-2 text-gray-600 dark:text-gray-300">
-                    {course.description}
-                  </p>
-                  <div className="flex items-center justify-between">
-                    {/* Price removed from schema */}
-                    <Link
-                      href={`/courses/${course.id}`}
-                      className="inline-flex h-10 items-center justify-center rounded-full bg-gradient-to-r from-blue-600 to-blue-800 px-6 text-sm font-semibold text-white transition-all duration-300 hover:from-blue-700 hover:to-blue-900 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            {loading
+              ? // Enhanced loading placeholders with shimmer effect
+                Array(3)
+                  .fill(0)
+                  .map((_, i) => (
+                    <div
+                      key={`loading-${i}`}
+                      className="group relative overflow-hidden rounded-2xl bg-white p-6 shadow-lg transition-all duration-300 hover:shadow-xl dark:bg-gray-800"
                     >
-                      Découvrir
-                    </Link>
+                      <div className="mb-4 aspect-video animate-pulse rounded-xl bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600"></div>
+                      <div className="mb-3 h-6 w-3/4 animate-pulse rounded-md bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600"></div>
+                      <div className="mb-4 h-16 animate-pulse rounded-md bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600"></div>
+                      <div className="flex items-center justify-between">
+                        <div className="h-6 w-16 animate-pulse rounded-md bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600"></div>
+                        <div className="h-10 w-24 animate-pulse rounded-full bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600"></div>
+                      </div>
+                    </div>
+                  ))
+              : // Enhanced course cards
+                featuredCourses.map((course: Course, index: number) => (
+                  <div
+                    key={course.id}
+                    className="group relative overflow-hidden rounded-2xl bg-white p-6 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:bg-gray-800"
+                    style={{ animationDelay: `${index * 100}ms` }}
+                  >
+                    <div className="mb-4 aspect-video overflow-hidden rounded-xl">
+                      {course.thumbnail_url ? (
+                        <img
+                          src={course.thumbnail_url}
+                          alt={course.title}
+                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-800 dark:to-blue-700">
+                          <div className="text-4xl text-blue-400 dark:text-blue-500">🎓</div>
+                        </div>
+                      )}
+                    </div>
+                    <h3 className="mb-3 text-xl font-bold text-gray-900 transition-colors group-hover:text-blue-600 dark:text-white dark:group-hover:text-blue-400">
+                      {course.title}
+                    </h3>
+                    <p className="mb-4 line-clamp-2 text-gray-600 dark:text-gray-300">
+                      {course.description}
+                    </p>
+                    <div className="flex items-center justify-between">
+                      {/* Price removed from schema */}
+                      <Link
+                        href={`/courses/${course.id}`}
+                        className="inline-flex h-10 items-center justify-center rounded-full bg-gradient-to-r from-blue-600 to-blue-800 px-6 text-sm font-semibold text-white transition-all duration-300 hover:from-blue-700 hover:to-blue-900 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                      >
+                        Découvrir
+                      </Link>
+                    </div>
                   </div>
-                </div>
-              ))
-            )}
+                ))}
           </GridLayout>
 
           <div className="text-center">
@@ -168,12 +179,15 @@ function Home() {
       </Section>
 
       {/* Features Section with Icons */}
-      <Section className="py-16 bg-blue-50 dark:bg-blue-900">
+      <Section className="bg-blue-50 py-16 dark:bg-blue-900">
         <Container maxWidth="7xl">
-          <div className="text-center mb-16">
-            <h2 className="mb-4 text-4xl font-bold text-gray-900 dark:text-white">Pourquoi les enfants adorent apprendre ici</h2>
+          <div className="mb-16 text-center">
+            <h2 className="mb-4 text-4xl font-bold text-gray-900 dark:text-white">
+              Pourquoi les enfants adorent apprendre ici
+            </h2>
             <p className="mx-auto max-w-3xl text-lg text-gray-600 dark:text-gray-300">
-              Une approche pédagogique innovante qui transforme l'apprentissage en aventure passionnante pour vos enfants.
+              Une approche pédagogique innovante qui transforme l'apprentissage en aventure
+              passionnante pour vos enfants.
             </p>
           </div>
 
@@ -182,41 +196,47 @@ function Home() {
               {
                 icon: '🎨',
                 title: 'Cours ludiques et colorés',
-                description: 'Des contenus visuels captivants et des activités amusantes créés spécialement pour les enfants du primaire.',
+                description:
+                  'Des contenus visuels captivants et des activités amusantes créés spécialement pour les enfants du primaire.',
               },
               {
                 icon: '🧩',
                 title: 'Apprentissage par le jeu',
-                description: 'Transformez l\'éducation en aventure avec des quiz interactifs, des défis et des récompenses.',
+                description:
+                  "Transformez l'éducation en aventure avec des quiz interactifs, des défis et des récompenses.",
               },
               {
                 icon: '👩‍🏫',
                 title: 'Enseignants certifiés',
-                description: 'Tous nos cours sont créés par des enseignants expérimentés du primaire et validés pédagogiquement.',
+                description:
+                  'Tous nos cours sont créés par des enseignants expérimentés du primaire et validés pédagogiquement.',
               },
               {
                 icon: '📱',
                 title: 'Accessible partout',
-                description: 'Votre enfant peut apprendre sur tablette, ordinateur ou smartphone, à la maison ou en déplacement.',
+                description:
+                  'Votre enfant peut apprendre sur tablette, ordinateur ou smartphone, à la maison ou en déplacement.',
               },
               {
                 icon: '⭐',
                 title: 'Suivi des progrès',
-                description: 'Les parents peuvent suivre les progrès de leur enfant et célébrer ses réussites ensemble.',
+                description:
+                  'Les parents peuvent suivre les progrès de leur enfant et célébrer ses réussites ensemble.',
               },
               {
                 icon: '💰',
                 title: 'Revenus pour enseignants',
-                description: 'Plateforme permettant aux enseignants de valoriser leur expertise et générer des revenus complémentaires.',
+                description:
+                  'Plateforme permettant aux enseignants de valoriser leur expertise et générer des revenus complémentaires.',
               },
             ].map((feature, i) => (
-              <div 
-                key={i} 
-                className="group relative overflow-hidden rounded-2xl bg-white p-8 shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-1 dark:bg-gray-700"
+              <div
+                key={i}
+                className="group relative overflow-hidden rounded-2xl bg-white p-8 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:bg-gray-700"
                 style={{ animationDelay: `${i * 100}ms` }}
               >
                 <div className="mb-4 text-4xl">{feature.icon}</div>
-                <h3 className="mb-3 text-xl font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                <h3 className="mb-3 text-xl font-bold text-gray-900 transition-colors group-hover:text-blue-600 dark:text-white dark:group-hover:text-blue-400">
                   {feature.title}
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300">{feature.description}</p>
@@ -227,59 +247,80 @@ function Home() {
       </Section>
 
       {/* Teacher Section */}
-      <Section className="py-16 bg-gradient-to-r from-blue-100 to-indigo-200 dark:from-blue-800 dark:to-indigo-800">
+      <Section className="bg-gradient-to-r from-blue-100 to-indigo-200 py-16 dark:from-blue-800 dark:to-indigo-800">
         <Container maxWidth="7xl">
-          <div className="text-center mb-16">
-            <h2 className="mb-4 text-4xl font-bold text-gray-900 dark:text-white">Enseignants : Partagez votre passion et générez des revenus</h2>
+          <div className="mb-16 text-center">
+            <h2 className="mb-4 text-4xl font-bold text-gray-900 dark:text-white">
+              Enseignants : Partagez votre passion et générez des revenus
+            </h2>
             <p className="mx-auto max-w-3xl text-lg text-gray-600 dark:text-gray-300">
-              Transformez votre expertise pédagogique en une source de revenus complémentaires tout en aidant des milliers d'enfants à apprendre.
+              Transformez votre expertise pédagogique en une source de revenus complémentaires tout
+              en aidant des milliers d'enfants à apprendre.
             </p>
           </div>
 
           <GridLayout columns={{ default: 1, lg: 2 }} gap="gap-12" className="items-center">
             <div className="space-y-6">
               <div className="flex items-start space-x-4">
-                <div className="flex-shrink-0 w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center">
-                  <span className="text-white text-xl">💡</span>
+                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-500">
+                  <span className="text-xl text-white">💡</span>
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Créez vos cours en ligne</h3>
-                  <p className="text-gray-600 dark:text-gray-300">Utilisez vos méthodes pédagogiques éprouvées pour créer des cours vidéo engageants.</p>
+                  <h3 className="mb-2 text-xl font-bold text-gray-900 dark:text-white">
+                    Créez vos cours en ligne
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-300">
+                    Utilisez vos méthodes pédagogiques éprouvées pour créer des cours vidéo
+                    engageants.
+                  </p>
                 </div>
               </div>
-              
+
               <div className="flex items-start space-x-4">
-                <div className="flex-shrink-0 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
-                  <span className="text-white text-xl">💰</span>
+                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-green-500">
+                  <span className="text-xl text-white">💰</span>
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Générez des revenus passifs</h3>
-                  <p className="text-gray-600 dark:text-gray-300">Recevez une commission sur chaque inscription à vos cours, créant un revenu durable.</p>
+                  <h3 className="mb-2 text-xl font-bold text-gray-900 dark:text-white">
+                    Générez des revenus passifs
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-300">
+                    Recevez une commission sur chaque inscription à vos cours, créant un revenu
+                    durable.
+                  </p>
                 </div>
               </div>
-              
+
               <div className="flex items-start space-x-4">
-                <div className="flex-shrink-0 w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center">
-                  <span className="text-white text-xl">🌟</span>
+                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-purple-500">
+                  <span className="text-xl text-white">🌟</span>
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Valorisez votre expertise</h3>
-                  <p className="text-gray-600 dark:text-gray-300">Construisez votre réputation et montrez vos compétences pédagogiques à un large public.</p>
+                  <h3 className="mb-2 text-xl font-bold text-gray-900 dark:text-white">
+                    Valorisez votre expertise
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-300">
+                    Construisez votre réputation et montrez vos compétences pédagogiques à un large
+                    public.
+                  </p>
                 </div>
               </div>
             </div>
-            
+
             <div className="text-center lg:text-left">
-              <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-xl">
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Rejoignez notre équipe d'enseignants</h3>
-                <p className="text-gray-600 dark:text-gray-300 mb-6">
-                  Nous recherchons des enseignants passionnés pour enrichir notre catalogue de cours. 
-                  Bénéficiez d'un support technique complet et d'une plateforme optimisée pour l'enseignement.
+              <div className="rounded-2xl bg-white p-8 shadow-xl dark:bg-gray-800">
+                <h3 className="mb-4 text-2xl font-bold text-gray-900 dark:text-white">
+                  Rejoignez notre équipe d'enseignants
+                </h3>
+                <p className="mb-6 text-gray-600 dark:text-gray-300">
+                  Nous recherchons des enseignants passionnés pour enrichir notre catalogue de
+                  cours. Bénéficiez d'un support technique complet et d'une plateforme optimisée
+                  pour l'enseignement.
                 </p>
                 <div className="space-y-3">
                   <Link
                     href="/signup"
-                    className="w-full inline-flex h-12 items-center justify-center rounded-full bg-gradient-to-r from-blue-600 to-blue-700 px-8 text-base font-semibold text-white transition-all duration-300 hover:from-blue-700 hover:to-blue-800 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    className="inline-flex h-12 w-full items-center justify-center rounded-full bg-gradient-to-r from-blue-600 to-blue-700 px-8 text-base font-semibold text-white transition-all duration-300 hover:from-blue-700 hover:to-blue-800 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                   >
                     Devenir enseignant partenaire
                   </Link>
@@ -294,10 +335,12 @@ function Home() {
       </Section>
 
       {/* Call to Action Section */}
-      <Section className="py-16 bg-gradient-to-r from-blue-600 to-blue-800 text-center text-white">
+      <Section className="bg-gradient-to-r from-blue-600 to-blue-800 py-16 text-center text-white">
         <Container maxWidth="2xl">
           <h2 className="mb-4 text-4xl font-bold">
-            {user ? 'Continuez l\'aventure d\'apprentissage' : 'Offrez à votre enfant le meilleur de l\'éducation'}
+            {user
+              ? "Continuez l'aventure d'apprentissage"
+              : "Offrez à votre enfant le meilleur de l'éducation"}
           </h2>
           <p className="mx-auto mb-8 max-w-3xl text-xl text-blue-100">
             {user
@@ -313,12 +356,14 @@ function Home() {
                 >
                   Découvrir les cours
                 </Link>
-                <Link
-                  href="/payment"
-                  className="inline-flex h-12 items-center justify-center rounded-full bg-gradient-to-r from-green-500 to-green-600 px-8 text-base font-semibold text-white transition-all duration-300 hover:from-green-600 hover:to-green-700 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-                >
-                  Mon abonnement
-                </Link>
+                {isStudent && (
+                  <Link
+                    href="/payment"
+                    className="inline-flex h-12 items-center justify-center rounded-full bg-gradient-to-r from-green-500 to-green-600 px-8 text-base font-semibold text-white transition-all duration-300 hover:from-green-600 hover:to-green-700 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                  >
+                    Mon abonnement
+                  </Link>
+                )}
               </>
             ) : (
               <>
