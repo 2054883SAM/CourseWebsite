@@ -16,6 +16,9 @@ import { useRouter } from 'next/navigation';
 const navigation = [
   { name: 'Accueil', href: '/' },
   { name: 'Cours', href: '/courses' },
+  { name: 'Membership', href: '/payment' },
+  { name: 'À propos', href: '/about' },
+  { name: 'Professeurs', href: '/teachers' },
 ];
 
 export function Header() {
@@ -99,16 +102,9 @@ export function Header() {
   const getNavItems = () => {
     const baseItems = [...navigation];
 
-    // Add "My Learning" only for authenticated non-admin users with an active (subscribed) membership
+    // Add "Mes formations" for authenticated users with subscribed membership
     if (user && dbUser?.role !== 'admin' && dbUser?.membership === 'subscribed') {
-      baseItems.splice(2, 0, { name: 'Mes formations', href: '/my-learning' });
-    }
-
-    // Add "Membership" for users not signed in or students with free membership
-    if (!user || (dbUser?.role === 'student' && dbUser?.membership === 'free')) {
-      if (!baseItems.some((item) => item.href === '/payment')) {
-        baseItems.push({ name: 'Membership', href: '/payment' });
-      }
+      baseItems.push({ name: 'Mes formations', href: '/my-learning' });
     }
 
     return baseItems;
@@ -116,10 +112,8 @@ export function Header() {
 
   return (
     <header
-      className={`sticky top-0 z-40 transition-all duration-300 ${
-        isScrolled
-          ? 'border-b border-blue-200 bg-white/90 shadow-lg backdrop-blur-sm dark:border-blue-800 dark:bg-black/90'
-          : 'border-b border-blue-200 bg-white dark:border-blue-800 dark:bg-black'
+      className={`sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm transition-all duration-300 ${
+        isScrolled ? 'shadow-lg' : ''
       }`}
       role="banner"
     >
@@ -136,8 +130,8 @@ export function Header() {
                 <ActiveLink
                   key={item.name}
                   href={item.href}
-                  className="text-gray-700 transition-colors duration-200 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400"
-                  activeClassName="text-blue-600 dark:text-blue-400 font-medium"
+                  className="text-[#1D4ED8] hover:text-blue-700 font-medium transition-colors duration-200 hover:underline decoration-2 underline-offset-4"
+                  activeClassName="text-blue-700 font-semibold"
                 >
                   {item.name}
                 </ActiveLink>
@@ -234,13 +228,13 @@ export function Header() {
                 <div className="flex items-center space-x-4">
                   <Link
                     href="/signin"
-                    className="text-gray-700 transition-colors duration-200 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400"
+                    className="text-[#1D4ED8] hover:text-blue-700 font-medium transition-colors duration-200"
                   >
                     Se connecter
                   </Link>
                   <Link
                     href="/signup"
-                    className="inline-flex h-10 items-center justify-center rounded-full border border-blue-500 bg-black px-6 text-sm font-semibold text-white transition-all duration-300 hover:border-blue-400 hover:bg-gray-800 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    className="inline-flex h-10 items-center justify-center rounded-lg bg-[#1D4ED8] px-4 py-2 text-sm font-semibold text-white transition-all duration-300 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                   >
                     S&apos;inscrire
                   </Link>
@@ -305,7 +299,7 @@ export function Header() {
       <div
         id="mobile-menu"
         ref={mobileMenuRef}
-        className={`fixed inset-0 z-50 transform bg-white transition-transform duration-300 ease-in-out dark:bg-black md:hidden ${
+        className={`fixed inset-0 z-50 transform bg-white transition-transform duration-300 ease-in-out md:hidden ${
           mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
         aria-hidden={!mobileMenuOpen}
@@ -379,7 +373,7 @@ export function Header() {
               <Link
                 key={item.name}
                 href={item.href}
-                className="block border-b border-blue-200 py-3 text-base font-medium text-gray-900 transition-colors duration-200 dark:border-blue-800 dark:text-gray-100"
+                className="block border-b border-gray-200 py-3 text-base font-medium text-[#1D4ED8] transition-colors duration-200 hover:text-blue-700"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 {item.name}
@@ -408,14 +402,14 @@ export function Header() {
             <div className="mt-8 space-y-4">
               <Link
                 href="/signin"
-                className="flex h-12 w-full items-center justify-center rounded-full border border-blue-500 bg-black px-4 text-sm font-semibold text-white transition-all duration-300 hover:border-blue-400 hover:bg-gray-800 hover:shadow-lg"
+                className="flex h-12 w-full items-center justify-center rounded-lg border border-[#1D4ED8] px-4 text-sm font-semibold text-[#1D4ED8] transition-all duration-300 hover:bg-[#1D4ED8] hover:text-white"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Se connecter
               </Link>
               <Link
                 href="/signup"
-                className="flex h-12 w-full items-center justify-center rounded-full border-2 border-blue-300 px-4 text-sm font-semibold text-gray-700 transition-all duration-300 hover:border-blue-500 hover:text-blue-600 dark:border-blue-600 dark:text-gray-300 dark:hover:border-blue-400 dark:hover:text-blue-400"
+                className="flex h-12 w-full items-center justify-center rounded-lg bg-[#1D4ED8] px-4 text-sm font-semibold text-white transition-all duration-300 hover:bg-blue-700"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 S&apos;inscrire
