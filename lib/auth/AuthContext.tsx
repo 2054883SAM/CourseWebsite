@@ -18,6 +18,10 @@ interface AuthContextType {
     password: string,
     name: string
   ) => Promise<{ error: Error | null; requiresEmailConfirmation: boolean; email?: string | null }>;
+  signInWithProvider: (
+    provider: 'google' | 'apple',
+    redirectTo?: string
+  ) => Promise<{ error: Error | null }>;
   checkPermission: (requiredRole: string) => boolean;
 }
 
@@ -210,6 +214,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const signInWithProvider = async (
+    provider: 'google' | 'apple',
+    redirectTo?: string
+  ): Promise<{ error: Error | null }> => {
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: redirectTo ?? `${window.location.origin}/`,
+          queryParams: provider === 'google' ? { prompt: 'select_account' } : undefined,
+        },
+      });
+
+      if (error) throw error;
+
+      // data.url exists for OAuth redirect; Supabase will navigate automatically
+      return { error: null };
+    } catch (error) {
+      console.error('OAuth sign-in error:', error);
+      return { error: error as Error };
+    }
+  };
+
   // Fonction pour vérifier le rôle
   const checkPermission = (requiredRole: string) => {
     const role = dbUser?.role;
@@ -222,7 +249,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, dbUser, loading, signIn, signOut, signUp, checkPermission }}
+      value={{ user, dbUser, loading, signIn, signOut, signUp, signInWithProvider, checkPermission }}
     >
       {children}
     </AuthContext.Provider>
