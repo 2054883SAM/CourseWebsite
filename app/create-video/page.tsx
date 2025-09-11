@@ -29,10 +29,7 @@ export default function CreateVideoPage() {
     primary_language: 'fr' as 'fr' | 'en' | 'es',
     // Nouveaux champs
     ceQueVousAllezApprendre: '',
-    prerequis: '',
-    publicCible: '',
     dureeEstimee: '',
-    niveauDifficulte: 'debutant' as 'debutant' | 'intermediaire' | 'avance',
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -658,7 +655,6 @@ export default function CreateVideoPage() {
         creator_id: user.id,
         is_featured: formData.isFeatured,
         ce_que_vous_allez_apprendre: formData.ceQueVousAllezApprendre || null,
-        niveau_difficulte: formData.niveauDifficulte,
       };
 
       let { data: course, error: courseError } = await supabase
@@ -802,10 +798,7 @@ export default function CreateVideoPage() {
         thumbnailDescription: '',
         primary_language: 'fr',
         ceQueVousAllezApprendre: '',
-        prerequis: '',
-        publicCible: '',
         dureeEstimee: '',
-        niveauDifficulte: 'debutant',
       });
       setSelectedThumbnail(null);
       setThumbnailPreview('');
@@ -981,21 +974,7 @@ export default function CreateVideoPage() {
                     </select>
                   </div>
 
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Niveau de difficulté
-                    </label>
-                    <select
-                      name="niveauDifficulte"
-                      value={formData.niveauDifficulte}
-                      onChange={handleInputChange}
-                      className="w-full rounded-xl border border-gray-300 px-4 py-3 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                    >
-                      <option value="debutant">Débutant</option>
-                      <option value="intermediaire">Intermédiaire</option>
-                      <option value="avance">Avancé</option>
-                    </select>
-                  </div>
+                  {/* Niveau de difficulté removed */}
 
                   <div className="md:col-span-2">
                     <label className="flex items-center">
@@ -1036,33 +1015,7 @@ export default function CreateVideoPage() {
                     />
                   </div>
 
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Prérequis
-                    </label>
-                    <textarea
-                      name="prerequis"
-                      value={formData.prerequis}
-                      onChange={handleInputChange}
-                      rows={3}
-                      className="w-full rounded-xl border border-gray-300 px-4 py-3 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                      placeholder="Quelles connaissances préalables sont nécessaires ?"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Public cible
-                    </label>
-                    <textarea
-                      name="publicCible"
-                      value={formData.publicCible}
-                      onChange={handleInputChange}
-                      rows={2}
-                      className="w-full rounded-xl border border-gray-300 px-4 py-3 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                      placeholder="À qui s'adresse ce cours ?"
-                    />
-                  </div>
+                  {/* Prérequis and Public cible removed */}
                 </div>
               </div>
 

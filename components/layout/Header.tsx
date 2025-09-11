@@ -107,7 +107,7 @@ export function Header() {
     // Add "Membership" for users not signed in or students with free membership
     if (!user || (dbUser?.role === 'student' && dbUser?.membership === 'free')) {
       if (!baseItems.some((item) => item.href === '/payment')) {
-        baseItems.push({ name: 'Membership', href: '/payment' });
+        baseItems.push({ name: 'Abonnement', href: '/payment' });
       }
     }
 

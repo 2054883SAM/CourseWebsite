@@ -6,23 +6,13 @@ import { supabase } from '../supabase/client';
  */
 export async function validateToken(): Promise<boolean> {
   try {
-    const { data: { session }, error } = await supabase.auth.getSession();
-    
-    if (error || !session) {
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+    if (error || !user) {
       return false;
     }
-
-    // Check if session is expired
-    if (session.expires_at) {
-      const expiresAt = typeof session.expires_at === 'number' 
-        ? session.expires_at * 1000 // Convert seconds to milliseconds
-        : new Date(session.expires_at).getTime();
-      
-      if (expiresAt < Date.now()) {
-        return false;
-      }
-    }
-
     return true;
   } catch (error) {
     console.error('Token validation error:', error);
@@ -36,7 +26,10 @@ export async function validateToken(): Promise<boolean> {
  */
 export async function refreshToken(): Promise<{ success: boolean; error: Error | null }> {
   try {
-    const { data: { session }, error } = await supabase.auth.refreshSession();
+    const {
+      data: { session },
+      error,
+    } = await supabase.auth.refreshSession();
 
     if (error) {
       return { success: false, error };
@@ -49,9 +42,9 @@ export async function refreshToken(): Promise<{ success: boolean; error: Error |
     return { success: true, error: null };
   } catch (error) {
     console.error('Token refresh error:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error : new Error('Failed to refresh token') 
+    return {
+      success: false,
+      error: error instanceof Error ? error : new Error('Failed to refresh token'),
     };
   }
-} 
+}

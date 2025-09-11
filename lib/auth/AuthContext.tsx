@@ -56,21 +56,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     console.log('Looking for cookie format:', expectedCookieName);
 
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
+    // Get initial authenticated user (validated)
+    supabase.auth.getUser().then(({ data: { user }, error }) => {
       if (error) {
-        console.error('Error getting initial session:', error);
+        console.error('Error getting initial user:', error);
       }
 
       console.log(
-        'Initial auth session:',
-        session ? 'Present' : 'None',
-        session ? `(User: ${session.user.email})` : ''
+        'Initial auth user:',
+        user ? 'Present' : 'None',
+        user ? `(User: ${user.email})` : ''
       );
 
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchDbUser(session.user.id);
+      setUser(user ?? null);
+      if (user) {
+        fetchDbUser(user.id);
       } else {
         setLoading(false);
       }
@@ -79,12 +79,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       console.log('Auth state change event:', _event);
       console.log('Session after event:', session ? 'Present' : 'None');
 
       setUser(session?.user ?? null);
       if (session?.user) {
+        // Ensure server-side cookies are kept in sync when we sign in or refresh tokens
+        if (_event === 'SIGNED_IN' || _event === 'TOKEN_REFRESHED') {
+          try {
+            await fetch('/api/auth/cookie', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                access_token: session.access_token,
+                refresh_token: session.refresh_token,
+              }),
+              credentials: 'include',
+            });
+          } catch (e) {
+            console.warn('Failed to sync auth cookies on state change:', e);
+          }
+        }
         fetchDbUser(session.user.id);
       } else {
         setDbUser(null);
@@ -124,13 +140,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         password,
       });
 
-      console.log('Sign in response:', {
-        success: !error,
-        session: data.session ? 'Present' : 'Missing',
-        user: data.user ? `${data.user.email}` : 'Missing',
-        error: error?.message,
-      });
-
       if (data.session) {
         // Manually ensure the session is stored properly
         // await supabase.auth.setSession({
@@ -146,15 +155,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }),
           credentials: 'include',
         });
-
-        // Verify cookies after sign in
-        console.log(
-          'Cookies after sign in:',
-          document.cookie
-            .split(';')
-            .map((c) => c.trim())
-            .filter((c) => c.startsWith('sb-') || c.includes('supabase'))
-        );
       }
 
       return { error: error };
@@ -249,7 +249,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, dbUser, loading, signIn, signOut, signUp, signInWithProvider, checkPermission }}
+      value={{
+        user,
+        dbUser,
+        loading,
+        signIn,
+        signOut,
+        signUp,
+        signInWithProvider,
+        checkPermission,
+      }}
     >
       {children}
     </AuthContext.Provider>

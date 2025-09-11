@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Database } from '@/types/supabase';
 import { Course } from '@/lib/supabase/types';
-import { getPaddleClient } from '@/lib/paddle/client';
 import { createRouteHandlerClient } from '@/lib/supabase/server';
 
 // Function to check if a user is already enrolled in a course
@@ -77,8 +76,11 @@ export async function POST(req: NextRequest, context: { params: { courseId: stri
         authorization: req.headers.has('authorization') ? 'Present' : 'Missing',
       });
 
-      // Get the authenticated user session
-      const { data, error } = await supabase.auth.getSession();
+      // Get the authenticated user (validated by Supabase Auth server)
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser();
 
       if (error) {
         console.error('API: Authentication error:', error);
@@ -88,7 +90,7 @@ export async function POST(req: NextRequest, context: { params: { courseId: stri
         );
       }
 
-      if (!data.session) {
+      if (!user) {
         console.error('API: No active session found');
         return NextResponse.json(
           { error: 'Authentication required. Please sign in.', authRequired: true },
@@ -96,12 +98,12 @@ export async function POST(req: NextRequest, context: { params: { courseId: stri
         );
       }
 
-      // Get the user ID from the session
-      const userId = data.session.user.id;
+      // Get the authenticated user ID
+      const userId = user.id;
       console.log('API: Authenticated user ID:', userId);
 
       // Get the user data including role
-      const { data: user, error: userError } = await supabase
+      const { data: userRow, error: userError } = await supabase
         .from('users')
         .select('role')
         .eq('id', userId)
@@ -112,7 +114,7 @@ export async function POST(req: NextRequest, context: { params: { courseId: stri
         return NextResponse.json({ error: 'Error fetching user data' }, { status: 500 });
       }
 
-      const role = user?.role;
+      const role = userRow?.role;
       console.log('API: User role:', role);
 
       // Check if user role allows enrollment (student or higher roles)
@@ -138,33 +140,8 @@ export async function POST(req: NextRequest, context: { params: { courseId: stri
       // Generate a unique client reference ID for this purchase (to prevent duplicate charges)
       const clientReferenceId = `${userId}_${courseId}_${Date.now()}`;
 
-      // Get Paddle API client
-      const paddle = getPaddleClient();
-
-      // Create checkout data response (use global price ID if configured)
-      const priceId = process.env.NEXT_PUBLIC_PADDLE_COURSE_PRICE_ID;
-      if (!priceId) {
-        console.warn('API: NEXT_PUBLIC_PADDLE_COURSE_PRICE_ID is not set; cannot open checkout.');
-      }
-      return NextResponse.json({
-        success: true,
-        checkoutData: priceId
-          ? {
-              priceId,
-              title: course.title,
-              courseId: course.id,
-              clientReferenceId,
-              userId,
-              passthrough: JSON.stringify({ courseId: course.id, userId, clientReferenceId }),
-              successUrl: `${req.nextUrl.origin}/courses/${courseId}?enrollment=success`,
-              cancelUrl: `${req.nextUrl.origin}/courses/${courseId}?enrollment=cancelled`,
-            }
-          : undefined,
-        paddleConfig: {
-          sellerId: paddle.sellerId,
-          sandboxMode: paddle.sandboxMode,
-        },
-      });
+      // Paddle removed: simply indicate that server-side is ready
+      return NextResponse.json({ success: true });
     } catch (authError: any) {
       console.error('Authentication error:', authError);
 

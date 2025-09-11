@@ -16,23 +16,23 @@ export async function POST(request: NextRequest) {
     // Create authenticated supabase client
     const supabase = await createRouteHandlerClient();
 
-    // Get the current user
+    // Get the current user (validated)
     const {
-      data: { session },
-      error: sessionError,
-    } = await supabase.auth.getSession();
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
 
-    if (sessionError || !session) {
-      console.error('Authentication error:', sessionError);
+    if (userError || !user) {
+      console.error('Authentication error:', userError);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    console.log('User authenticated:', session.user.id);
+    console.log('User authenticated:', user.id);
     console.log('Progress data:', { courseId, sectionId, progressPercentage, completed });
 
     // Prepare progress data
     const progressData: any = {
-      user_id: session.user.id,
+      user_id: user.id,
       course_id: courseId,
       section_id: sectionId,
       progress_percentage: Math.min(100, Math.max(0, progressPercentage)),
@@ -94,20 +94,20 @@ export async function GET(request: NextRequest) {
     // Create authenticated supabase client
     const supabase = await createRouteHandlerClient();
 
-    // Get the current user
+    // Get the current user (validated)
     const {
-      data: { session },
-      error: sessionError,
-    } = await supabase.auth.getSession();
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
 
-    if (sessionError || !session) {
+    if (userError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     let query = supabase
       .from('section_progress')
       .select('*')
-      .eq('user_id', session.user.id)
+      .eq('user_id', user.id)
       .eq('course_id', courseId);
 
     if (sectionId) {

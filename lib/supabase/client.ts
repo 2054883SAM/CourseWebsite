@@ -82,14 +82,9 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, 
 
 // Only run client-side initialization code in browser context
 if (!isServer) {
-  // 1) Restore in-memory session from localStorage on load
-  supabase.auth.getSession().then(({ data: { session } }) => {
-    if (session) {
-      supabase.auth.setSession({
-        access_token: session.access_token,
-        refresh_token: session.refresh_token,
-      });
-    }
+  // 1) Optionally ensure auth state is consistent (no need to trust stored session blindly)
+  supabase.auth.getUser().then(() => {
+    // noop: calling getUser() will contact Auth server if needed
   });
 
   // 2) Tell your app when things change (SIGN_IN, TOKEN_REFRESHED, SIGN_OUT)
@@ -112,7 +107,7 @@ if (!isServer) {
  */
 export async function ensureValidSession(): Promise<any> {
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  return session;
+    data: { user },
+  } = await supabase.auth.getUser();
+  return user ? { user } : null;
 }

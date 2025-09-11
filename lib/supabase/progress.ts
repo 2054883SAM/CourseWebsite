@@ -65,26 +65,26 @@ export async function updateSectionProgress(
       completed,
     });
 
-    // Check if user is authenticated
+    // Check if user is authenticated (validated by Auth server)
     const {
-      data: { session },
-      error: sessionError,
-    } = await supabase.auth.getSession();
-    if (sessionError || !session) {
-      console.error('Authentication error:', sessionError);
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+    if (userError || !user) {
+      console.error('Authentication error:', userError);
       throw new Error('User not authenticated');
     }
 
-    console.log('User is authenticated:', session.user.id);
+    console.log('User is authenticated:', user.id);
 
     // Ensure the userId matches the authenticated user
-    if (session.user.id !== userId) {
-      console.error('User ID mismatch:', { sessionUserId: session.user.id, passedUserId: userId });
+    if (user.id !== userId) {
+      console.error('User ID mismatch:', { sessionUserId: user.id, passedUserId: userId });
       throw new Error('User ID mismatch');
     }
 
     const progressData = {
-      user_id: session.user.id, // Use the authenticated user ID
+      user_id: user.id, // Use the authenticated user ID
       course_id: courseId,
       section_id: sectionId,
       progress_percentage: Math.min(100, Math.max(0, progressPercentage)),

@@ -6,23 +6,23 @@ export async function POST(req: NextRequest) {
     const { courseId } = await req.json();
 
     if (!courseId) {
-      return NextResponse.json(
-        { error: 'Missing required field: courseId' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Missing required field: courseId' }, { status: 400 });
     }
 
     const supabase = await createRouteHandlerClient();
 
-    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-    if (sessionError || !sessionData.session) {
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+    if (userError || !user) {
       return NextResponse.json(
         { error: 'Authentication required. Please sign in.' },
         { status: 401 }
       );
     }
 
-    const userId = sessionData.session.user.id;
+    const userId = user.id;
 
     console.log('Course ID:', courseId);
     console.log('User ID:', userId);
@@ -43,10 +43,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (!enrollment?.id) {
-      return NextResponse.json(
-        { error: 'Enrollment record not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Enrollment record not found' }, { status: 404 });
     }
 
     // 2) Delete by id and return representation to confirm deletion
@@ -90,5 +87,3 @@ export async function POST(req: NextRequest) {
     );
   }
 }
-
-

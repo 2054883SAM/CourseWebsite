@@ -5,14 +5,17 @@ import { createRouteHandlerClient } from '@/lib/supabase/server';
 export async function POST(req: NextRequest) {
   try {
     const supabase = await createRouteHandlerClient();
-    const { data, error } = await supabase.auth.getSession();
-    if (error || !data.session?.user) {
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+    if (error || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const stripe = getStripeServerClient();
 
-    const customerEmail = data.session.user.email || undefined;
+    const customerEmail = user.email || undefined;
     if (!customerEmail) {
       return NextResponse.json({ error: 'Missing customer email' }, { status: 400 });
     }
@@ -23,7 +26,7 @@ export async function POST(req: NextRequest) {
     if (!customerId) {
       const created = await stripe.customers.create({
         email: customerEmail,
-        metadata: { userId: data.session.user.id, app: 'CourseWebsite' },
+        metadata: { userId: user.id, app: 'CourseWebsite' },
       });
       customerId = created.id;
     }

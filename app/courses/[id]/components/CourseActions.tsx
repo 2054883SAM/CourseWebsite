@@ -13,7 +13,10 @@ interface CourseActionsProps {
   initialEnrollmentStatus?: 'enrolled' | 'not-enrolled' | 'processing';
 }
 
-export function CourseActions({ course, initialEnrollmentStatus = 'not-enrolled' }: CourseActionsProps) {
+export function CourseActions({
+  course,
+  initialEnrollmentStatus = 'not-enrolled',
+}: CourseActionsProps) {
   const { user, dbUser, loading: authLoading } = useAuth();
   const router = useRouter();
   const [enrollmentStatus, setEnrollmentStatus] = useState<
@@ -39,162 +42,9 @@ export function CourseActions({ course, initialEnrollmentStatus = 'not-enrolled'
     }
   }, [initialEnrollmentStatus]);
 
-  // Load Paddle.js when component mounts - using the approach from payment-test-client.tsx
+  // Paddle removed
   useEffect(() => {
-    const initializePaddle = async () => {
-      return new Promise((resolve, reject) => {
-        // Check if Paddle is already loaded
-        if (window.Paddle) {
-          console.log('Paddle already loaded');
-          resolve(window.Paddle);
-          return;
-        }
-
-        // Create and append the script
-        const script = document.createElement('script');
-        script.src = 'https://cdn.paddle.com/paddle/v2/paddle.js';
-        script.async = true;
-        script.defer = true;
-
-        script.onload = () => {
-          console.log('Paddle script loaded');
-          resolve(window.Paddle);
-        };
-
-        script.onerror = () => {
-          console.error('Failed to load Paddle script');
-          reject(new Error('Failed to load Paddle script'));
-        };
-
-        document.head.appendChild(script);
-      });
-    };
-
-    // Function to configure Paddle after it's loaded
-    const setupPaddle = async () => {
-      try {
-        // Load Paddle script and wait for it
-        await initializePaddle();
-
-        if (!window.Paddle) {
-          console.error('Paddle failed to initialize - window.Paddle is undefined');
-          return;
-        }
-
-        console.log('Setting up Paddle');
-
-        // Set environment to sandbox if needed
-        const isSandbox = process.env.NEXT_PUBLIC_PADDLE_SANDBOX_MODE === 'true';
-        if (isSandbox) {
-          console.log('Setting sandbox environment');
-          window.Paddle.Environment.set('sandbox');
-        }
-
-        // Hard-coding sellerId for reliability
-        const sellerId = Number(34619); // Your seller ID from .env
-
-        console.log('Initializing Paddle with seller ID:', sellerId);
-
-        // Initialize Paddle with event callback for Paddle Billing (v2)
-        window.Paddle.Initialize({
-          seller: sellerId,
-          eventCallback: function(data: any) {
-            console.log('Paddle event:', data);
-            
-            // Handle checkout:completed event
-            if (data.name === 'checkout.completed') {
-              console.log('Checkout completed event received:', data);
-              
-              // Extract transaction ID for Paddle Billing v2 format
-              // The transaction ID in Paddle Billing v2 is in data.checkout.transaction_id or data.id
-              const transactionId = 
-                data?.checkout?.transaction_id || 
-                data?.data?.checkout?.transaction_id || 
-                data?.data?.id || 
-                data?.id || 
-                `paddle_${Date.now()}`;
-              console.log('Transaction ID from event:', transactionId);
-
-              // Prevent duplicate handling
-              if (finalizingRef.current) {
-                return;
-              }
-              finalizingRef.current = true;
-              setEnrollmentStatus('processing');
-              setTooltipMessage('Finalisation de votre inscription...');
-
-              // After 2s, close checkout and begin enrollment record creation with a progress UI
-              setTimeout(() => {
-                try {
-                  if (typeof window !== 'undefined' && window.Paddle?.Checkout?.close) {
-                    window.Paddle.Checkout.close();
-                  }
-                } catch (e) {
-                  console.warn('Failed to programmatically close Paddle checkout:', e);
-                }
-                setShowEnrollmentProgress(true);
-
-                createEnrollmentRecord(transactionId)
-                  .then(success => {
-                    setShowEnrollmentProgress(false);
-                    if (success) {
-                      setEnrollmentStatus('enrolled');
-                      setTooltipMessage('Vous êtes inscrit à ce cours');
-                      setShowEnrollmentSuccess(true);
-                    } else {
-                      setEnrollmentStatus('not-enrolled');
-                      setErrorMessage('Nous n\'avons pas pu finaliser votre inscription. Veuillez réessayer.');
-                      setTooltipMessage('Cliquez pour réessayer l\'inscription');
-                    }
-                  })
-                  .catch(error => {
-                    console.error('Error creating enrollment from event:', error);
-                    setShowEnrollmentProgress(false);
-                    setEnrollmentStatus('not-enrolled');
-                    setErrorMessage('Une erreur s\'est produite lors de la finalisation de votre inscription.');
-                    setTooltipMessage('Cliquez pour réessayer l\'inscription');
-                  })
-                  .finally(() => {
-                    finalizingRef.current = false;
-                  });
-              }, 2000);
-            }
-            
-            // Handle checkout:closed event
-            if (data.name === 'checkout.closed') {
-              console.log('Checkout closed event received');
-              // If we closed it programmatically to finalize enrollment, don't override state
-              if (finalizingRef.current || showEnrollmentProgress) {
-                return;
-              }
-              setEnrollmentStatus('not-enrolled');
-              setTooltipMessage('Cliquez pour réessayer l\'inscription');
-            }
-            
-            // Handle checkout:error event
-            if (data.name === 'checkout.error') {
-              console.error('Checkout error event received:', data);
-              setEnrollmentStatus('not-enrolled');
-              setErrorMessage('Une erreur s\'est produite lors du paiement. Veuillez réessayer.');
-              setTooltipMessage('Cliquez pour réessayer l\'inscription');
-            }
-          }
-        });
-
-        console.log('Paddle setup complete');
-        setPaddleLoaded(true);
-      } catch (error) {
-        console.error('Error setting up Paddle:', error);
-        setErrorMessage('Le système de paiement n\'a pas pu être initialisé. Veuillez réessayer plus tard.');
-      }
-    };
-
-    // Run the setup when in browser environment
-    if (typeof window !== 'undefined') {
-      setupPaddle();
-    }
-
-    // No cleanup needed
+    setPaddleLoaded(false);
   }, []);
 
   // Check enrollment eligibility when user or course changes, but only if initialEnrollmentStatus is not provided
@@ -203,7 +53,7 @@ export function CourseActions({ course, initialEnrollmentStatus = 'not-enrolled'
     if (initialEnrollmentStatus && isEnrollmentChecked) {
       return;
     }
-    
+
     const checkEligibility = async () => {
       if (!course?.id) return;
 
@@ -249,7 +99,11 @@ export function CourseActions({ course, initialEnrollmentStatus = 'not-enrolled'
 
       // If API responded with non-2xx, double-check for idempotent success cases
       if (!response.ok) {
-        console.warn('API response not OK. Inspecting payload for success-like states:', response.status, data);
+        console.warn(
+          'API response not OK. Inspecting payload for success-like states:',
+          response.status,
+          data
+        );
         if (data?.success || data?.alreadyEnrolled) {
           console.log('Treating non-OK response as success due to payload flags');
           return true;
@@ -271,7 +125,7 @@ export function CourseActions({ course, initialEnrollmentStatus = 'not-enrolled'
       }
 
       console.log('Enrollment record created successfully:', data);
-      
+
       // Handle both standard success and "already enrolled" success case
       if (data.success) {
         if (data.alreadyEnrolled) {
@@ -303,7 +157,9 @@ export function CourseActions({ course, initialEnrollmentStatus = 'not-enrolled'
       } catch (verifyErr) {
         console.warn('Verification after catch failed:', verifyErr);
       }
-      setErrorMessage(`Impossible de finaliser votre inscription: ${error.message}. Veuillez contacter le support.`);
+      setErrorMessage(
+        `Impossible de finaliser votre inscription: ${error.message}. Veuillez contacter le support.`
+      );
       return false;
     }
   };
@@ -313,7 +169,9 @@ export function CourseActions({ course, initialEnrollmentStatus = 'not-enrolled'
     const usingMock = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
     const looksLikeUuid = typeof course.id === 'string' && /^[0-9a-fA-F-]{36}$/.test(course.id);
     if (usingMock || !looksLikeUuid) {
-      setErrorMessage('L\'inscription est désactivée en mode maquette ou pour un identifiant de cours invalide.');
+      setErrorMessage(
+        "L'inscription est désactivée en mode maquette ou pour un identifiant de cours invalide."
+      );
       setTooltipMessage('Mode données factices détecté');
       return;
     }
@@ -350,17 +208,12 @@ export function CourseActions({ course, initialEnrollmentStatus = 'not-enrolled'
         }
       } catch (e: any) {
         setEnrollmentStatus('not-enrolled');
-        setErrorMessage(e?.message || 'Une erreur s\'est produite lors de l\'inscription');
+        setErrorMessage(e?.message || "Une erreur s'est produite lors de l'inscription");
       }
       return;
     }
 
-    // Verify Paddle is loaded
-    if (!paddleLoaded) {
-      console.error('Paddle is not loaded yet');
-      setErrorMessage('Le système de paiement n\'est pas encore prêt. Veuillez réessayer dans un instant.');
-      return;
-    }
+    // Paddle removed: no SDK gate
 
     if (!user) {
       // Store the current course URL in session storage for redirect after login
@@ -374,8 +227,8 @@ export function CourseActions({ course, initialEnrollmentStatus = 'not-enrolled'
       !dbUser?.role ||
       (dbUser.role !== 'admin' && dbUser.role !== 'teacher' && dbUser.role !== 'student')
     ) {
-      setErrorMessage('Votre compte n\'a pas la permission de s\'inscrire aux cours');
-      console.error('Votre compte n\'a pas la permission de s\'inscrire aux cours');
+      setErrorMessage("Votre compte n'a pas la permission de s'inscrire aux cours");
+      console.error("Votre compte n'a pas la permission de s'inscrire aux cours");
       return;
     }
 
@@ -385,62 +238,7 @@ export function CourseActions({ course, initialEnrollmentStatus = 'not-enrolled'
     try {
       console.log('Initiating checkout for course:', course.id);
 
-      // Check if we have a global Paddle price ID available
-      const configuredPriceId = process.env.NEXT_PUBLIC_PADDLE_COURSE_PRICE_ID;
-      if (configuredPriceId) {
-        console.log('Using Paddle checkout with configured price ID:', configuredPriceId);
-
-        // Open Paddle checkout directly using the price ID from the course
-        if (typeof window !== 'undefined' && window.Paddle) {
-          console.log('Paddle is loaded');
-          console.log('Paddle object:', window.Paddle);
-          
-          // Setup a fallback mechanism to check enrollment status after a delay
-          const checkAfterDelay = () => {
-            console.log('Setting up fallback enrollment check');
-            setTimeout(async () => {
-              console.log('Running fallback enrollment check');
-              try {
-                const { status, message } = await verifyEnrollmentEligibility(
-                  user?.id,
-                  dbUser?.role,
-                  course.id
-                );
-                
-                if (status === 'enrolled') {
-                  console.log('Fallback check: User is enrolled');
-                  setEnrollmentStatus('enrolled');
-                  setTooltipMessage('Vous êtes inscrit à ce cours');
-                  router.refresh();
-                }
-              } catch (err) {
-                console.error('Error in fallback enrollment check:', err);
-              }
-            }, 5000); // Give webhook 5 seconds to process
-          };
-
-          // Set up checkout options using Paddle Billing v2 approach
-          window.Paddle.Checkout.open({
-            settings: {
-              displayMode: 'overlay',
-              theme: 'light',
-              frameTarget: 'paddle-checkout',
-              frameInitialHeight: 416
-            },
-            items: [
-              {
-                priceId: configuredPriceId,
-                quantity: 1,
-              },
-            ]
-          });
-          
-          // Add a fallback check as safety net
-          checkAfterDelay();
-          
-          return;
-        }
-      }
+      // Paddle direct checkout removed
 
       // Fall back to the API-based checkout if no configured price ID is available
       const result = await initiateCheckout(course.id);
@@ -468,8 +266,8 @@ export function CourseActions({ course, initialEnrollmentStatus = 'not-enrolled'
       } else {
         // Handle other checkout errors
         setEnrollmentStatus('not-enrolled');
-        setErrorMessage(result.error || 'Échec de l\'inscription');
-        setTooltipMessage('Cliquez pour réessayer l\'inscription');
+        setErrorMessage(result.error || "Échec de l'inscription");
+        setTooltipMessage("Cliquez pour réessayer l'inscription");
       }
     } catch (error: any) {
       console.error('Enrollment error:', error);
@@ -484,16 +282,17 @@ export function CourseActions({ course, initialEnrollmentStatus = 'not-enrolled'
       } else {
         // Handle other errors
         setEnrollmentStatus('not-enrolled');
-        setErrorMessage(error.message || 'Une erreur s\'est produite lors de l\'inscription');
-        setTooltipMessage('Cliquez pour réessayer l\'inscription');
+        setErrorMessage(error.message || "Une erreur s'est produite lors de l'inscription");
+        setTooltipMessage("Cliquez pour réessayer l'inscription");
       }
     }
   };
 
   // Derive total duration from course if available (fallback 0)
-  const totalDuration = typeof (course as any).duration === 'number'
-    ? Math.round(((course as any).duration as number))
-    : 0;
+  const totalDuration =
+    typeof (course as any).duration === 'number'
+      ? Math.round((course as any).duration as number)
+      : 0;
 
   // Don't show anything until enrollment is checked to prevent UI flickering
   if (!isEnrollmentChecked && !authLoading) {
@@ -526,7 +325,7 @@ export function CourseActions({ course, initialEnrollmentStatus = 'not-enrolled'
           status={enrollmentStatus}
           onClick={handleEnrollClick}
           disabled={authLoading || enrollmentStatus === 'processing'}
-          tooltipText={enrollmentStatus === 'enrolled' ? 'Aller au cours' : (!paddleLoaded ? 'Chargement du système de paiement...' : tooltipMessage)}
+          tooltipText={enrollmentStatus === 'enrolled' ? 'Aller au cours' : tooltipMessage}
           enrolledText="Regarder maintenant"
           className="w-full"
         />
@@ -597,7 +396,9 @@ export function CourseActions({ course, initialEnrollmentStatus = 'not-enrolled'
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
             <div className="mb-2 text-lg font-semibold">Vous êtes inscrit ! 🎉</div>
-            <p className="mb-6 text-sm text-gray-700">Vous avez maintenant accès à {course.title}. Commencez à apprendre dès maintenant.</p>
+            <p className="mb-6 text-sm text-gray-700">
+              Vous avez maintenant accès à {course.title}. Commencez à apprendre dès maintenant.
+            </p>
             <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
               <button
                 onClick={() => {

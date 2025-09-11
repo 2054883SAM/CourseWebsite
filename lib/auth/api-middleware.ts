@@ -11,10 +11,13 @@ interface AuthResult {
 
 export async function validateApiAuth(request: NextRequest): Promise<AuthResult> {
   console.log('API Auth: Validating authentication using createServerClient');
-  
+
   // Debug cookie information
-  console.log('API Auth: Available cookies:', Array.from(request.cookies.getAll()).map(c => c.name));
-  
+  console.log(
+    'API Auth: Available cookies:',
+    Array.from(request.cookies.getAll()).map((c) => c.name)
+  );
+
   try {
     // Create a Supabase client using the cookies from the request
     const supabase = createServerClient<Database>(
@@ -32,23 +35,27 @@ export async function validateApiAuth(request: NextRequest): Promise<AuthResult>
           },
           remove() {
             // We don't need to remove cookies in this context
-          }
+          },
         },
       }
     );
-    
-    // Get the session from the Supabase client
-    const { data, error: sessionError } = await supabase.auth.getSession();
-    const session = data.session;
-    
-    if (sessionError) {
-      console.error('Session error:', sessionError);
-      throw new Error('Error getting session: ' + sessionError.message);
+
+    // Get the authenticated user (validated by Supabase Auth server)
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError) {
+      console.error('User fetch error:', userError);
+      throw new Error('Error getting user: ' + userError.message);
     }
-    
-    if (!session) {
-      console.log('API Auth: No session found in Supabase client, checking for supabase.auth.token cookie');
-      
+
+    if (!user) {
+      console.log(
+        'API Auth: No session found in Supabase client, checking for supabase.auth.token cookie'
+      );
+
       // Check specifically for the supabase.auth.token cookie that we see in the logs
       const supabaseAuthCookie = request.cookies.get('supabase.auth.token');
       if (supabaseAuthCookie) {
@@ -56,34 +63,38 @@ export async function validateApiAuth(request: NextRequest): Promise<AuthResult>
         try {
           // Parse the cookie value - it might be a JSON string containing the token
           let tokenData = supabaseAuthCookie.value;
-          
+
           try {
             // Try to parse it as JSON
             const parsed = JSON.parse(tokenData);
             console.log('API Auth: Parsed supabase.auth.token as JSON');
-            
+
             // If it's JSON, extract the access_token
             if (parsed.access_token) {
               console.log('API Auth: Found access_token in cookie data');
               // Create a new session with this token
-              const { data: { session: newSession }, error } = await supabase.auth.setSession({
+              const {
+                data: { session: newSession },
+                error,
+              } = await supabase.auth.setSession({
                 access_token: parsed.access_token,
-                refresh_token: parsed.refresh_token || ''
+                refresh_token: parsed.refresh_token || '',
               });
-              
+
               if (error) {
                 console.error('API Auth: Error setting session from cookie token:', error);
               }
-              
+
               if (newSession) {
                 console.log('API Auth: Successfully created session from cookie token');
                 // Extract user information from the new session
                 return {
                   userId: newSession.user.id,
-                  role: newSession.user.app_metadata?.role || await fetchUserRole(newSession.user.id)
+                  role:
+                    newSession.user.app_metadata?.role || (await fetchUserRole(newSession.user.id)),
                 };
               }
-              
+
               // If we couldn't create a session but have a valid token, try to validate it manually
               return await validateToken(parsed.access_token);
             } else {
@@ -100,7 +111,7 @@ export async function validateApiAuth(request: NextRequest): Promise<AuthResult>
       } else {
         console.log('API Auth: supabase.auth.token cookie not found or empty');
       }
-      
+
       // Try getting session from authorization header as fallback
       const authHeader = request.headers.get('authorization');
       if (authHeader && authHeader.startsWith('Bearer ')) {
@@ -112,7 +123,7 @@ export async function validateApiAuth(request: NextRequest): Promise<AuthResult>
           console.error('Error validating auth header token:', err);
         }
       }
-      
+
       // Check for a token in the X-Auth-Token header (custom implementation)
       const customToken = request.headers.get('x-auth-token');
       if (customToken) {
@@ -123,24 +134,26 @@ export async function validateApiAuth(request: NextRequest): Promise<AuthResult>
           console.error('Error validating custom token:', err);
         }
       }
-      
+
       throw new Error('No auth token found');
     }
-    
-    // Extract the user ID from the session
-    console.log('API Auth: Session found, user ID:', session.user.id);
-    const userId = session.user.id;
+
+    // Extract the user ID from the validated user
+    console.log('API Auth: Authenticated user ID:', user.id);
+    const userId = user.id;
     if (!userId) {
       throw new Error('User ID not found in session');
     }
-    
+
     return {
       userId,
-      role: session.user.app_metadata?.role || await fetchUserRole(userId)
+      role: (user as any).app_metadata?.role || (await fetchUserRole(userId)),
     };
   } catch (error) {
     console.error('Authentication error:', error);
-    throw new Error('Authentication failed: ' + (error instanceof Error ? error.message : String(error)));
+    throw new Error(
+      'Authentication failed: ' + (error instanceof Error ? error.message : String(error))
+    );
   }
 
   // This section is now handled in the main function
@@ -150,22 +163,25 @@ export async function validateApiAuth(request: NextRequest): Promise<AuthResult>
 // Helper function to fetch the user's role from the database
 async function fetchUserRole(userId: string): Promise<string> {
   console.log('API Auth: Fetching role for user ID:', userId);
-  
+
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/users?select=role&id=eq.${userId}`, {
-      headers: {
-        'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
-        'apikey': process.env.SUPABASE_SERVICE_ROLE_KEY!,
-        'Content-Type': 'application/json',
-      },
-    });
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/users?select=role&id=eq.${userId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+          apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
 
     if (!response.ok) {
       throw new Error(`Failed to fetch user data: ${response.status}`);
     }
 
     const userData = await response.json();
-    
+
     if (!userData || userData.length === 0) {
       throw new Error('User not found in database');
     }
@@ -183,7 +199,7 @@ async function fetchUserRole(userId: string): Promise<string> {
 async function validateToken(token: string): Promise<AuthResult> {
   try {
     console.log('API Auth: Validating token manually');
-    
+
     // Check if token is JSON format (cookie sometimes stores as JSON)
     if (token.startsWith('{') && token.endsWith('}')) {
       try {
@@ -200,7 +216,7 @@ async function validateToken(token: string): Promise<AuthResult> {
         console.log('API Auth: Failed to parse token as JSON');
       }
     }
-    
+
     // Handle code verifier cookies which don't contain an actual token
     if (token.indexOf('.') === -1) {
       console.error('Token appears to be a code verifier, not a JWT');
@@ -225,20 +241,23 @@ async function validateToken(token: string): Promise<AuthResult> {
     console.log('User ID from authorization header token:', userId);
 
     // Fetch the user's role from the database
-    const response = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/users?select=role&id=eq.${userId}`, {
-      headers: {
-        'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
-        'apikey': process.env.SUPABASE_SERVICE_ROLE_KEY!,
-        'Content-Type': 'application/json',
-      },
-    });
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/users?select=role&id=eq.${userId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+          apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
 
     if (!response.ok) {
       throw new Error('Failed to fetch user data');
     }
 
     const userData = await response.json();
-    
+
     if (!userData || userData.length === 0) {
       throw new Error('User not found in database');
     }
@@ -248,10 +267,10 @@ async function validateToken(token: string): Promise<AuthResult> {
 
     return {
       userId,
-      role
+      role,
     };
   } catch (error) {
     console.error('Error validating token:', error);
     throw new Error('Invalid authentication token');
   }
-} 
+}

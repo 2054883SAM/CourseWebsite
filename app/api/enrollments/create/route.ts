@@ -7,10 +7,7 @@ export async function POST(req: NextRequest) {
     const { courseId } = await req.json();
 
     if (!courseId) {
-      return NextResponse.json(
-        { error: 'Missing required field: courseId' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Missing required field: courseId' }, { status: 400 });
     }
 
     console.log('API: Creating enrollment record for course:', courseId);
@@ -19,19 +16,22 @@ export async function POST(req: NextRequest) {
     // Create a Supabase client with the proper route handler
     const supabase = await createRouteHandlerClient();
 
-    // Try to authenticate the user
-    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    // Try to authenticate the user (validated by Supabase Auth server)
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
 
-    if (sessionError || !sessionData.session) {
-      console.error('API: Authentication error:', sessionError);
+    if (userError || !user) {
+      console.error('API: Authentication error:', userError);
       return NextResponse.json(
         { error: 'Authentication required. Please sign in.' },
         { status: 401 }
       );
     }
 
-    // Get the user ID from the session
-    const userId = sessionData.session.user.id;
+    // Get the authenticated user ID
+    const userId = user.id;
 
     // Fetch user membership (and role if needed)
     const { data: userRow } = await supabase
@@ -133,19 +133,18 @@ export async function POST(req: NextRequest) {
     });
   } catch (error: any) {
     console.error('API: Enrollment creation error:', error);
-    
+
     // Handle the unique constraint violation as a success case
     // This means the user is already enrolled in the course
-    if (error.code === '23505' && 
-        error.message?.includes('enrollments_user_id_course_id_key')) {
+    if (error.code === '23505' && error.message?.includes('enrollments_user_id_course_id_key')) {
       console.log('API: User already enrolled in this course, treating as success');
       return NextResponse.json({
         success: true,
         message: 'User already enrolled in this course',
-        alreadyEnrolled: true
+        alreadyEnrolled: true,
       });
     }
-    
+
     return NextResponse.json(
       { error: error.message || 'Error creating enrollment' },
       { status: 500 }

@@ -7,21 +7,26 @@ export async function POST(req: NextRequest) {
     const stripe = getStripeServerClient();
 
     // Ensure we have a price id for the subscription
-    const { priceId, trialDays } = await req.json().catch(() => ({ priceId: undefined, trialDays: undefined }));
+    const { priceId, trialDays } = await req
+      .json()
+      .catch(() => ({ priceId: undefined, trialDays: undefined }));
     const defaultPriceId = process.env.NEXT_PUBLIC_STRIPE_TEST_PRICE_ID;
     const resolvedPriceId = priceId || defaultPriceId;
     if (!resolvedPriceId) {
       return NextResponse.json({ error: 'Missing Stripe price ID' }, { status: 400 });
     }
 
-    // Auth: require session
+    // Auth: require validated user
     const supabase = await createRouteHandlerClient();
-    const { data, error } = await supabase.auth.getSession();
-    if (error || !data.session?.user) {
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+    if (error || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    const userId = data.session.user.id;
-    const customerEmail = data.session.user.email || undefined;
+    const userId = user.id;
+    const customerEmail = user.email || undefined;
 
     const origin = req.nextUrl.origin;
 
@@ -56,5 +61,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: err.message || 'Internal error' }, { status: 500 });
   }
 }
-
-

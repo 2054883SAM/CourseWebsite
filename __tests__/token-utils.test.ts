@@ -5,7 +5,7 @@ import { validateToken, refreshToken } from '@/lib/auth/token-utils';
 jest.mock('@/lib/supabase/client', () => ({
   supabase: {
     auth: {
-      getSession: jest.fn(),
+      getUser: jest.fn(),
       refreshSession: jest.fn(),
     },
   },
@@ -18,9 +18,9 @@ describe('Token Utilities', () => {
   });
 
   describe('validateToken', () => {
-    it('should return true for valid session', async () => {
-      (supabase.auth.getSession as jest.Mock).mockResolvedValue({
-        data: { session: { expires_at: Date.now() / 1000 + 3600 } }, // 1 hour from now in seconds
+    it('should return true when user is returned', async () => {
+      (supabase.auth.getUser as jest.Mock).mockResolvedValue({
+        data: { user: { id: 'user-1', email: 'a@b.com' } },
         error: null,
       });
 
@@ -28,19 +28,9 @@ describe('Token Utilities', () => {
       expect(isValid).toBe(true);
     });
 
-    it('should return false for expired session', async () => {
-      (supabase.auth.getSession as jest.Mock).mockResolvedValue({
-        data: { session: { expires_at: Date.now() / 1000 - 3600 } }, // 1 hour ago in seconds
-        error: null,
-      });
-
-      const isValid = await validateToken();
-      expect(isValid).toBe(false);
-    });
-
     it('should return false for no session', async () => {
-      (supabase.auth.getSession as jest.Mock).mockResolvedValue({
-        data: { session: null },
+      (supabase.auth.getUser as jest.Mock).mockResolvedValue({
+        data: { user: null },
         error: null,
       });
 
@@ -49,8 +39,8 @@ describe('Token Utilities', () => {
     });
 
     it('should return false on error', async () => {
-      (supabase.auth.getSession as jest.Mock).mockResolvedValue({
-        data: { session: null },
+      (supabase.auth.getUser as jest.Mock).mockResolvedValue({
+        data: { user: null },
         error: new Error('Failed to get session'),
       });
 
@@ -84,13 +74,11 @@ describe('Token Utilities', () => {
     });
 
     it('should handle unexpected errors', async () => {
-      (supabase.auth.refreshSession as jest.Mock).mockRejectedValue(
-        new Error('Unexpected error')
-      );
+      (supabase.auth.refreshSession as jest.Mock).mockRejectedValue(new Error('Unexpected error'));
 
       const result = await refreshToken();
       expect(result.success).toBe(false);
       expect(result.error).toBeInstanceOf(Error);
     });
   });
-}); 
+});
