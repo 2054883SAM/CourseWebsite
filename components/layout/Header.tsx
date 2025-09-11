@@ -104,7 +104,6 @@ export function Header() {
 
     // Add "Mes formations" for authenticated users with subscribed membership
     if (user && dbUser?.role !== 'admin' && dbUser?.membership === 'subscribed') {
-<<<<<<< HEAD
       baseItems.splice(2, 0, { name: 'Mes formations', href: '/my-learning' });
     }
 
@@ -113,9 +112,6 @@ export function Header() {
       if (!baseItems.some((item) => item.href === '/payment')) {
         baseItems.push({ name: 'Abonnement', href: '/payment' });
       }
-=======
-      baseItems.push({ name: 'Mes formations', href: '/my-learning' });
->>>>>>> b9e892699f04c1674a28110c10033b607641cb01
     }
 
     return baseItems;
@@ -123,7 +119,7 @@ export function Header() {
 
   return (
     <header
-      className={`sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm transition-all duration-300 ${
+      className={`sticky top-0 z-50 border-b border-gray-100 bg-white shadow-sm transition-all duration-300 ${
         isScrolled ? 'shadow-lg' : ''
       }`}
       role="banner"
@@ -141,7 +137,7 @@ export function Header() {
                 <ActiveLink
                   key={item.name}
                   href={item.href}
-                  className="text-[#1D4ED8] hover:text-blue-700 font-medium transition-colors duration-200 hover:underline decoration-2 underline-offset-4"
+                  className="font-medium text-[#1D4ED8] decoration-2 underline-offset-4 transition-colors duration-200 hover:text-blue-700 hover:underline"
                   activeClassName="text-blue-700 font-semibold"
                 >
                   {item.name}
@@ -239,7 +235,7 @@ export function Header() {
                 <div className="flex items-center space-x-4">
                   <Link
                     href="/signin"
-                    className="text-[#1D4ED8] hover:text-blue-700 font-medium transition-colors duration-200"
+                    className="font-medium text-[#1D4ED8] transition-colors duration-200 hover:text-blue-700"
                   >
                     Se connecter
                   </Link>
