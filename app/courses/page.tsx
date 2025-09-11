@@ -157,8 +157,8 @@ function CoursesPage() {
 
   if (error) {
     return (
-      <PageLayout>
-        <Section className="bg-gradient-gray py-20">
+      <div className="min-h-screen w-full bg-white">
+        <div className="w-full py-20">
           <div className="container mx-auto px-4">
             <div className="text-center">
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20">
@@ -191,8 +191,8 @@ function CoursesPage() {
               </button>
             </div>
           </div>
-        </Section>
-      </PageLayout>
+        </div>
+      </div>
     );
   }
 
@@ -215,17 +215,17 @@ function CoursesPage() {
   };
 
   return (
-    <PageLayout>
-      <Section className="bg-gradient-gray py-20">
+    <div className="min-h-screen w-full bg-white">
+      <div className="w-full py-20">
         <div className="container mx-auto px-4">
           {/* Header avec animations */}
           <div className="animate-fade-in-up mb-16 text-center">
             <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700">
               <span className="text-2xl">📚</span>
             </div>
-            <h1 className="mb-4 bg-gradient-to-r from-gray-900 via-gold-600 to-gray-800 bg-clip-text text-4xl font-bold text-gray-900 text-transparent dark:from-white dark:via-gold-400 dark:to-gray-300 dark:text-white md:text-5xl lg:text-6xl">
+            <h1 className="mb-4 text-4xl font-bold text-gray-900 md:text-5xl lg:text-6xl">
               {showCategories
-                ? 'Matières Scolaires'
+                ? <span className="text-blue-700">Matières Scolaires</span>
                 : category
                   ? `Cours de ${category}`
                   : 'Catalogue de Cours'}
@@ -378,7 +378,7 @@ function CoursesPage() {
             </div>
           )}
         </div>
-      </Section>
+      </div>
 
       {/* Deletion loading overlay */}
       {isDeleting && (
@@ -465,7 +465,7 @@ function CoursesPage() {
           </div>
         </div>
       )}
-    </PageLayout>
+    </div>
   );
 }
 

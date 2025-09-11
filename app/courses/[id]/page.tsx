@@ -154,8 +154,8 @@ function CourseDetailPage({ params }: PageProps) {
 
   if (error) {
     return (
-      <PageLayout>
-        <Section className="bg-gray-50 py-12">
+      <div className="min-h-screen w-full bg-white">
+        <div className="w-full py-12">
           <div className="container mx-auto px-4">
             <div className="text-center text-red-600">
               <p>{error}</p>
@@ -170,8 +170,8 @@ function CourseDetailPage({ params }: PageProps) {
               </button>
             </div>
           </div>
-        </Section>
-      </PageLayout>
+        </div>
+      </div>
     );
   }
 
@@ -180,36 +180,42 @@ function CourseDetailPage({ params }: PageProps) {
   }
 
   return (
-    <PageLayout>
-      <Section className="bg-gray-50 pt-6 pb-12">
-        <div className="container mx-auto px-4">
-          <Breadcrumbs
-            items={[
-              { label: 'Cours', href: '/courses' },
-              { label: course.title, href: `/courses/${course.id}` },
-            ]}
-          />
+    <div className="min-h-screen w-full bg-gradient-to-br from-sky-50 via-white to-blue-50">
+      <div className="w-full pt-6 pb-16">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
+          <div className="mb-6">
+            <Breadcrumbs
+              items={[
+                { label: 'Cours', href: '/courses' },
+                { label: course.title, href: `/courses/${course.id}` },
+              ]}
+            />
+          </div>
           
           <Suspense fallback={<CourseDetailSkeleton />}>
             {/* Course Header */}
             <CourseHeader course={course} />
             
-            <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
               {/* Main Content - 2/3 width on large screens */}
-              <div className="lg:col-span-2">
+              <div className="lg:col-span-2 space-y-12">
                 {/* Course Overview */}
                 <CourseOverview course={course} />
                 
                 {/* Course Curriculum removed (no sections) */}
                 
                 {/* Instructor Info */}
-                <div className="mt-8">
+                <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-2xl p-6 shadow-sm">
+                  <div className="flex items-center gap-3 mb-6">
+                    <span className="text-3xl">👨‍🏫</span>
+                    <h3 className="text-2xl font-bold text-indigo-700">Ton enseignant</h3>
+                  </div>
                   <InstructorInfo creator={course.creator} />
                 </div>
               </div>
               
               {/* Sidebar - 1/3 width on large screens */}
-              <div className="lg:col-span-1">
+              <div className="lg:col-span-1 order-first lg:order-last">
                 <CourseActions 
                   course={course} 
                   initialEnrollmentStatus={dbUser?.role === 'admin' ? 'enrolled' : (isCheckingEnrollment ? 'processing' : (isEnrolled ? 'enrolled' : 'not-enrolled'))} 
@@ -218,17 +224,23 @@ function CourseDetailPage({ params }: PageProps) {
             </div>
             
             {/* Related Courses */}
-            <div className="mt-12">
-              <RelatedCourses 
-                courseId={course.id} 
-                creatorId={course.creator_id}
-                relatedCourses={relatedCourses}
-              />
+            <div className="mt-16">
+              <div className="bg-gradient-to-r from-green-50 to-teal-50 border-2 border-green-200 rounded-2xl p-8 shadow-sm">
+                <div className="flex items-center gap-3 mb-8">
+                  <span className="text-3xl">🎪</span>
+                  <h3 className="text-2xl font-bold text-green-700">Autres cours qui pourraient te plaire</h3>
+                </div>
+                <RelatedCourses 
+                  courseId={course.id} 
+                  creatorId={course.creator_id}
+                  relatedCourses={relatedCourses}
+                />
+              </div>
             </div>
           </Suspense>
         </div>
-      </Section>
-    </PageLayout>
+      </div>
+    </div>
   );
 }
 

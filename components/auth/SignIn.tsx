@@ -276,7 +276,11 @@ Auth Status:
           </div>
         </div>
 
+<<<<<<< HEAD
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+=======
+        <div className="grid grid-cols-1 gap-3">
+>>>>>>> b9e892699f04c1674a28110c10033b607641cb01
           <button
             type="button"
             onClick={() => signInWithProvider('google')}
@@ -302,6 +306,7 @@ Auth Status:
             </svg>
             Google
           </button>
+<<<<<<< HEAD
           <button
             type="button"
             onClick={() => signInWithProvider('apple')}
@@ -312,6 +317,8 @@ Auth Status:
             </svg>
             Apple
           </button>
+=======
+>>>>>>> b9e892699f04c1674a28110c10033b607641cb01
         </div>
 
         {debugInfo && (
