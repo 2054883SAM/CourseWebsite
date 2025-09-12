@@ -187,9 +187,9 @@ export function CourseActions({
     setErrorMessage(null);
 
     // Membership-based gating:
-    // Free membership: redirect to payment page to subscribe
+    // Free membership: redirect to payment page to subscribe, carrying courseId for post-payment enrollment
     if (dbUser?.membership === 'free') {
-      router.push('/payment');
+      router.push(`/payment?courseId=${encodeURIComponent(course.id)}`);
       return;
     }
 

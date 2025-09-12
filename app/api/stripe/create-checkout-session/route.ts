@@ -6,10 +6,10 @@ export async function POST(req: NextRequest) {
   try {
     const stripe = getStripeServerClient();
 
-    // Ensure we have a price id for the subscription
-    const { priceId, trialDays } = await req
+    // Ensure we have a price id for the subscription and optionally a courseId to return to
+    const { priceId, trialDays, courseId } = await req
       .json()
-      .catch(() => ({ priceId: undefined, trialDays: undefined }));
+      .catch(() => ({ priceId: undefined, trialDays: undefined, courseId: undefined }));
     const defaultPriceId = process.env.NEXT_PUBLIC_STRIPE_TEST_PRICE_ID;
     const resolvedPriceId = priceId || defaultPriceId;
     if (!resolvedPriceId) {
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
       mode: 'subscription',
       allow_promotion_codes: true,
       payment_method_types: ['card'],
-      success_url: `${origin}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${origin}/payment/success?session_id={CHECKOUT_SESSION_ID}${courseId ? `&courseId=${encodeURIComponent(courseId)}` : ''}`,
       cancel_url: `${origin}/payment/cancel`,
       customer_email: customerEmail,
       line_items: [
@@ -47,11 +47,13 @@ export async function POST(req: NextRequest) {
         trial_period_days: trialDays ? Number(trialDays) || undefined : undefined,
         metadata: {
           userId,
+          ...(courseId ? { courseId } : {}),
         },
       },
       metadata: {
         userId,
         app: 'CourseWebsite',
+        ...(courseId ? { courseId } : {}),
       },
     });
 

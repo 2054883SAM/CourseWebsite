@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth/AuthContext';
 
 export default function PaymentPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -16,10 +17,11 @@ export default function PaymentPage() {
       setLoading(true);
 
       // Create subscription checkout session
+      const courseId = searchParams?.get('courseId') || undefined;
       const res = await fetch('/api/stripe/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}),
+        body: JSON.stringify({ courseId }),
       });
 
       const data = await res.json();
@@ -40,15 +42,16 @@ export default function PaymentPage() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-gray-50 py-16 px-4">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen w-full bg-gray-50 px-4 py-16">
+      <div className="mx-auto max-w-6xl">
         {/* Header de la page */}
-        <div className="text-center mb-16">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+        <div className="mb-16 text-center">
+          <h1 className="mb-4 text-4xl font-bold text-gray-900 md:text-5xl">
             Choisissez votre abonnement
           </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Accédez à tous nos cours premium et donnez à votre enfant les meilleures chances de réussite
+          <p className="mx-auto max-w-2xl text-xl text-gray-600">
+            Accédez à tous nos cours premium et donnez à votre enfant les meilleures chances de
+            réussite
           </p>
         </div>
 
@@ -56,28 +59,30 @@ export default function PaymentPage() {
         <div className="flex justify-center">
           <div className="w-full max-w-xl">
             {/* Carte d'abonnement moderne */}
-            <div className="relative bg-white rounded-3xl shadow-2xl border border-gray-200 overflow-hidden transform hover:shadow-3xl transition-shadow duration-300 mt-6">
+            <div className="hover:shadow-3xl relative mt-6 transform overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-2xl transition-shadow duration-300">
               {/* Badge "Populaire" */}
-              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
-                <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg">
+              <div className="absolute left-1/2 top-0 z-10 -translate-x-1/2 -translate-y-1/2 transform">
+                <div className="rounded-full bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-2 text-sm font-bold text-white shadow-lg">
                   ⭐ Le plus populaire
                 </div>
               </div>
 
               {/* Header de la carte */}
-              <div className="pt-12 pb-8 px-10 text-center border-b border-gray-100">
-                <h3 className="text-3xl font-bold text-[#1D4ED8] mb-3">Premium</h3>
-                <p className="text-gray-600 mb-8 text-lg">Accès complet à tous les cours</p>
-                
+              <div className="border-b border-gray-100 px-10 pb-8 pt-12 text-center">
+                <h3 className="mb-3 text-3xl font-bold text-[#1D4ED8]">Premium</h3>
+                <p className="mb-8 text-lg text-gray-600">Accès complet à tous les cours</p>
+
                 {/* Prix avec ancien prix barré */}
                 <div className="mb-6">
-                  <div className="flex items-center justify-center gap-3 mb-3">
+                  <div className="mb-3 flex items-center justify-center gap-3">
                     <span className="text-lg text-gray-500 line-through">$70</span>
-                    <span className="text-sm bg-red-100 text-red-600 px-3 py-1 rounded-full font-semibold">-29%</span>
+                    <span className="rounded-full bg-red-100 px-3 py-1 text-sm font-semibold text-red-600">
+                      -29%
+                    </span>
                   </div>
                   <div className="flex items-baseline justify-center gap-2">
                     <span className="text-6xl font-black text-[#1D4ED8]">$50</span>
-                    <span className="text-xl text-gray-600 font-medium">/mois</span>
+                    <span className="text-xl font-medium text-gray-600">/mois</span>
                   </div>
                 </div>
               </div>
@@ -86,27 +91,35 @@ export default function PaymentPage() {
               <div className="px-10 py-8">
                 <ul className="space-y-5">
                   <li className="flex items-center gap-4">
-                    <span className="text-green-500 text-2xl">✅</span>
-                    <span className="text-gray-700 font-semibold text-lg">Accès illimité à tous les cours</span>
+                    <span className="text-2xl text-green-500">✅</span>
+                    <span className="text-lg font-semibold text-gray-700">
+                      Accès illimité à tous les cours
+                    </span>
                   </li>
                   <li className="flex items-center gap-4">
-                    <span className="text-blue-500 text-2xl">📘</span>
-                    <span className="text-gray-700 font-semibold text-lg">Nouveau contenu ajouté chaque mois</span>
+                    <span className="text-2xl text-blue-500">📘</span>
+                    <span className="text-lg font-semibold text-gray-700">
+                      Nouveau contenu ajouté chaque mois
+                    </span>
                   </li>
                   <li className="flex items-center gap-4">
-                    <span className="text-blue-500 text-2xl">🔒</span>
-                    <span className="text-gray-700 font-semibold text-lg">Accès sécurisé et paiement Stripe</span>
+                    <span className="text-2xl text-blue-500">🔒</span>
+                    <span className="text-lg font-semibold text-gray-700">
+                      Accès sécurisé et paiement Stripe
+                    </span>
                   </li>
                   <li className="flex items-center gap-4">
-                    <span className="text-green-500 text-2xl">❌</span>
-                    <span className="text-gray-700 font-semibold text-lg">Annulable à tout moment</span>
+                    <span className="text-2xl text-green-500">❌</span>
+                    <span className="text-lg font-semibold text-gray-700">
+                      Annulable à tout moment
+                    </span>
                   </li>
                 </ul>
               </div>
 
               {/* Message d'erreur */}
               {error && (
-                <div className="mx-10 mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-red-700 text-center text-sm">
+                <div className="mx-10 mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-center text-sm text-red-700">
                   <span className="font-medium">⚠️ {error}</span>
                 </div>
               )}
@@ -118,11 +131,11 @@ export default function PaymentPage() {
                   <button
                     onClick={handleSubscribe}
                     disabled={loading}
-                    className="w-full bg-[#1D4ED8] hover:bg-blue-700 text-white font-bold py-5 px-8 rounded-2xl text-lg shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                    className="w-full transform rounded-2xl bg-[#1D4ED8] px-8 py-5 text-lg font-bold text-white shadow-lg transition-all duration-300 hover:scale-[1.02] hover:bg-blue-700 hover:shadow-xl disabled:transform-none disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {loading ? (
                       <div className="flex items-center justify-center gap-3">
-                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+                        <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-white"></div>
                         <span>Redirection vers Stripe...</span>
                       </div>
                     ) : (
@@ -136,7 +149,7 @@ export default function PaymentPage() {
                   // Bouton pour utilisateur non connecté
                   <button
                     onClick={handleLoginToSubscribe}
-                    className="w-full bg-[#1D4ED8] hover:bg-blue-700 text-white font-bold py-5 px-8 rounded-2xl text-lg shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300"
+                    className="w-full transform rounded-2xl bg-[#1D4ED8] px-8 py-5 text-lg font-bold text-white shadow-lg transition-all duration-300 hover:scale-[1.02] hover:bg-blue-700 hover:shadow-xl"
                   >
                     <div className="flex items-center justify-center gap-2">
                       <span>🔐</span>
@@ -146,7 +159,7 @@ export default function PaymentPage() {
                 )}
 
                 {/* Texte sous le bouton */}
-                <p className="text-center text-sm text-gray-500 mt-6">
+                <p className="mt-6 text-center text-sm text-gray-500">
                   Annulation possible à tout moment. Paiement sécurisé.
                 </p>
               </div>
@@ -156,20 +169,20 @@ export default function PaymentPage() {
 
         {/* Section d'informations supplémentaires */}
         <div className="mt-16 text-center">
-          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-              <div className="text-3xl mb-3">💳</div>
-              <h4 className="font-semibold text-gray-900 mb-2">Paiement sécurisé</h4>
+          <div className="mx-auto grid max-w-4xl gap-8 md:grid-cols-3">
+            <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+              <div className="mb-3 text-3xl">💳</div>
+              <h4 className="mb-2 font-semibold text-gray-900">Paiement sécurisé</h4>
               <p className="text-sm text-gray-600">Vos données sont protégées par Stripe</p>
             </div>
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-              <div className="text-3xl mb-3">📞</div>
-              <h4 className="font-semibold text-gray-900 mb-2">Support 24/7</h4>
+            <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+              <div className="mb-3 text-3xl">📞</div>
+              <h4 className="mb-2 font-semibold text-gray-900">Support 24/7</h4>
               <p className="text-sm text-gray-600">Notre équipe est là pour vous aider</p>
             </div>
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-              <div className="text-3xl mb-3">🎓</div>
-              <h4 className="font-semibold text-gray-900 mb-2">Contenu premium</h4>
+            <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+              <div className="mb-3 text-3xl">🎓</div>
+              <h4 className="mb-2 font-semibold text-gray-900">Contenu premium</h4>
               <p className="text-sm text-gray-600">Cours créés par des experts</p>
             </div>
           </div>
@@ -178,5 +191,3 @@ export default function PaymentPage() {
     </div>
   );
 }
-
-
