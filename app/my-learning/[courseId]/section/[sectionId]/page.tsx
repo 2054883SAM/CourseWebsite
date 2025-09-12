@@ -127,20 +127,20 @@ export default function SectionPlayerPage() {
     if (!user || !courseId || !sectionId) return;
 
     try {
-      const response = await fetch('/api/progress/section', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          courseId,
-          sectionId,
-          progressPercentage: 100, // Video should be at 100% to take quiz
-          completed: passed, // Only mark as completed if quiz is passed
-          quizScore: score,
-          quizPassed: passed,
-        }),
-      });
+      const response = await fetch(
+        `/api/progress/section?courseId=${encodeURIComponent(courseId)}&sectionId=${encodeURIComponent(sectionId)}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            progressPercentage: 100, // Video should be at 100% to take quiz
+            quizScore: score,
+            quizPassed: passed,
+          }),
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -384,22 +384,22 @@ export default function SectionPlayerPage() {
             // Update progress in database every 5% or when significant progress is made
             if (
               user &&
-              progressPercentage > 0 &&
-              (progressPercentage % 5 === 0 || progressPercentage >= 95)
+              progressPercentage >= 0 &&
+              (progressPercentage % 5 === 0 || progressPercentage >= 98)
             ) {
               try {
-                const response = await fetch('/api/progress/section', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({
-                    courseId,
-                    sectionId,
-                    progressPercentage,
-                    completed: progressPercentage >= 95,
-                  }),
-                });
+                const response = await fetch(
+                  `/api/progress/section?courseId=${encodeURIComponent(courseId)}&sectionId=${encodeURIComponent(sectionId)}`,
+                  {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                      progressPercentage,
+                    }),
+                  }
+                );
 
                 if (!response.ok) {
                   const errorData = await response.json();
@@ -455,18 +455,18 @@ export default function SectionPlayerPage() {
             // Section is only completed when quiz is passed with 70%+
             if (user) {
               try {
-                const response = await fetch('/api/progress/section', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({
-                    courseId,
-                    sectionId,
-                    progressPercentage: 100,
-                    completed: false, // Don't mark as completed until quiz is passed
-                  }),
-                });
+                const response = await fetch(
+                  `/api/progress/section?courseId=${encodeURIComponent(courseId)}&sectionId=${encodeURIComponent(sectionId)}`,
+                  {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                      progressPercentage: 100,
+                    }),
+                  }
+                );
 
                 if (!response.ok) {
                   const errorData = await response.json();
@@ -760,6 +760,46 @@ export default function SectionPlayerPage() {
                                 onClick={() => router.push(`/my-learning/${courseId}`)}
                               >
                                 <span className="kid-emoji">🏠</span> Retour au cours
+                              </button>
+                              <button
+                                className="kid-btn-primary"
+                                onClick={async () => {
+                                  try {
+                                    setShowScoreResult(false);
+                                    setIsGeneratingFinalFlashcards(true);
+                                    resetQuiz();
+
+                                    const res = await fetch('/api/video/new-quiz', {
+                                      method: 'POST',
+                                      headers: { 'Content-Type': 'application/json' },
+                                      body: JSON.stringify({
+                                        sectionId,
+                                        maxQuestions: 8,
+                                        previous: Array.isArray(questions) ? questions : undefined,
+                                      }),
+                                    });
+                                    if (res.ok) {
+                                      const data = await res.json();
+                                      if (
+                                        Array.isArray(data?.questions) &&
+                                        data.questions.length > 0
+                                      ) {
+                                        setQuestions(data.questions);
+                                        resetQuiz();
+                                      } else {
+                                        console.error('No new questions returned');
+                                      }
+                                    } else {
+                                      console.error('Failed to fetch new quiz', await res.text());
+                                    }
+                                  } catch (e) {
+                                    console.error('Error regenerating quiz:', e);
+                                  } finally {
+                                    setIsGeneratingFinalFlashcards(false);
+                                  }
+                                }}
+                              >
+                                <span className="kid-emoji">🔁</span> Refaire le quiz
                               </button>
                             </>
                           ) : (

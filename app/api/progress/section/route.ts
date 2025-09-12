@@ -3,8 +3,13 @@ import { createRouteHandlerClient } from '@/lib/supabase/server';
 
 export async function POST(request: NextRequest) {
   try {
-    const { courseId, sectionId, progressPercentage, completed, quizScore, quizPassed } =
-      await request.json();
+    // Read courseId and sectionId from the URL query params
+    const { searchParams } = new URL(request.url);
+    const courseId = searchParams.get('courseId');
+    const sectionId = searchParams.get('sectionId');
+
+    // Read progress and quiz info from the body
+    const { progressPercentage, quizScore, quizPassed } = await request.json();
 
     if (!courseId || !sectionId || typeof progressPercentage !== 'number') {
       return NextResponse.json(
@@ -28,7 +33,17 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('User authenticated:', user.id);
-    console.log('Progress data:', { courseId, sectionId, progressPercentage, completed });
+    console.log('Progress data:', {
+      courseId,
+      sectionId,
+      progressPercentage,
+      quizScore,
+      quizPassed,
+    });
+
+    // Compute completion strictly based on quiz passing (>=70%)
+    const computedQuizPassed =
+      quizPassed === true || (typeof quizScore === 'number' && quizScore >= 70);
 
     // Prepare progress data
     const progressData: any = {
@@ -36,17 +51,15 @@ export async function POST(request: NextRequest) {
       course_id: courseId,
       section_id: sectionId,
       progress_percentage: Math.min(100, Math.max(0, progressPercentage)),
-      completed: completed || progressPercentage >= 95, // Auto-complete at 95%
+      completed: computedQuizPassed, // Only complete when quiz is passed
       last_watched_at: new Date().toISOString(),
     };
 
     // Add quiz data if provided
     if (typeof quizScore === 'number') {
       progressData.quiz_score = Math.min(100, Math.max(0, quizScore));
-      progressData.quiz_passed = quizPassed !== undefined ? quizPassed : quizScore >= 70;
+      progressData.quiz_passed = computedQuizPassed;
     }
-
-    console.log('Upserting progress data:', progressData);
 
     // Upsert progress data
     const { data, error } = await supabase
@@ -56,14 +69,11 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      console.error('Supabase upsert error:', error);
       return NextResponse.json(
         { error: 'Failed to update progress', details: error.message },
         { status: 500 }
       );
     }
-
-    console.log('Progress updated successfully:', data);
 
     return NextResponse.json({
       success: true,
