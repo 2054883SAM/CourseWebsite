@@ -23,7 +23,19 @@ interface VdoCipherPlayerProps {
   onChapterComplete?: (chapter: VideoChapter) => void;
 }
 
-function VdoCipherPlayerComponent({ videoId, watermark, className, chapters = [], userId, courseId, duration, onChapterSeek, onProgress, onComplete, onChapterComplete }: VdoCipherPlayerProps) {
+function VdoCipherPlayerComponent({
+  videoId,
+  watermark,
+  className,
+  chapters = [],
+  userId,
+  courseId,
+  duration,
+  onChapterSeek,
+  onProgress,
+  onComplete,
+  onChapterComplete,
+}: VdoCipherPlayerProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const hasInitialized = useRef(false);
   const playerLoaded = useRef(false);
@@ -51,11 +63,15 @@ function VdoCipherPlayerComponent({ videoId, watermark, className, chapters = []
           player.video.play?.();
           // Proactively signal completion and 100% progress
           if (typeof onProgress === 'function') {
-            try { onProgress(100); } catch {}
+            try {
+              onProgress(100);
+            } catch {}
           }
           if (!completionFiredRef.current && typeof onComplete === 'function') {
             completionFiredRef.current = true;
-            try { onComplete(); } catch {}
+            try {
+              onComplete();
+            } catch {}
           }
           // Persist 100% progress server-side
           if (userId && courseId) {
@@ -75,14 +91,14 @@ function VdoCipherPlayerComponent({ videoId, watermark, className, chapters = []
   // This ensures the video is loaded ONCE and never reloaded unless the page refreshes
   useEffect(() => {
     if (hasInitialized.current || !videoId) return;
-    
+
     // Mark as initialized immediately to prevent duplicate calls
     hasInitialized.current = true;
-    
+
     const fetchOtpAndLoadPlayer = async () => {
       try {
         console.log('Fetching VdoCipher OTP for videoId:', videoId);
-        
+
         const res = await fetch('/api/video/vdocipher-otp', {
           method: 'POST',
           headers: {
@@ -105,10 +121,10 @@ function VdoCipherPlayerComponent({ videoId, watermark, className, chapters = []
           : '';
 
         const playerUrl = `https://player.vdocipher.com/v2/?otp=${otp}&playbackInfo=${playbackInfo}${watermarkParam}`;
-        
+
         console.log('VdoCipher player initialized successfully');
         setEmbedUrl(playerUrl);
-        
+
         // Store in sessionStorage to persist between rerenders
         try {
           sessionStorage.setItem(`vdoCipher_${videoId}`, playerUrl);
@@ -138,7 +154,7 @@ function VdoCipherPlayerComponent({ videoId, watermark, className, chapters = []
   // Second useEffect for player tracking with VdoPlayer API, will only run when embedUrl is available
   useEffect(() => {
     if (!embedUrl || !iframeRef.current) return;
-    
+
     // Wait for iframe to load before initializing the player
     const handleIframeLoad = async () => {
       try {
@@ -147,15 +163,15 @@ function VdoCipherPlayerComponent({ videoId, watermark, className, chapters = []
           console.warn('VdoPlayer API not available yet, waiting...');
           return;
         }
-        
+
         if (!iframeRef.current) {
           console.warn('iframe reference is not available');
           return;
         }
-        
+
         console.log('Setting up VdoCipher player using VdoPlayer API');
         playerLoaded.current = true;
-        
+
         const iframeElement = iframeRef.current; // Store reference for cleanup function
         const vdoPlayer = (window as any).VdoPlayer;
         const player = vdoPlayer.getInstance(iframeElement);
@@ -171,7 +187,7 @@ function VdoCipherPlayerComponent({ videoId, watermark, className, chapters = []
         } catch (e) {
           console.warn('Could not attach play listener:', e);
         }
-        
+
         // Fetch chapters metadata if not provided as props
         if ((!safeChapters || safeChapters.length === 0) && player.api) {
           try {
@@ -186,10 +202,10 @@ function VdoCipherPlayerComponent({ videoId, watermark, className, chapters = []
             console.error('Error fetching VdoCipher metadata:', e);
           }
         }
-        
+
         // Set up time tracking
         let timeUpdateInterval: NodeJS.Timeout | null = null;
-        
+
         // Helper to persist progress to API with throttling
         const persistProgress = async (progressPercentage: number) => {
           if (!userId || !courseId) return;
@@ -229,14 +245,20 @@ function VdoCipherPlayerComponent({ videoId, watermark, className, chapters = []
               if (durationPositive && hasStartedPlayingRef.current) {
                 const percent = Math.min(Math.round((currentTime / durationSec) * 100), 100);
                 if (typeof onProgress === 'function') {
-                  try { onProgress(percent); } catch {}
+                  try {
+                    onProgress(percent);
+                  } catch {}
                 }
                 if (!completionFiredRef.current && percent >= 100) {
                   completionFiredRef.current = true;
                   // Pause video before triggering completion callback
-                  try { player.video.pause?.(); } catch {}
+                  try {
+                    player.video.pause?.();
+                  } catch {}
                   if (typeof onComplete === 'function') {
-                    try { onComplete(); } catch {}
+                    try {
+                      onComplete();
+                    } catch {}
                   }
                 }
                 if (userId && courseId) {
@@ -270,15 +292,23 @@ function VdoCipherPlayerComponent({ videoId, watermark, className, chapters = []
 
                   // Fire chapter-complete when passing end time once
                   // Only trigger for chapters explicitly marked with flashcard
-                  if (!Number.isNaN(chapterEndTime) && hasStartedPlayingRef.current && currentChapter.flashcard === true) {
+                  if (
+                    !Number.isNaN(chapterEndTime) &&
+                    hasStartedPlayingRef.current &&
+                    currentChapter.flashcard === true
+                  ) {
                     const epsilon = 0.25;
                     if (currentTime >= chapterEndTime - epsilon) {
                       if (!completedChapterIdsRef.current.has(currentChapter.id)) {
                         completedChapterIdsRef.current.add(currentChapter.id);
                         // Pause video before notifying parent
-                        try { player.video.pause?.(); } catch {}
+                        try {
+                          player.video.pause?.();
+                        } catch {}
                         if (typeof onChapterComplete === 'function') {
-                          try { onChapterComplete(currentChapter); } catch {}
+                          try {
+                            onChapterComplete(currentChapter);
+                          } catch {}
                         }
                       }
                     }
@@ -290,7 +320,7 @@ function VdoCipherPlayerComponent({ videoId, watermark, className, chapters = []
             }
           }
         }, 1000);
-        
+
         // Cleanup
         return () => {
           if (timeUpdateInterval) clearInterval(timeUpdateInterval);
@@ -299,55 +329,66 @@ function VdoCipherPlayerComponent({ videoId, watermark, className, chapters = []
         console.error('Error initializing VdoPlayer:', error);
       }
     };
-    
+
     // Set a timeout to allow iframe and API to load
     const initTimeout = setTimeout(() => {
       handleIframeLoad();
     }, 1000);
-    
+
     // Listen for iframe load event
     const currentIframe = iframeRef.current;
     if (currentIframe) {
       currentIframe.addEventListener('load', handleIframeLoad);
     }
-    
+
     return () => {
       clearTimeout(initTimeout);
       if (currentIframe) {
         currentIframe.removeEventListener('load', handleIframeLoad);
       }
     };
-  }, [embedUrl, chapters, onChapterSeek, safeChapters, userId, courseId, duration, onProgress, onComplete, onChapterComplete]);
+  }, [
+    embedUrl,
+    chapters,
+    onChapterSeek,
+    safeChapters,
+    userId,
+    courseId,
+    duration,
+    onProgress,
+    onComplete,
+    onChapterComplete,
+  ]);
 
   const handleChapterClick = (chapter: VideoChapter) => {
     setIsLoading(true);
-    
+
     try {
       // Access player through VdoPlayer API
       if (iframeRef.current && (window as any).VdoPlayer) {
         console.log(`Seeking to chapter at time: ${chapter.startTime}`);
-        
+
         // Get a reference to the current iframe
         const iframeElement = iframeRef.current;
         if (!iframeElement) {
           throw new Error('Iframe element is null');
         }
-        
+
         const vdoPlayer = (window as any).VdoPlayer;
         const player = vdoPlayer.getInstance(iframeElement);
-        
+
         // Set the current time and play using the direct API
         player.video.currentTime = chapter.startTime;
         player.video.play();
-        
+
         // Set currentTime immediately for better UX
         setCurrentTime(chapter.startTime);
-        
+
         // Call external callback if provided
         if (onChapterSeek) {
           onChapterSeek(chapter, chapter.startTime);
         }
-        
+
         // Set a fallback timeout to ensure loading state doesn't get stuck
         setTimeout(() => {
           setIsLoading(false);
@@ -363,7 +404,7 @@ function VdoCipherPlayerComponent({ videoId, watermark, className, chapters = []
   };
 
   // This block is now handled in the playerContent variable below
-  
+
   // We're using this technique to ensure the iframe doesn't get recreated on re-renders
   const playerContent = embedUrl ? (
     <iframe
@@ -387,9 +428,7 @@ function VdoCipherPlayerComponent({ videoId, watermark, className, chapters = []
     <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
       <Script src="https://player.vdocipher.com/v2/api.js" strategy="afterInteractive" />
       <div className="col-span-1 md:col-span-2">
-        <div className={className}>
-          {playerContent}
-        </div>
+        <div className={className}>{playerContent}</div>
       </div>
       {safeChapters && safeChapters.length > 0 && (
         <div className="col-span-1">
@@ -412,20 +451,20 @@ const VdoCipherPlayer = memo(VdoCipherPlayerComponent, (prevProps, nextProps) =>
   // Return true if passing nextProps to render would return
   // the same result as passing prevProps to render,
   // otherwise return false
-  
+
   // Compare only essential props that would affect rendering
   const sameVideoId = prevProps.videoId === nextProps.videoId;
   const sameWatermark = prevProps.watermark === nextProps.watermark;
   const sameCallback = prevProps.onChapterSeek === nextProps.onChapterSeek;
-  
+
   // For chapters, we just check if both are arrays
   // and if their length is the same since we don't expect chapters to change often
-  const sameChapterLength = 
-    (!prevProps.chapters && !nextProps.chapters) || 
-    (Array.isArray(prevProps.chapters) && 
-     Array.isArray(nextProps.chapters) && 
-     prevProps.chapters.length === nextProps.chapters.length);
-  
+  const sameChapterLength =
+    (!prevProps.chapters && !nextProps.chapters) ||
+    (Array.isArray(prevProps.chapters) &&
+      Array.isArray(nextProps.chapters) &&
+      prevProps.chapters.length === nextProps.chapters.length);
+
   // If all key props are the same, we can skip re-rendering
   return sameVideoId && sameWatermark && sameChapterLength && sameCallback;
 });

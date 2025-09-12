@@ -33,6 +33,121 @@ type MatchingGameQuestion = {
 
 type AnyQuestion = FlashcardQuestion | FillBlankQuestion | MatchingGameQuestion;
 
+type VttCue = { start: number; end: number; text: string };
+
+function parseTimestampToSeconds(ts: string): number {
+  // Supports hh:mm:ss.mmm or mm:ss.mmm (mmm optional)
+  const parts = ts.trim().split(':');
+  let h = 0,
+    m = 0,
+    s = 0;
+  if (parts.length === 3) {
+    h = Number(parts[0]);
+    m = Number(parts[1]);
+    s = Number(parts[2].replace(',', '.'));
+  } else if (parts.length === 2) {
+    m = Number(parts[0]);
+    s = Number(parts[1].replace(',', '.'));
+  }
+  if (Number.isNaN(h)) h = 0;
+  if (Number.isNaN(m)) m = 0;
+  if (Number.isNaN(s)) s = 0;
+  return h * 3600 + m * 60 + s;
+}
+
+function parseWebVtt(vtt: string): VttCue[] {
+  const lines = vtt.split(/\r?\n/);
+  const cues: VttCue[] = [];
+  let i = 0;
+  // Skip header if present
+  if (lines[i] && /^WEBVTT/i.test(lines[i])) {
+    i++;
+  }
+  while (i < lines.length) {
+    // Skip empty and numeric identifier lines
+    while (i < lines.length && lines[i].trim() === '') i++;
+    // Optional cue identifier
+    if (i < lines.length && lines[i].match(/^[A-Za-z0-9\-_. ]+$/) && !lines[i].includes('-->')) {
+      i++;
+    }
+    if (i >= lines.length) break;
+    const timeLine = lines[i++];
+    if (!timeLine || !timeLine.includes('-->')) continue;
+    const [startStr, endStr] = timeLine.split('-->').map((s) => s.trim());
+    const start = parseTimestampToSeconds(startStr);
+    const end = parseTimestampToSeconds((endStr || '').split(' ')[0]);
+    const textParts: string[] = [];
+    while (i < lines.length && lines[i].trim() !== '') {
+      textParts.push(lines[i]);
+      i++;
+    }
+    const text = textParts.join(' ').trim();
+    if (!Number.isNaN(start) && !Number.isNaN(end) && end > start) {
+      cues.push({ start, end, text });
+    }
+  }
+  return cues;
+}
+
+function normalizeForMatch(s: string): string[] {
+  return s
+    .toLowerCase()
+    .replace(/[^a-z0-9àâäçéèêëîïôöùûüñ\s]/gi, ' ')
+    .split(/\s+/)
+    .filter((w) => w.length >= 4);
+}
+
+function attachTimestampsToQuestions(cues: VttCue[], questions: AnyQuestion[]): AnyQuestion[] {
+  if (!Array.isArray(cues) || cues.length === 0) return questions;
+
+  const cueTokens: string[][] = cues.map((c) => normalizeForMatch(c.text));
+
+  const getQuestionTokens = (q: AnyQuestion): string[] => {
+    if (q.type === 'flashcard') {
+      return normalizeForMatch(`${q.question} ${q.correctAnswer}`);
+    }
+    if (q.type === 'fillBlank') {
+      return normalizeForMatch(`${q.sentence} ${q.correctAnswer}`);
+    }
+    // matchingGame
+    const mg = q as MatchingGameQuestion;
+    const pairsText = mg.pairs.map((p) => `${p.left} ${p.right}`).join(' ');
+    return normalizeForMatch(`${mg.title || ''} ${mg.instructions || ''} ${pairsText}`);
+  };
+
+  const annotated = questions.map((q, idx) => {
+    const qTokens = new Set(getQuestionTokens(q));
+    let bestIdx = -1;
+    let bestScore = -1;
+    for (let i = 0; i < cues.length; i++) {
+      const tokens = cueTokens[i];
+      if (!tokens || tokens.length === 0) continue;
+      let score = 0;
+      for (const t of tokens) {
+        if (qTokens.has(t)) score++;
+      }
+      if (score > bestScore) {
+        bestScore = score;
+        bestIdx = i;
+      }
+    }
+    // Fallback: distribute evenly if no reasonable match
+    if (bestIdx === -1 || bestScore === 0) {
+      bestIdx = Math.min(
+        cues.length - 1,
+        Math.floor(((idx + 1) / (questions.length + 1)) * cues.length)
+      );
+    }
+    const chosen = cues[bestIdx];
+    // Attach non-breaking fields using type assertion to avoid changing API contract
+    (q as any).startTime = chosen.start;
+    (q as any).endTime = chosen.end;
+    return q;
+  });
+
+  return annotated;
+}
+
 export async function POST(req: Request) {
   try {
     const apiKey = process.env.OPENAI_API_KEY;
@@ -69,6 +184,7 @@ export async function POST(req: Request) {
     if (!captionsVtt || captionsVtt.trim().length === 0) {
       return NextResponse.json({ error: 'Empty captions' }, { status: 422 });
     }
+    const cues = parseWebVtt(captionsVtt);
 
     const openai = new OpenAI({ apiKey });
 
@@ -197,7 +313,7 @@ export async function POST(req: Request) {
       return null;
     };
 
-    const cleaned: AnyQuestion[] = (parsed as any[])
+    let cleaned: AnyQuestion[] = (parsed as any[])
       .map(sanitize)
       .filter((q: AnyQuestion | null): q is AnyQuestion => q !== null)
       .slice(0, maxQuestions);
@@ -205,6 +321,9 @@ export async function POST(req: Request) {
     if (cleaned.length === 0) {
       return NextResponse.json({ error: 'No valid questions parsed', raw }, { status: 502 });
     }
+
+    // Attach timestamps from cues for better alignment with the video
+    cleaned = attachTimestampsToQuestions(cues, cleaned);
 
     return NextResponse.json({ questions: cleaned }, { status: 200 });
   } catch (err) {

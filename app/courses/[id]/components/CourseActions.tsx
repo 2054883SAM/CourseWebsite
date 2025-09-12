@@ -319,47 +319,6 @@ export function CourseActions({
             <h3 className="text-xl font-bold text-orange-700">Commencer l'aventure</h3>
           </div>
 
-          <div className="mb-4 w-full">
-            <EnrollButton
-              status={enrollmentStatus}
-              onClick={handleEnrollClick}
-              disabled={authLoading || enrollmentStatus === 'processing'}
-              tooltipText={enrollmentStatus === 'enrolled' ? 'Aller au cours' : tooltipMessage}
-              enrolledText="Regarder maintenant"
-              className="w-full"
-            />
-            {enrollmentStatus === 'enrolled' && dbUser?.role !== 'admin' && (
-              <button
-                onClick={async () => {
-                  try {
-                    console.log('Unenrolling from course');
-                    setErrorMessage(null);
-                    setEnrollmentStatus('processing');
-                    const res = await fetch('/api/enrollments/delete', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ courseId: course.id }),
-                    });
-                    const data = await res.json().catch(() => ({}));
-                    console.log('Unenrollment response:', data);
-                    if (!res.ok || !data?.success) {
-                      throw new Error(data?.error || 'Failed to unenroll from course');
-                    }
-                    setEnrollmentStatus('not-enrolled');
-                    setTooltipMessage('Cliquez pour vous inscrire à ce cours');
-                    router.refresh();
-                  } catch (e: any) {
-                    setEnrollmentStatus('enrolled');
-                    setErrorMessage(e?.message || 'Impossible de vous désinscrire pour le moment.');
-                  }
-                }}
-                className="mt-3 w-full rounded border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-              >
-                Se désinscrire du cours
-              </button>
-            )}
-          </div>
-
           <div className="space-y-4 text-sm">
             <div className="flex justify-between">
               <span className="text-gray-600">Durée totale :</span>
@@ -389,6 +348,7 @@ export function CourseActions({
                         ? 'Chargement du système de paiement...'
                         : tooltipMessage
                   }
+                  notEnrolledText="s'inscrire maintenant"
                   enrolledText="🎯 Commencer à apprendre"
                   className="w-full transform rounded-xl border-2 border-green-400 bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-4 text-lg font-bold text-white shadow-lg transition-all duration-200 hover:scale-105 hover:border-green-500 hover:from-green-600 hover:to-emerald-700 hover:shadow-xl"
                 />

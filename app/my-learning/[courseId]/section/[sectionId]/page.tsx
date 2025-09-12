@@ -581,30 +581,22 @@ export default function SectionPlayerPage() {
             setShowQuestions(true);
             setIsGeneratingFinalFlashcards(true);
             try {
-              const res = await fetch('/api/video/generate-flashcards', {
+              const res = await fetch('/api/video/generate-questions', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ courseId, sectionId }),
+                body: JSON.stringify({ sectionId, maxQuestions: 8 }),
               });
               if (!res.ok) {
-                console.error('Failed to generate flashcards', await res.text());
+                console.error('Failed to generate questions', await res.text());
                 return;
               }
               const data = await res.json();
-              if (Array.isArray(data?.flashcards) && data.flashcards.length > 0) {
-                // Convert flashcards to questions format
-                const convertedQuestions = data.flashcards.map((card: any, index: number) => ({
-                  id: index + 1,
-                  type: 'flashcard',
-                  question: card.question,
-                  choices: card.choices,
-                  correctAnswer: card.correctAnswer,
-                }));
-                setQuestions(convertedQuestions);
+              if (Array.isArray(data?.questions) && data.questions.length > 0) {
+                setQuestions(data.questions);
                 resetQuiz(); // Reset quiz state for new attempt
               }
             } catch (e) {
-              console.error('Error generating flashcards:', e);
+              console.error('Error generating questions:', e);
             } finally {
               setIsGeneratingFinalFlashcards(false);
             }
