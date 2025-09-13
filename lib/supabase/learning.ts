@@ -162,10 +162,7 @@ export async function getEnrolledCourses(
 
         if (!progressError && progressRows) {
           courseIdToProgress = progressRows.reduce(
-            (
-              acc: Record<string, { progress: number; updated_at?: string }>,
-              row: any
-            ) => {
+            (acc: Record<string, { progress: number; updated_at?: string }>, row: any) => {
               acc[row.course_id] = {
                 progress: Number(row.progress ?? 0),
                 updated_at: row.updated_at,
@@ -385,7 +382,6 @@ export async function getEnrolledCourse(
       title: courseData.title,
       description: courseData.description,
       thumbnail_url: courseData.thumbnail_url,
-      price: courseData.price,
       created_at: courseData.created_at,
       creator_id: courseData.creator_id,
       progress: progress,

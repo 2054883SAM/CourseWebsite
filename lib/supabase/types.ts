@@ -70,9 +70,12 @@ export interface Enrollment {
   id: string; // UUID
   user_id: string; // UUID linked to users.id
   course_id: string; // UUID linked to courses.id
-  created_at: string;
-  updated_at: string;
-  status: 'active' | 'refunded' | 'disputed'; // Updated to match schema
+  created_at?: string;
+  updated_at?: string;
+  // Some code paths use unified status, others rely on payment_status
+  status?: 'active' | 'refunded' | 'disputed';
+  enrolled_at?: string;
+  payment_status?: 'paid' | 'pending';
 }
 
 // Section Progress model

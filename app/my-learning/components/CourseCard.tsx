@@ -23,7 +23,7 @@ export default function CourseCard({
     enrollment: {
       id: 'demo-enrollment',
       status: 'active' as const,
-      created_at: '2025-06-10'
+      enrolled_at: '2025-06-10'
     }
   }
 }: CourseCardProps) {

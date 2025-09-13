@@ -19,9 +19,10 @@ interface AuthContextType {
     name: string
   ) => Promise<{ error: Error | null; requiresEmailConfirmation: boolean; email?: string | null }>;
   signInWithProvider: (
-    provider: 'google',
+    provider: 'google' | 'apple',
     redirectTo?: string
   ) => Promise<{ error: Error | null }>;
+  resetPassword: (email: string) => Promise<{ error: Error | null }>;
   checkPermission: (requiredRole: string) => boolean;
 }
 
@@ -214,8 +215,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const resetPassword = async (email: string): Promise<{ error: Error | null }> => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) {
+        return { error } as { error: Error };
+      }
+      return { error: null };
+    } catch (error) {
+      console.error('Error sending password reset email:', error);
+      return { error: error as Error };
+    }
+  };
+
   const signInWithProvider = async (
-    provider: 'google',
+    provider: 'google' | 'apple',
     redirectTo?: string
   ): Promise<{ error: Error | null }> => {
     try {
@@ -257,6 +273,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signOut,
         signUp,
         signInWithProvider,
+        resetPassword,
         checkPermission,
       }}
     >

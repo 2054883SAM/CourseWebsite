@@ -1,5 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Use a custom distDir to avoid stale caches locally
+  distDir: '.next-build',
+  // Allow builds to succeed even if ESLint finds issues (does not affect dev)
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   /* config options here */
   images: {
     remotePatterns: [

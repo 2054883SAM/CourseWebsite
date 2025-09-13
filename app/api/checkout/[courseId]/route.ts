@@ -57,7 +57,7 @@ async function getCourseDetails(courseId: string, supabaseClient: any): Promise<
 }
 
 // Main API handler for course checkout
-export async function POST(req: NextRequest, context: { params: { courseId: string } }) {
+export async function POST(req: NextRequest, context: { params: Promise<{ courseId: string }> }) {
   try {
     // Get the courseId from the params
     const { courseId } = await context.params;

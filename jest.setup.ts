@@ -2,8 +2,8 @@
 import '@testing-library/jest-dom';
 import { TextEncoder, TextDecoder } from 'util';
 
-global.TextEncoder = TextEncoder;
-global.TextDecoder = TextDecoder;
+(global as any).TextEncoder = TextEncoder as any;
+(global as any).TextDecoder = TextDecoder as any;
 
 export class MockResponse {
   private statusCode: number = 200;
@@ -45,23 +45,19 @@ jest.mock('next/image', () => ({
 // Mock NextRequest and NextResponse
 jest.mock('next/server', () => {
   const originalModule = jest.requireActual('next/server');
-  const Response = jest.requireActual('next/server').NextResponse;
 
-  class MockNextResponse extends Response {
+  class MockNextResponse {
     static json(body: any, init?: ResponseInit) {
-      const response = new MockNextResponse(
-        JSON.stringify(body),
-        {
-          ...init,
-          headers: {
-            ...init?.headers,
-            'content-type': 'application/json',
-          },
-        }
-      );
-      response.status = init?.status || 200;
-      response.json = async () => body;
-      return response;
+      const response = new (global as any).Response(JSON.stringify(body), {
+        ...init,
+        headers: {
+          ...init?.headers,
+          'content-type': 'application/json',
+        },
+      });
+      (response as any).status = init?.status || 200;
+      (response as any).json = async () => body;
+      return response as any;
     }
   }
 
@@ -72,11 +68,11 @@ jest.mock('next/server', () => {
       const url = typeof input === 'string' ? new URL(input) : input;
       return {
         url: url.toString(),
-        method: init.method || 'GET',
-        headers: new Headers(init.headers),
-        json: async () => init.body ? JSON.parse(init.body as string) : null,
+        method: (init as any).method || 'GET',
+        headers: new Headers((init as any).headers),
+        json: async () => ((init as any).body ? JSON.parse((init as any).body as string) : null),
         nextUrl: url,
-        ...init,
+        ...(init as any),
       };
     }),
   };
@@ -103,7 +99,7 @@ if (typeof window !== 'undefined') {
 if (typeof global.Request === 'undefined') {
   global.Request = class Request implements Partial<Request> {
     public url: string;
-    
+
     constructor(input: string | URL | Request, init: RequestInit = {}) {
       this.url = input.toString();
       Object.assign(this, init);
@@ -114,10 +110,10 @@ if (typeof global.Request === 'undefined') {
 if (typeof global.Response === 'undefined') {
   global.Response = class Response implements Partial<Response> {
     public body: BodyInit | null;
-    
+
     constructor(body?: BodyInit | null, init: ResponseInit = {}) {
       this.body = body || null;
       Object.assign(this, init);
     }
   } as unknown as typeof Response;
-} 
+}

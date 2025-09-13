@@ -1,5 +1,9 @@
-import { useContext } from 'react';
+import { useContext, useEffect } from 'react';
 import { AuthContext } from './AuthContext';
+import { Role } from './types';
+import { useRouter } from 'next/navigation';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { handleAuthError } from './utils';
 
 export function useAuth() {
   const context = useContext(AuthContext);

@@ -1,23 +1,24 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { Role } from '@/lib/auth/types';
 
-const roleMessages = {
+const roleMessages: Record<Role, string> = {
   admin: 'This page requires administrator privileges.',
-  creator: 'This page is only accessible to course creators and administrators.',
+  teacher: 'This page is only accessible to teachers and administrators.',
   student: 'This page requires a valid student account.',
 };
 
-const roleUpgradeMessages = {
-  creator: 'Please contact an administrator to request creator privileges.',
+const roleUpgradeMessages: Record<Role, string> = {
+  teacher: 'Please contact an administrator to request teacher privileges.',
   admin: 'Administrator access is restricted. Please contact support if you believe this is an error.',
   student: 'Please sign in or create an account to access this content.',
 };
 
-export default function UnauthorizedPage() {
+function UnauthorizedContent() {
   const { user } = useAuth();
   const searchParams = useSearchParams();
   const requiredRole = searchParams.get('requiredRole') as Role;
@@ -74,4 +75,12 @@ export default function UnauthorizedPage() {
       </div>
     </div>
   );
-} 
+}
+
+export default function UnauthorizedPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center px-4 py-12 sm:px-6 lg:px-8">Chargement…</div>}>
+      <UnauthorizedContent />
+    </Suspense>
+  );
+}

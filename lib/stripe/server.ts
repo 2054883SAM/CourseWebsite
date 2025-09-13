@@ -9,9 +9,8 @@ export function getStripeServerClient(): Stripe {
   }
 
   if (!stripeSingleton) {
-    stripeSingleton = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: '2024-06-20',
-    });
+    // Use SDK default API version for compatibility
+    stripeSingleton = new Stripe(process.env.STRIPE_SECRET_KEY);
   }
 
   return stripeSingleton;
@@ -22,5 +21,3 @@ export function getStripeWebhookSecret(): string {
   if (!secret) throw new Error('STRIPE_WEBHOOK_SECRET is not set');
   return secret;
 }
-
-

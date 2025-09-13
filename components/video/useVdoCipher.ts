@@ -2,14 +2,6 @@
 
 import { useState, useEffect } from 'react';
 
-// Augment Window interface to include our VdoCipher types
-declare global {
-  interface Window {
-    VdoPlayer?: any;
-    vdoCipherScriptLoaded?: boolean;
-  }
-}
-
 export function useVdoCipher(maxRetries = 20, retryInterval = 300) {
   const [vdoPlayer, setVdoPlayer] = useState<any>(null);
   const [isLoaded, setIsLoaded] = useState(false);

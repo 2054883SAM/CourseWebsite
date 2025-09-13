@@ -9,7 +9,7 @@ import { normalizeChaptersToVideo } from '@/lib/utils/chapters';
 
 // No global types needed, we'll use type assertions
 
-interface VdoCipherPlayerProps {
+export interface VdoCipherPlayerProps {
   videoId: string;
   watermark?: string;
   className?: string;

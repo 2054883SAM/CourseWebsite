@@ -1,4 +1,5 @@
 import { SignIn } from '@/components/auth/SignIn';
+import { Suspense } from 'react';
 import { Metadata } from 'next';
 import { Logo } from '@/components/layout/Logo';
 
@@ -32,9 +33,11 @@ export default function SignInPage() {
         </div>
 
         {/* Sign in form */}
-        <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm py-8 px-6 shadow-2xl rounded-2xl border border-blue-200/50 dark:border-blue-700/50 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-          <SignIn />
-        </div>
+        <Suspense fallback={<div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm py-8 px-6 shadow-2xl rounded-2xl border border-blue-200/50 dark:border-blue-700/50 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>Chargement…</div>}>
+          <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm py-8 px-6 shadow-2xl rounded-2xl border border-blue-200/50 dark:border-blue-700/50 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+            <SignIn />
+          </div>
+        </Suspense>
 
         {/* Footer */}
         <div className="mt-8 text-center animate-fade-in-up" style={{ animationDelay: '0.4s' }}>

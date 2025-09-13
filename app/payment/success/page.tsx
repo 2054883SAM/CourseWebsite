@@ -1,10 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function PaymentSuccessPage() {
+function PaymentSuccessContent() {
   const [confirming, setConfirming] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [enrolling, setEnrolling] = useState(false);
@@ -91,5 +91,13 @@ export default function PaymentSuccessPage() {
         </Link>
       </div>
     </div>
+  );
+}
+
+export default function PaymentSuccessPage() {
+  return (
+    <Suspense fallback={<div className="mx-auto max-w-3xl px-6 py-16 text-center">Chargement…</div>}>
+      <PaymentSuccessContent />
+    </Suspense>
   );
 }
