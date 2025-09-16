@@ -21,6 +21,8 @@ export default function SectionPlayerPage() {
   const [error, setError] = useState<string | null>(null);
   const hasFetchedRef = useRef(false);
   const hasRequestedFlashcardsRef = useRef(false);
+  const lastPostedProgressRef = useRef<number>(-1);
+  const reachedHundredRef = useRef<boolean>(false);
 
   type Flashcard = { id: number; question: string; choices: string[]; correctAnswer: string };
   // Additional question types
@@ -381,33 +383,43 @@ export default function SectionPlayerPage() {
           courseId={courseId}
           duration={sectionData.duration}
           onProgress={async (progressPercentage) => {
-            // Update progress in database every 5% or when significant progress is made
-            if (
-              user &&
-              progressPercentage >= 0 &&
-              (progressPercentage % 5 === 0 || progressPercentage >= 98)
-            ) {
-              try {
-                const response = await fetch(
-                  `/api/progress/section?courseId=${encodeURIComponent(courseId)}&sectionId=${encodeURIComponent(sectionId)}`,
-                  {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                      progressPercentage,
-                    }),
-                  }
-                );
+            // Stop progress updates if not logged in, if quiz is showing, or once 100% was recorded
+            if (!user) return;
+            if (showQuestions) return;
+            if (reachedHundredRef.current) return;
 
-                if (!response.ok) {
-                  const errorData = await response.json();
-                  console.error('Failed to update progress:', errorData);
+            const rounded = Math.round(progressPercentage);
+            if (rounded === lastPostedProgressRef.current) return;
+
+            const shouldPost = rounded >= 98 || (rounded >= 0 && rounded % 5 === 0);
+            if (!shouldPost) return;
+
+            const toSend = rounded >= 98 ? 100 : rounded;
+            try {
+              const response = await fetch(
+                `/api/progress/section?courseId=${encodeURIComponent(courseId)}&sectionId=${encodeURIComponent(sectionId)}`,
+                {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    progressPercentage: toSend,
+                  }),
                 }
-              } catch (error) {
-                console.error('Failed to update section progress:', error);
+              );
+
+              if (!response.ok) {
+                const errorData = await response.json();
+                console.error('Failed to update progress:', errorData);
+              } else {
+                lastPostedProgressRef.current = toSend;
+                if (toSend === 100) {
+                  reachedHundredRef.current = true;
+                }
               }
+            } catch (error) {
+              console.error('Failed to update section progress:', error);
             }
           }}
           onChapterComplete={async (chapter) => {
@@ -754,12 +766,6 @@ export default function SectionPlayerPage() {
                                 }}
                               >
                                 <span className="kid-emoji">✨</span> Continuer à apprendre
-                              </button>
-                              <button
-                                className="kid-btn-primary"
-                                onClick={() => router.push(`/my-learning/${courseId}`)}
-                              >
-                                <span className="kid-emoji">🏠</span> Retour au cours
                               </button>
                               <button
                                 className="kid-btn-primary"
@@ -1185,7 +1191,12 @@ export default function SectionPlayerPage() {
                 <div className="mt-6 text-center">
                   <button
                     className="kid-btn-secondary opacity-75 hover:opacity-100"
-                    onClick={() => setShowQuestions(false)}
+                    onClick={() => {
+                      // Allow the quiz to be shown again if the student finishes the video once more
+                      resetQuiz();
+                      setShowQuestions(false);
+                      hasRequestedFlashcardsRef.current = false;
+                    }}
                   >
                     <span className="kid-emoji">🚪</span> Quitter le quiz
                   </button>

@@ -67,8 +67,9 @@ function VdoCipherPlayerComponent({
               onProgress(100);
             } catch {}
           }
-          if (!completionFiredRef.current && typeof onComplete === 'function') {
-            completionFiredRef.current = true;
+          // Always allow "Terminé" to trigger completion callback, even repeatedly,
+          // so the parent can reopen the quiz after the user exits it.
+          if (typeof onComplete === 'function') {
             try {
               onComplete();
             } catch {}

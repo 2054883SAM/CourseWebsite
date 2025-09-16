@@ -194,7 +194,9 @@ function PaymentContent() {
 
 export default function PaymentPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen w-full bg-gray-50 px-4 py-16">Chargement…</div>}>
+    <Suspense
+      fallback={<div className="min-h-screen w-full bg-gray-50 px-4 py-16">Chargement…</div>}
+    >
       <PaymentContent />
     </Suspense>
   );
