@@ -3,13 +3,52 @@
 import { Suspense, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth/AuthContext';
+import { SubscriptionCard } from '@/components/subscription/SubscriptionCard';
 
 function PaymentContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user } = useAuth();
+  const { user, dbUser } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [currentPlanId, setCurrentPlanId] = useState<string | null>(null);
+  const defaultPriceId = process.env.NEXT_PUBLIC_STRIPE_TEST_PRICE_ID;
+
+  // Récupérer l'ID du plan actuel de l'utilisateur
+  useEffect(() => {
+    const fetchCurrentPlan = async () => {
+      if (!user) {
+        setCurrentPlanId(null);
+        return;
+      }
+
+      try {
+        // Récupérer les informations d'abonnement Stripe de l'utilisateur
+        const response = await fetch('/api/stripe/get-subscription', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setCurrentPlanId(data.priceId || null);
+        } else {
+          // Si l'utilisateur n'a pas d'abonnement actif, vérifier le statut membership
+          if (dbUser?.membership === 'subscribed') {
+            // Utiliser l'ID du plan par défaut si l'utilisateur est marqué comme abonné
+            setCurrentPlanId(defaultPriceId || null);
+          } else {
+            setCurrentPlanId(null);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching current plan:', error);
+        setCurrentPlanId(null);
+      }
+    };
+
+    fetchCurrentPlan();
+  }, [user, dbUser]);
 
   const handleSubscribe = async () => {
     try {
@@ -55,115 +94,29 @@ function PaymentContent() {
           </p>
         </div>
 
-        {/* Container pour les cartes de pricing (préparé pour plusieurs cartes) */}
+        {/* Container pour les cartes de pricing */}
         <div className="flex justify-center">
           <div className="w-full max-w-xl">
-            {/* Carte d'abonnement moderne */}
-            <div className="hover:shadow-3xl relative mt-6 transform overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-2xl transition-shadow duration-300">
-              {/* Badge "Populaire" */}
-              <div className="absolute left-1/2 top-0 z-10 -translate-x-1/2 -translate-y-1/2 transform">
-                <div className="rounded-full bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-2 text-sm font-bold text-white shadow-lg">
-                  ⭐ Le plus populaire
-                </div>
-              </div>
-
-              {/* Header de la carte */}
-              <div className="border-b border-gray-100 px-10 pb-8 pt-12 text-center">
-                <h3 className="mb-3 text-3xl font-bold text-[#1D4ED8]">Premium</h3>
-                <p className="mb-8 text-lg text-gray-600">Accès complet à tous les cours</p>
-
-                {/* Prix avec ancien prix barré */}
-                <div className="mb-6">
-                  <div className="mb-3 flex items-center justify-center gap-3">
-                    <span className="text-lg text-gray-500 line-through">$70</span>
-                    <span className="rounded-full bg-red-100 px-3 py-1 text-sm font-semibold text-red-600">
-                      -29%
-                    </span>
-                  </div>
-                  <div className="flex items-baseline justify-center gap-2">
-                    <span className="text-6xl font-black text-[#1D4ED8]">$50</span>
-                    <span className="text-xl font-medium text-gray-600">/mois</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Liste des avantages */}
-              <div className="px-10 py-8">
-                <ul className="space-y-5">
-                  <li className="flex items-center gap-4">
-                    <span className="text-2xl text-green-500">✅</span>
-                    <span className="text-lg font-semibold text-gray-700">
-                      Accès illimité à tous les cours
-                    </span>
-                  </li>
-                  <li className="flex items-center gap-4">
-                    <span className="text-2xl text-blue-500">📘</span>
-                    <span className="text-lg font-semibold text-gray-700">
-                      Nouveau contenu ajouté chaque mois
-                    </span>
-                  </li>
-                  <li className="flex items-center gap-4">
-                    <span className="text-2xl text-blue-500">🔒</span>
-                    <span className="text-lg font-semibold text-gray-700">
-                      Accès sécurisé et paiement Stripe
-                    </span>
-                  </li>
-                  <li className="flex items-center gap-4">
-                    <span className="text-2xl text-green-500">❌</span>
-                    <span className="text-lg font-semibold text-gray-700">
-                      Annulable à tout moment
-                    </span>
-                  </li>
-                </ul>
-              </div>
-
-              {/* Message d'erreur */}
-              {error && (
-                <div className="mx-10 mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-center text-sm text-red-700">
-                  <span className="font-medium">⚠️ {error}</span>
-                </div>
-              )}
-
-              {/* Bouton principal */}
-              <div className="px-10 pb-10">
-                {user ? (
-                  // Bouton pour utilisateur connecté
-                  <button
-                    onClick={handleSubscribe}
-                    disabled={loading}
-                    className="w-full transform rounded-2xl bg-[#1D4ED8] px-8 py-5 text-lg font-bold text-white shadow-lg transition-all duration-300 hover:scale-[1.02] hover:bg-blue-700 hover:shadow-xl disabled:transform-none disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {loading ? (
-                      <div className="flex items-center justify-center gap-3">
-                        <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-white"></div>
-                        <span>Redirection vers Stripe...</span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-center gap-2">
-                        <span>🚀</span>
-                        <span>S'abonner maintenant</span>
-                      </div>
-                    )}
-                  </button>
-                ) : (
-                  // Bouton pour utilisateur non connecté
-                  <button
-                    onClick={handleLoginToSubscribe}
-                    className="w-full transform rounded-2xl bg-[#1D4ED8] px-8 py-5 text-lg font-bold text-white shadow-lg transition-all duration-300 hover:scale-[1.02] hover:bg-blue-700 hover:shadow-xl"
-                  >
-                    <div className="flex items-center justify-center gap-2">
-                      <span>🔐</span>
-                      <span>Se connecter pour s'abonner</span>
-                    </div>
-                  </button>
-                )}
-
-                {/* Texte sous le bouton */}
-                <p className="mt-6 text-center text-sm text-gray-500">
-                  Annulation possible à tout moment. Paiement sécurisé.
-                </p>
-              </div>
-            </div>
+            <SubscriptionCard
+              title="Premium"
+              description="Accès complet à tous les cours"
+              price={50}
+              originalPrice={70}
+              discount={29}
+              features={[
+                "Accès illimité à tous les cours",
+                "Nouveau contenu ajouté chaque mois",
+                "Accès sécurisé et paiement Stripe",
+                "Annulable à tout moment"
+              ]}
+              isCurrent={currentPlanId === defaultPriceId}
+              onSubscribe={handleSubscribe}
+              onLoginToSubscribe={handleLoginToSubscribe}
+              loading={loading}
+              error={error}
+              user={user}
+              badge="Le plus populaire"
+            />
           </div>
         </div>
 
