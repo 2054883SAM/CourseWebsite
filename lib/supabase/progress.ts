@@ -156,6 +156,87 @@ export async function getCourseCompletionPercentage(
 }
 
 /**
+ * Get comprehensive course progress data including time-based progress
+ */
+export async function getComprehensiveCourseProgress(
+  userId: string,
+  courseId: string
+): Promise<{
+  overallProgress: number;
+  timeWatchedMinutes: number;
+  totalCourseMinutes: number;
+  sectionsCompleted: number;
+  totalSections: number;
+  sectionProgress: SectionProgress[];
+}> {
+  try {
+    // Get all sections for the course with their durations
+    const { data: sections, error: sectionsError } = await supabase
+      .from('sections')
+      .select('id, duration')
+      .eq('course_id', courseId)
+      .order('section_number');
+
+    if (sectionsError) throw sectionsError;
+
+    // Get all section progress for the user in this course
+    const { data: progress, error: progressError } = await supabase
+      .from('section_progress')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('course_id', courseId);
+
+    if (progressError) throw progressError;
+
+    const sectionProgress = progress || [];
+    const courseSections = sections || [];
+
+    // Calculate total course duration
+    const totalCourseMinutes = courseSections.reduce(
+      (total, section) => total + (section.duration || 0),
+      0
+    );
+
+    // Calculate time watched based on progress percentage
+    let timeWatchedMinutes = 0;
+    courseSections.forEach((section) => {
+      const sectionProgressData = sectionProgress.find((p) => p.section_id === section.id);
+      if (sectionProgressData && sectionProgressData.progress_percentage > 0) {
+        const sectionTimeWatched =
+          (section.duration * sectionProgressData.progress_percentage) / 100;
+        timeWatchedMinutes += sectionTimeWatched;
+      }
+    });
+
+    // Calculate overall progress as percentage of time watched
+    const overallProgress =
+      totalCourseMinutes > 0 ? Math.round((timeWatchedMinutes / totalCourseMinutes) * 100) : 0;
+
+    // Count completed sections
+    const sectionsCompleted = sectionProgress.filter((p) => p.completed).length;
+
+    return {
+      overallProgress,
+      timeWatchedMinutes: Math.round(timeWatchedMinutes),
+      totalCourseMinutes: Math.round(totalCourseMinutes),
+      sectionsCompleted,
+      totalSections: courseSections.length,
+      sectionProgress,
+    };
+  } catch (error) {
+    console.error('Error getting comprehensive course progress:', error);
+    return {
+      overallProgress: 0,
+      timeWatchedMinutes: 0,
+      totalCourseMinutes: 0,
+      sectionsCompleted: 0,
+      totalSections: 0,
+      sectionProgress: [],
+    };
+  }
+}
+
+/**
  * Reset progress for a section (for retaking)
  */
 export async function resetSectionProgress(userId: string, sectionId: string): Promise<boolean> {

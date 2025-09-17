@@ -82,18 +82,20 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, 
 
 // Only run client-side initialization code in browser context
 if (!isServer) {
-  // 1) Optionally ensure auth state is consistent (no need to trust stored session blindly)
-  supabase.auth.getUser().then(() => {
-    // noop: calling getUser() will contact Auth server if needed
-  });
+  // Do NOT call getUser() eagerly at startup – it throws AuthSessionMissingError when no session exists.
+  // Instead, set up listeners and optionally warm up with getSession (which safely returns null when absent).
 
-  // 2) Tell your app when things change (SIGN_IN, TOKEN_REFRESHED, SIGN_OUT)
-  supabase.auth.onAuthStateChange((event, session) => {
+  // Auth state change events (SIGNED_IN, TOKEN_REFRESHED, SIGNED_OUT, etc.)
+  supabase.auth.onAuthStateChange((event, _session) => {
     console.log('Supabase auth event:', event);
-    // You can dispatch to your React context or state management here
   });
 
-  // 3) Refresh session when tab gains focus
+  // Warm up session fetch safely (no error thrown if missing)
+  supabase.auth.getSession().catch(() => {
+    // ignore: no active session on initial load
+  });
+
+  // Refresh session when tab gains focus
   window.addEventListener('focus', () => {
     supabase.auth.refreshSession().catch((err) => {
       console.error('Error refreshing Supabase session on focus:', err);

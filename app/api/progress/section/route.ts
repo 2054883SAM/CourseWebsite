@@ -1,6 +1,78 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createRouteHandlerClient } from '@/lib/supabase/server';
 
+/**
+ * Calculate and update course-level progress based on section progress
+ */
+async function updateCourseProgress(supabase: any, userId: string, courseId: string) {
+  try {
+    // Get all sections for the course with their durations
+    const { data: sections, error: sectionsError } = await supabase
+      .from('sections')
+      .select('id, duration')
+      .eq('course_id', courseId)
+      .order('section_number');
+
+    if (sectionsError) {
+      console.error('Error fetching sections for course progress:', sectionsError);
+      return;
+    }
+
+    // Get all section progress for the user in this course
+    const { data: sectionProgress, error: progressError } = await supabase
+      .from('section_progress')
+      .select('section_id, progress_percentage')
+      .eq('user_id', userId)
+      .eq('course_id', courseId);
+
+    if (progressError) {
+      console.error('Error fetching section progress for course progress:', progressError);
+      return;
+    }
+
+    const courseSections = sections || [];
+    const userProgress = sectionProgress || [];
+
+    // Calculate total course duration
+    const totalCourseMinutes = courseSections.reduce(
+      (total: number, section: any) => total + (section.duration || 0),
+      0
+    );
+
+    // Calculate time watched based on progress percentage
+    let timeWatchedMinutes = 0;
+    courseSections.forEach((section: any) => {
+      const sectionProgressData = userProgress.find((p: any) => p.section_id === section.id);
+      if (sectionProgressData && sectionProgressData.progress_percentage > 0) {
+        const sectionTimeWatched =
+          (section.duration * sectionProgressData.progress_percentage) / 100;
+        timeWatchedMinutes += sectionTimeWatched;
+      }
+    });
+
+    // Calculate overall progress as percentage of time watched
+    const overallProgress =
+      totalCourseMinutes > 0 ? Math.round((timeWatchedMinutes / totalCourseMinutes) * 100) : 0;
+
+    // Update or insert course progress
+    const { error: upsertError } = await supabase.from('courses_progress').upsert({
+      user_id: userId,
+      course_id: courseId,
+      progress: Math.min(100, Math.max(0, overallProgress)),
+      updated_at: new Date().toISOString(),
+    });
+
+    if (upsertError) {
+      console.error('Error updating course progress:', upsertError);
+      // Don't throw error, just log it - section progress should still be saved
+    } else {
+      console.log(`Course progress updated: ${overallProgress}% for course ${courseId}`);
+    }
+  } catch (error) {
+    console.error('Error in updateCourseProgress:', error);
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     // Read courseId and sectionId from the URL query params
@@ -86,9 +158,19 @@ export async function POST(request: NextRequest) {
       // Only write in 5% increments and only if increasing
       shouldUpdateProgress = existingProgress == null || bucketedProgress > existingProgress;
     } else {
-      // 0%: don't store unless there is no existing row yet
-      shouldUpdateProgress = existing == null && bucketedProgress === 0;
+      // 0%: only store if there is no existing row yet and it's exactly 0%
+      // This prevents storing very small progress values that get rounded to 0
+      shouldUpdateProgress = existing == null && bucketedProgress === 0 && normalizedProgress === 0;
     }
+
+    console.log('Progress update decision:', {
+      bucketedProgress,
+      normalizedProgress,
+      existingProgress,
+      shouldUpdateProgress,
+      hasQuizUpdate,
+      existing: !!existing,
+    });
 
     // Determine if we should update quiz fields
     let shouldUpdateQuiz = false;
@@ -103,13 +185,19 @@ export async function POST(request: NextRequest) {
 
     // If nothing to update, return existing as success
     if (existing && !shouldUpdateProgress && !shouldUpdateQuiz) {
+      console.log('No updates needed, returning existing progress');
       return NextResponse.json({ success: true, data: existing });
     }
 
     if (!existing) {
       // No row yet: insert when we have a valid reason
       if (!shouldUpdateProgress && !shouldUpdateQuiz) {
-        return NextResponse.json({ success: true, data: null });
+        console.log('No progress to record yet (0% and no quiz), returning null');
+        return NextResponse.json({
+          success: true,
+          data: null,
+          message: 'No progress to record yet',
+        });
       }
       const insertData: any = {
         user_id: user.id,
@@ -134,6 +222,9 @@ export async function POST(request: NextRequest) {
           { status: 500 }
         );
       }
+      // Update course-level progress after inserting section progress
+      await updateCourseProgress(supabase, user.id, courseId);
+
       return NextResponse.json({ success: true, data: inserted });
     }
 
@@ -168,6 +259,9 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    // Update course-level progress after updating section progress
+    await updateCourseProgress(supabase, user.id, courseId);
 
     return NextResponse.json({ success: true, data: updated });
   } catch (error) {

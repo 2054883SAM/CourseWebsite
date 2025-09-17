@@ -411,8 +411,15 @@ export default function SectionPlayerPage() {
 
               if (!response.ok) {
                 const errorData = await response.json();
-                console.error('Failed to update progress:', errorData);
+                console.error('Failed to update progress:', {
+                  status: response.status,
+                  statusText: response.statusText,
+                  error: errorData,
+                  progressData: { courseId, sectionId, progressPercentage: toSend },
+                });
               } else {
+                const successData = await response.json();
+                console.log('Progress update successful:', successData);
                 lastPostedProgressRef.current = toSend;
                 if (toSend === 100) {
                   reachedHundredRef.current = true;

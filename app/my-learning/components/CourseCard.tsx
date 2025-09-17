@@ -9,12 +9,13 @@ interface CourseCardProps {
   course?: EnrolledCourse;
 }
 
-export default function CourseCard({ 
-  viewMode, 
+export default function CourseCard({
+  viewMode,
   course = {
     id: 'demo-course',
     title: 'Introduction à React et Next.js',
-    description: 'Apprenez les fondamentaux de React et Next.js pour développer des applications web modernes et performantes.',
+    description:
+      'Apprenez les fondamentaux de React et Next.js pour développer des applications web modernes et performantes.',
     thumbnail_url: '/images/placeholders/course-thumbnail.jpg',
     creator_id: 'demo',
     created_at: '2025-06-01',
@@ -23,29 +24,29 @@ export default function CourseCard({
     enrollment: {
       id: 'demo-enrollment',
       status: 'active' as const,
-      enrolled_at: '2025-06-10'
-    }
-  }
+      enrolled_at: '2025-06-10',
+    },
+  },
 }: CourseCardProps) {
   // Calculate formatted date string
-  const lastAccessedDate = course.lastAccessedAt 
+  const lastAccessedDate = course.lastAccessedAt
     ? new Date(course.lastAccessedAt).toLocaleDateString('fr-FR', {
         day: 'numeric',
         month: 'long',
-        year: 'numeric'
+        year: 'numeric',
       })
     : null;
-    
+
   // Use thumbnail_url if available, otherwise use placeholder
   const thumbnail = course.thumbnail_url || '/images/placeholders/course-thumbnail.jpg';
-  
+
   // Link to the course player page for enrolled courses
   const courseLink = `/my-learning/${course.id}`;
 
   return viewMode === 'grid' ? (
     // Grid view
     <div className="group flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
-      <Link href={courseLink} className="aspect-video relative overflow-hidden">
+      <Link href={courseLink} className="relative aspect-video overflow-hidden">
         <Image
           src={thumbnail}
           alt={course.title}
@@ -56,35 +57,37 @@ export default function CourseCard({
         {/* Play button overlay */}
         <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100">
           <div className="rounded-full bg-white/80 p-3 shadow-lg backdrop-blur-sm transition-transform duration-300 group-hover:scale-110 dark:bg-black/50">
-            <svg className="h-8 w-8 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <svg
+              className="h-8 w-8 text-blue-600 dark:text-blue-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
             </svg>
           </div>
         </div>
       </Link>
       <div className="flex flex-1 flex-col p-4">
         <Link href={courseLink}>
-          <h3 className="line-clamp-2 font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
+          <h3 className="line-clamp-2 font-semibold text-gray-900 transition-colors duration-300 group-hover:text-blue-600 dark:text-white dark:group-hover:text-blue-400">
             {course.title}
           </h3>
         </Link>
         <p className="mt-2 line-clamp-2 text-sm text-gray-500 dark:text-gray-400">
           {course.description}
         </p>
-        <div className="mt-4 flex items-center">
-          <div className="flex-1">
-            <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
-              <div 
-                className="h-full rounded-full bg-green-500" 
-                style={{ width: `${course.progress}%` }}
-              ></div>
-            </div>
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              {course.progress}% terminé
-            </p>
-          </div>
-        </div>
         {lastAccessedDate && (
           <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
             Dernier accès le {lastAccessedDate}
@@ -105,9 +108,24 @@ export default function CourseCard({
         {/* Play button overlay */}
         <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100">
           <div className="rounded-full bg-white/80 p-2 shadow-lg backdrop-blur-sm transition-transform duration-300 group-hover:scale-110 dark:bg-black/50">
-            <svg className="h-6 w-6 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <svg
+              className="h-6 w-6 text-blue-600 dark:text-blue-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
             </svg>
           </div>
         </div>
@@ -115,35 +133,20 @@ export default function CourseCard({
       <div className="flex flex-1 flex-col justify-between p-4">
         <div>
           <Link href={courseLink}>
-            <h3 className="font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
+            <h3 className="font-semibold text-gray-900 transition-colors duration-300 group-hover:text-blue-600 dark:text-white dark:group-hover:text-blue-400">
               {course.title}
             </h3>
           </Link>
-          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-            {course.description}
-          </p>
+          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">{course.description}</p>
         </div>
-        <div className="mt-4">
-          <div className="flex items-center space-x-4">
-            <div className="flex-1">
-              <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
-                <div 
-                  className="h-full rounded-full bg-green-500" 
-                  style={{ width: `${course.progress}%` }}
-                ></div>
-              </div>
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                {course.progress}% terminé
-              </p>
-            </div>
-            {lastAccessedDate && (
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                Dernier accès le {lastAccessedDate}
-              </p>
-            )}
+        {lastAccessedDate && (
+          <div className="mt-4">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Dernier accès le {lastAccessedDate}
+            </p>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
-} 
+}

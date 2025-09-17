@@ -1,8 +1,0 @@
-{
-  "/api/auth/cookie/route": "app/api/auth/cookie/route.js",
-  "/page": "app/page.js",
-  "/learning/[courseId]/page": "app/learning/[courseId]/page.js",
-  "/courses/[id]/page": "app/courses/[id]/page.js",
-  "/about/page": "app/about/page.js",
-  "/my-learning/[courseId]/section/[sectionId]/page": "app/my-learning/[courseId]/section/[sectionId]/page.js"
-}

@@ -11,7 +11,6 @@ export function SignIn() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [debugInfo, setDebugInfo] = useState<string | null>(null);
   const { signIn, signInWithProvider, user, loading: authLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -19,30 +18,11 @@ export function SignIn() {
   // Helper function to check authentication status
   const verifyAuthStatus = async () => {
     try {
-      // Prefer validated user from Supabase Auth server
       const {
         data: { user },
-        error: userError,
       } = await supabase.auth.getUser();
-      if (userError) {
-        console.error('Error getting auth user:', userError);
-      }
-
-      const isValid = !!user?.id;
-
-      const debugMessage = `
-Auth Status:
-- User present: ${!!user}
-- User ID: ${user?.id || 'none'}
-- Session validity inferred from getUser(): ${isValid}
-`;
-      console.log(debugMessage);
-      setDebugInfo(debugMessage);
-
-      return isValid;
-    } catch (e) {
-      console.error('Error verifying auth status:', e);
-      setDebugInfo(`Error checking auth: ${e instanceof Error ? e.message : String(e)}`);
+      return !!user?.id;
+    } catch {
       return false;
     }
   };
@@ -55,11 +35,9 @@ Auth Status:
       // Verify auth status before redirecting
       verifyAuthStatus().then((isAuthenticated) => {
         if (isAuthenticated) {
-          console.log('✅ Authentication verified, redirecting to', redirectTo);
           sessionStorage.removeItem('redirectAfterLogin');
           router.replace(redirectTo);
         } else {
-          console.error('⚠️ Authentication issue detected in useEffect - not redirecting');
           setError('Authentication issue detected. Please try signing in again.');
         }
       });
@@ -70,14 +48,11 @@ Auth Status:
     e.preventDefault();
     setLoading(true);
     setError(null);
-    setDebugInfo(null);
 
     try {
       // Sign in using AuthContext
       const { error: signInError } = await signIn(email, password);
       if (signInError) throw signInError;
-
-      console.log('Sign-in attempt completed, verifying authentication...');
 
       // Give Supabase a moment to set up the session
       await new Promise((resolve) => setTimeout(resolve, 300));
@@ -97,14 +72,9 @@ Auth Status:
       sessionStorage.removeItem('redirectAfterLogin');
 
       // Redirect to the appropriate page
-      console.log('✅ Authentication verified, redirecting to', redirectTo);
       router.push(redirectTo);
     } catch (err) {
-      console.error('Sign in error:', err);
       setError(err instanceof Error ? err.message : 'Failed to sign in');
-
-      // Try to get latest auth status for debugging
-      verifyAuthStatus();
     } finally {
       setLoading(false);
     }
@@ -276,7 +246,7 @@ Auth Status:
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3">
           <button
             type="button"
             onClick={() => signInWithProvider('google')}
@@ -302,79 +272,6 @@ Auth Status:
             </svg>
             Google
           </button>
-          <button
-            type="button"
-            onClick={() => signInWithProvider('apple')}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
-          >
-            <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
-              <path d="M16.365 1.43c0 1.14-.414 2.024-1.24 2.653-.993.777-2.119.82-2.119.82s-.18-1.1.639-2.21c.703-.952 1.72-1.6 2.72-1.7.001.147 0 .293 0 .437zM20.6 17.28c-.4.93-.88 1.77-1.45 2.52-.76.99-1.39 1.67-1.89 2.03-.76.56-1.58.85-2.45.87-.63.02-1.39-.18-2.28-.6-.89-.42-1.71-.63-2.46-.63-.75 0-1.6.21-2.54.63-.94.42-1.71.63-2.3.64-.84.03-1.67-.26-2.5-.87-.54-.39-1.19-1.08-1.95-2.07-.83-1.06-1.51-2.29-2.02-3.68-.57-1.57-.85-3.07-.85-4.5 0-1.65.35-3.07 1.04-4.27.55-.98 1.28-1.76 2.17-2.33.89-.57 1.85-.86 2.89-.88.68-.01 1.56.22 2.66.69 1.1.47 1.8.7 2.1.7.26 0 1.04-.29 2.38-.87 1.27-.54 2.34-.77 3.21-.7 2.37.19 4.16 1.12 5.38 2.79-2.13 1.29-3.19 3.11-3.19 5.46 0 1.95.73 3.58 2.19 4.89-.06.16-.13.33-.2.51z" />
-            </svg>
-            Apple
-          </button>
-        </div>
-
-        {debugInfo && (
-          <div className="mt-4 rounded-lg border border-gray-300 bg-gray-50 p-4 dark:border-gray-600 dark:bg-gray-700">
-            <h4 className="mb-2 font-semibold text-gray-900 dark:text-white">
-              Informations de débogage :
-            </h4>
-            <pre className="whitespace-pre-wrap text-xs text-gray-700 dark:text-gray-300">
-              {debugInfo}
-            </pre>
-          </div>
-        )}
-
-        <div className="mt-6 border-t border-gray-200 pt-6 dark:border-gray-600">
-          <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
-            Si vous rencontrez des problèmes de connexion :
-          </p>
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <button
-              type="button"
-              onClick={() => {
-                // Sign out from Supabase first to clean up session
-                supabase.auth.signOut().then(() => {
-                  console.log('Signed out from Supabase');
-
-                  // Clear localStorage items related to auth
-                  try {
-                    Object.keys(localStorage).forEach((key) => {
-                      if (key.includes('supabase') || key.includes('sb-')) {
-                        localStorage.removeItem(key);
-                      }
-                    });
-                  } catch (e) {
-                    console.warn('Error clearing localStorage:', e);
-                  }
-
-                  setDebugInfo(
-                    "Déconnexion effectuée et données d'authentification effacées. Veuillez réessayer de vous connecter."
-                  );
-
-                  // Force reload to completely reset state
-                  setTimeout(() => window.location.reload(), 500);
-                });
-              }}
-              className="text-xs text-blue-600 transition-colors duration-200 hover:text-blue-500 hover:underline dark:text-blue-400"
-            >
-              Se déconnecter et effacer les données
-            </button>
-
-            <button
-              type="button"
-              onClick={async () => {
-                const status = await verifyAuthStatus();
-                const { data } = await supabase.auth.getUser();
-                setDebugInfo(
-                  `Résultats de la vérification d'authentification : ${status ? 'Utilisateur authentifié' : 'Aucun utilisateur authentifié'}\n\nInformations détaillées de l'utilisateur : ${JSON.stringify(data, null, 2)}`
-                );
-              }}
-              className="text-xs text-blue-600 transition-colors duration-200 hover:text-blue-500 hover:underline dark:text-blue-400"
-            >
-              Vérifier le statut d'authentification
-            </button>
-          </div>
         </div>
       </form>
     </div>

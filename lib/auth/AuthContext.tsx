@@ -57,25 +57,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     console.log('Looking for cookie format:', expectedCookieName);
 
-    // Get initial authenticated user (validated)
-    supabase.auth.getUser().then(({ data: { user }, error }) => {
-      if (error) {
-        console.error('Error getting initial user:', error);
-      }
+    // Get initial session safely (does not throw when no session)
+    supabase.auth
+      .getSession()
+      .then(({ data: { session }, error }) => {
+        if (error) {
+          console.error('Error getting initial session:', error);
+        }
 
-      console.log(
-        'Initial auth user:',
-        user ? 'Present' : 'None',
-        user ? `(User: ${user.email})` : ''
-      );
+        const initialUser = session?.user ?? null;
+        console.log(
+          'Initial auth session:',
+          session ? 'Present' : 'None',
+          initialUser ? `(User: ${initialUser.email})` : ''
+        );
 
-      setUser(user ?? null);
-      if (user) {
-        fetchDbUser(user.id);
-      } else {
+        setUser(initialUser);
+        if (initialUser) {
+          fetchDbUser(initialUser.id);
+        } else {
+          setLoading(false);
+        }
+      })
+      .catch((e) => {
+        console.warn('Initial session fetch failed:', e);
         setLoading(false);
-      }
-    });
+      });
 
     // Listen for auth changes
     const {

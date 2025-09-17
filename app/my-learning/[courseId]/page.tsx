@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { getEnrolledCourse } from '@/lib/supabase/learning';
 import { getCourseById, getCourseSections } from '@/lib/supabase/courses';
-import { getUserCourseProgress } from '@/lib/supabase/progress';
+import { getUserCourseProgress, getComprehensiveCourseProgress } from '@/lib/supabase/progress';
 import { Section } from '@/lib/supabase/types';
 import SectionList from '@/components/courses/SectionList';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
@@ -17,6 +17,19 @@ export default function CourseOverviewPage() {
   const [courseData, setCourseData] = useState<any>(null);
   const [sections, setSections] = useState<Section[]>([]);
   const [progress, setProgress] = useState<any[]>([]);
+  const [courseProgress, setCourseProgress] = useState<{
+    overallProgress: number;
+    timeWatchedMinutes: number;
+    totalCourseMinutes: number;
+    sectionsCompleted: number;
+    totalSections: number;
+  }>({
+    overallProgress: 0,
+    timeWatchedMinutes: 0,
+    totalCourseMinutes: 0,
+    sectionsCompleted: 0,
+    totalSections: 0,
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const hasFetchedRef = useRef(false);
@@ -32,6 +45,7 @@ export default function CourseOverviewPage() {
       try {
         sessionStorage.removeItem(`course_${courseId}`);
         sessionStorage.removeItem(`course_sections_${courseId}`);
+        sessionStorage.removeItem(`course_progress_${courseId}`);
       } catch (e) {
         console.warn('Failed to clear cache on focus:', e);
       }
@@ -58,36 +72,43 @@ export default function CourseOverviewPage() {
       try {
         setLoading(true);
 
-        // Try to get data from session storage first
+        // Try to get course and sections data from session storage first
+        let cachedCourseData = null;
+        let cachedSections = null;
         try {
           const cachedData = sessionStorage.getItem(`course_${courseId}`);
-          const cachedSections = sessionStorage.getItem(`course_sections_${courseId}`);
+          const cachedSectionsData = sessionStorage.getItem(`course_sections_${courseId}`);
 
-          if (cachedData && cachedSections) {
-            const parsedData = JSON.parse(cachedData);
-            const parsedSections = JSON.parse(cachedSections);
+          if (cachedData && cachedSectionsData) {
+            cachedCourseData = JSON.parse(cachedData);
+            cachedSections = JSON.parse(cachedSectionsData);
             console.log('Using cached course data and sections');
-            setCourseData(parsedData);
-            setSections(parsedSections);
-            hasFetchedRef.current = true;
-            setLoading(false);
-            return;
           }
         } catch (e) {
           console.warn('Failed to read from session storage:', e);
           // Continue with API fetch if session storage fails
         }
 
-        // If no cached data, fetch from API
-        console.log('Fetching course data and sections from API');
+        // Fetch course data and progress data
+        console.log('Fetching course data and progress');
 
         // Admins can access any course without enrollment
         if (dbUser?.role === 'admin') {
-          const [course, courseSections, userProgress] = await Promise.all([
-            getCourseById(courseId),
-            getCourseSections(courseId),
-            getUserCourseProgress(user.id, courseId),
-          ]);
+          // Always fetch progress data
+          const comprehensiveProgress = await getComprehensiveCourseProgress(user.id, courseId);
+
+          let course = cachedCourseData;
+          let courseSections = cachedSections;
+
+          // Only fetch course/sections if not cached
+          if (!cachedCourseData || !cachedSections) {
+            const [courseData, sectionsData] = await Promise.all([
+              getCourseById(courseId),
+              getCourseSections(courseId),
+            ]);
+            course = courseData;
+            courseSections = sectionsData;
+          }
 
           if (!course) {
             setError('Course not found');
@@ -95,59 +116,91 @@ export default function CourseOverviewPage() {
             return;
           }
 
-          const adminCourseData = {
-            id: course.id,
-            title: course.title,
-            description: course.description,
-            thumbnail_url: course.thumbnail_url,
-            created_at: course.created_at,
-            creator_id: course.creator_id,
-            section_count: course.section_count,
-            creator: course.creator,
-          } as any;
+          const adminCourseData =
+            cachedCourseData ||
+            ({
+              id: course.id,
+              title: course.title,
+              description: course.description,
+              thumbnail_url: course.thumbnail_url,
+              created_at: course.created_at,
+              creator_id: course.creator_id,
+              section_count: course.section_count,
+              creator: course.creator,
+            } as any);
 
-          // Cache the result in session storage
-          try {
-            sessionStorage.setItem(`course_${courseId}`, JSON.stringify(adminCourseData));
-            sessionStorage.setItem(`course_sections_${courseId}`, JSON.stringify(courseSections));
-          } catch (e) {
-            console.warn('Failed to cache course data:', e);
+          // Cache the result in session storage (only if not already cached)
+          if (!cachedCourseData || !cachedSections) {
+            try {
+              sessionStorage.setItem(`course_${courseId}`, JSON.stringify(adminCourseData));
+              sessionStorage.setItem(`course_sections_${courseId}`, JSON.stringify(courseSections));
+            } catch (e) {
+              console.warn('Failed to cache course data:', e);
+            }
           }
 
           hasFetchedRef.current = true;
           setCourseData(adminCourseData);
           setSections(courseSections);
-          setProgress(userProgress);
+          setProgress(comprehensiveProgress.sectionProgress);
+          setCourseProgress({
+            overallProgress: comprehensiveProgress.overallProgress,
+            timeWatchedMinutes: comprehensiveProgress.timeWatchedMinutes,
+            totalCourseMinutes: comprehensiveProgress.totalCourseMinutes,
+            sectionsCompleted: comprehensiveProgress.sectionsCompleted,
+            totalSections: comprehensiveProgress.totalSections,
+          });
           setLoading(false);
           return;
         }
 
-        const [result, courseSections, userProgress] = await Promise.all([
-          getEnrolledCourse(user.id, courseId),
-          getCourseSections(courseId),
-          getUserCourseProgress(user.id, courseId),
-        ]);
+        // For enrolled students, always fetch progress data
+        const comprehensiveProgress = await getComprehensiveCourseProgress(user.id, courseId);
 
-        if (result.error || !result.data) {
-          setError(result.error || 'Course not found');
-          // Redirect to unauthorized page if not enrolled (non-admin)
-          router.replace('/unauthorized?requiredRole=student');
-          return;
+        let result = null;
+        let courseSections = cachedSections;
+
+        // Only fetch course/enrollment and sections if not cached
+        if (!cachedCourseData || !cachedSections) {
+          const [enrollmentResult, sectionsData] = await Promise.all([
+            getEnrolledCourse(user.id, courseId),
+            getCourseSections(courseId),
+          ]);
+          result = enrollmentResult;
+          courseSections = sectionsData;
+
+          if (result.error || !result.data) {
+            setError(result.error || 'Course not found');
+            // Redirect to unauthorized page if not enrolled (non-admin)
+            router.replace('/unauthorized?requiredRole=student');
+            return;
+          }
         }
 
-        // Cache the result in session storage
-        try {
-          sessionStorage.setItem(`course_${courseId}`, JSON.stringify(result.data));
-          sessionStorage.setItem(`course_sections_${courseId}`, JSON.stringify(courseSections));
-        } catch (e) {
-          console.warn('Failed to cache course data:', e);
+        const courseData = cachedCourseData || result?.data;
+
+        // Cache the result in session storage (only if not already cached)
+        if (!cachedCourseData || !cachedSections) {
+          try {
+            sessionStorage.setItem(`course_${courseId}`, JSON.stringify(courseData));
+            sessionStorage.setItem(`course_sections_${courseId}`, JSON.stringify(courseSections));
+          } catch (e) {
+            console.warn('Failed to cache course data:', e);
+          }
         }
 
         // Mark as fetched and update state
         hasFetchedRef.current = true;
-        setCourseData(result.data);
+        setCourseData(courseData);
         setSections(courseSections);
-        setProgress(userProgress);
+        setProgress(comprehensiveProgress.sectionProgress);
+        setCourseProgress({
+          overallProgress: comprehensiveProgress.overallProgress,
+          timeWatchedMinutes: comprehensiveProgress.timeWatchedMinutes,
+          totalCourseMinutes: comprehensiveProgress.totalCourseMinutes,
+          sectionsCompleted: comprehensiveProgress.sectionsCompleted,
+          totalSections: comprehensiveProgress.totalSections,
+        });
       } catch (e) {
         setError(e instanceof Error ? e.message : 'An error occurred');
       } finally {
@@ -215,6 +268,34 @@ export default function CourseOverviewPage() {
                   </p>
                 )}
 
+                {/* Course Progress */}
+                <div className="mb-6">
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Course Progress
+                    </span>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                      {courseProgress.overallProgress}% complete
+                    </span>
+                  </div>
+                  <div className="h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                    <div
+                      className="h-2 rounded-full bg-blue-600 transition-all duration-300"
+                      style={{ width: `${courseProgress.overallProgress}%` }}
+                    ></div>
+                  </div>
+                  <div className="mt-2 flex flex-wrap items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                    <span>
+                      {courseProgress.timeWatchedMinutes} / {courseProgress.totalCourseMinutes}{' '}
+                      minutes watched
+                    </span>
+                    <span>
+                      {courseProgress.sectionsCompleted} / {courseProgress.totalSections} sections
+                      completed
+                    </span>
+                  </div>
+                </div>
+
                 {/* Course Stats */}
                 <div className="flex flex-wrap items-center space-x-6 text-sm text-gray-500 dark:text-gray-400">
                   <div className="flex items-center">
@@ -248,10 +329,7 @@ export default function CourseOverviewPage() {
                         d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                       />
                     </svg>
-                    {Math.round(
-                      sections.reduce((total, section) => total + (section.duration || 0), 0)
-                    )}{' '}
-                    minutes total
+                    {courseProgress.totalCourseMinutes} minutes total
                   </div>
 
                   {courseData.creator && (
@@ -296,6 +374,7 @@ export default function CourseOverviewPage() {
             try {
               sessionStorage.removeItem(`course_${courseId}`);
               sessionStorage.removeItem(`course_sections_${courseId}`);
+              sessionStorage.removeItem(`course_progress_${courseId}`);
             } catch (e) {
               console.warn('Failed to clear cache:', e);
             }
