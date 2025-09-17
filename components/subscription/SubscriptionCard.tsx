@@ -10,6 +10,7 @@ interface SubscriptionCardProps {
   discount?: number;
   features: string[];
   isCurrent?: boolean;
+  isOptimistic?: boolean;
   onSubscribe: () => void;
   onLoginToSubscribe: () => void;
   loading?: boolean;
@@ -26,6 +27,7 @@ export function SubscriptionCard({
   discount,
   features,
   isCurrent = false,
+  isOptimistic = false,
   onSubscribe,
   onLoginToSubscribe,
   loading = false,
@@ -53,10 +55,18 @@ export function SubscriptionCard({
         <div className="absolute -top-1 left-0 right-0 z-20">
           <div className="relative">
             {/* Ruban principal */}
-            <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 text-white text-center py-3 px-6 shadow-xl">
+            <div className={`bg-gradient-to-r text-white text-center py-3 px-6 shadow-xl ${
+              isOptimistic 
+                ? 'from-amber-500 via-amber-600 to-amber-700' 
+                : 'from-blue-600 via-blue-700 to-blue-800'
+            }`}>
               <span className="text-sm font-bold flex items-center justify-center gap-2">
-                <span className="text-lg animate-pulse">✅</span>
-                <span>Abonnement actuel</span>
+                <span className={`text-lg ${isOptimistic ? 'animate-spin' : 'animate-pulse'}`}>
+                  {isOptimistic ? '⏳' : '✅'}
+                </span>
+                <span>
+                  {isOptimistic ? 'Abonnement en cours...' : 'Abonnement actuel'}
+                </span>
               </span>
             </div>
             {/* Effet de ruban avec coins coupés */}
@@ -151,8 +161,12 @@ export function SubscriptionCard({
               </div>
             ) : isCurrent ? (
               <div className="flex items-center justify-center gap-3">
-                <span className="text-xl">✅</span>
-                <span>Déjà abonné</span>
+                <span className={`text-xl ${isOptimistic ? 'animate-spin' : ''}`}>
+                  {isOptimistic ? '⏳' : '✅'}
+                </span>
+                <span>
+                  {isOptimistic ? 'Abonnement en cours...' : 'Déjà abonné'}
+                </span>
               </div>
             ) : (
               <div className="flex items-center justify-center gap-2">
@@ -176,10 +190,13 @@ export function SubscriptionCard({
 
         {/* Texte sous le bouton */}
         <p className={`mt-6 text-center text-sm ${
-          isCurrent ? 'text-green-600 font-medium' : 'text-gray-500'
+          isCurrent ? (isOptimistic ? 'text-amber-600 font-medium' : 'text-green-600 font-medium') : 'text-gray-500'
         }`}>
-          {isCurrent 
-            ? 'Vous profitez déjà de cet abonnement' 
+          {isCurrent
+            ? (isOptimistic 
+                ? 'Votre abonnement est en cours de traitement...' 
+                : 'Vous profitez déjà de cet abonnement'
+              )
             : 'Annulation possible à tout moment. Paiement sécurisé.'
           }
         </p>

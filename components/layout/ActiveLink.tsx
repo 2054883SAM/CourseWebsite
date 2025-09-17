@@ -1,8 +1,8 @@
 'use client';
 
-import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ReactNode } from 'react';
+import { NavigationLink } from '@/components/navigation/NavigationLink';
 
 interface ActiveLinkProps {
   children: ReactNode;
@@ -28,12 +28,12 @@ export function ActiveLink({
     : pathname === href || (href !== '/' && pathname.startsWith(href));
 
   return (
-    <Link
+    <NavigationLink
       href={href}
       className={`${className} ${isActive ? activeClassName : ''}`}
       onClick={onClick}
     >
       {children}
-    </Link>
+    </NavigationLink>
   );
 } 

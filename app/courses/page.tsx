@@ -11,6 +11,7 @@ import { getCourses, getCategories, shouldUseMockData, mockData } from '@/lib/su
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Section } from '@/components/layout/Section';
 import { withAuth } from '@/components/auth/withAuth';
+import { useNavigation } from '@/lib/navigation/NavigationContext';
 import { Course } from '@/lib/supabase/types';
 import { CategoryGridView } from './components/CategoryGridView';
 import { useSearchParams } from 'next/navigation';
@@ -31,6 +32,7 @@ type SearchParams = {
 
 function CoursesPage() {
   const searchParams = useSearchParams();
+  const { isNavigating } = useNavigation();
   const [loading, setLoading] = useState(true);
   const [courses, setCourses] = useState<Course[]>([]);
   const [categories, setCategories] = useState<{ categorie: string; count: number }[]>([]);
@@ -151,7 +153,7 @@ function CoursesPage() {
     };
   }, [fetchData, lastFetchTime]);
 
-  if (loading) {
+  if (loading && !isNavigating) {
     return view === 'grid' ? <CourseGridSkeleton /> : <CourseListSkeleton />;
   }
 
@@ -185,7 +187,7 @@ function CoursesPage() {
                   setLoading(true);
                   fetchData(true);
                 }}
-                className="inline-flex transform items-center rounded-full bg-gradient-to-r from-gray-600 to-gray-800 px-6 py-3 font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-gray-700 hover:to-gray-900 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:ring-offset-2"
+                className="inline-flex items-center rounded-full bg-gradient-to-r from-gray-600 to-gray-800 px-6 py-3 font-semibold text-white shadow-lg hover:from-gray-700 hover:to-gray-900 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:ring-offset-2"
               >
                 🔄 Réessayer
               </button>
@@ -218,8 +220,8 @@ function CoursesPage() {
     <div className="min-h-screen w-full bg-white">
       <div className="w-full py-20">
         <div className="container mx-auto px-4">
-          {/* Header avec animations */}
-          <div className="animate-fade-in-up mb-16 text-center">
+          {/* Header */}
+          <div className="mb-16 text-center">
             <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700">
               <span className="text-2xl">📚</span>
             </div>
@@ -239,24 +241,18 @@ function CoursesPage() {
             </p>
           </div>
 
-          {/* Barre de recherche améliorée */}
-          <div
-            className="animate-fade-in-up relative z-10 mb-12"
-            style={{ animationDelay: '0.2s' }}
-          >
+          {/* Barre de recherche */}
+          <div className="relative z-10 mb-12">
             <div className="mx-auto max-w-3xl">
               <SearchBar initialQuery={query} className="w-full" />
             </div>
           </div>
 
           {/* Statistiques et contrôles */}
-          <div
-            className="animate-fade-in-up mb-8 flex flex-col justify-between md:flex-row md:items-center"
-            style={{ animationDelay: '0.4s' }}
-          >
+          <div className="mb-8 flex flex-col justify-between md:flex-row md:items-center">
             <div className="mb-4 md:mb-0">
               <div className="flex items-center space-x-2">
-                <div className="h-2 w-2 animate-pulse rounded-full bg-green-500"></div>
+                <div className="h-2 w-2 rounded-full bg-green-500"></div>
                 <p className="text-gray-600 dark:text-gray-400">
                   {showCategories ? (
                     <>
@@ -323,7 +319,7 @@ function CoursesPage() {
           )}
 
           {/* Contenu principal */}
-          <div className="animate-fade-in-up relative z-0" style={{ animationDelay: '0.6s' }}>
+          <div className="relative z-0">
             <Suspense fallback={view === 'grid' ? <CourseGridSkeleton /> : <CourseListSkeleton />}>
               {showCategories ? (
                 <CategoryGridView categories={categories} />
@@ -351,7 +347,7 @@ function CoursesPage() {
 
           {/* Message si aucune donnée trouvée */}
           {!showCategories && courses.length === 0 && !loading && (
-            <div className="animate-fade-in-up py-16 text-center">
+            <div className="py-16 text-center">
               <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
                 <span className="text-3xl">🔍</span>
               </div>
@@ -370,7 +366,7 @@ function CoursesPage() {
                     params.delete('query');
                     window.location.search = params.toString();
                   }}
-                  className="mt-6 inline-flex transform items-center rounded-full bg-gradient-to-r from-gray-600 to-gray-700 px-6 py-3 font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-gray-700 hover:to-gray-800 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:ring-offset-2"
+                  className="mt-6 inline-flex items-center rounded-full bg-gradient-to-r from-gray-600 to-gray-700 px-6 py-3 font-semibold text-white shadow-lg hover:from-gray-700 hover:to-gray-800 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:ring-offset-2"
                 >
                   ✨ Voir tous les cours
                 </button>

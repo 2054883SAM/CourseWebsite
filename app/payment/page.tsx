@@ -12,6 +12,7 @@ function PaymentContent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentPlanId, setCurrentPlanId] = useState<string | null>(null);
+  const [optimisticSubscription, setOptimisticSubscription] = useState<string | null>(null);
   const defaultPriceId = process.env.NEXT_PUBLIC_STRIPE_TEST_PRICE_ID;
 
   // Récupérer l'ID du plan actuel de l'utilisateur
@@ -19,6 +20,7 @@ function PaymentContent() {
     const fetchCurrentPlan = async () => {
       if (!user) {
         setCurrentPlanId(null);
+        setOptimisticSubscription(null);
         return;
       }
 
@@ -32,28 +34,38 @@ function PaymentContent() {
         if (response.ok) {
           const data = await response.json();
           setCurrentPlanId(data.priceId || null);
+          // Réinitialiser l'état optimiste si l'utilisateur a un abonnement réel
+          if (data.priceId) {
+            setOptimisticSubscription(null);
+          }
         } else {
           // Si l'utilisateur n'a pas d'abonnement actif, vérifier le statut membership
           if (dbUser?.membership === 'subscribed') {
             // Utiliser l'ID du plan par défaut si l'utilisateur est marqué comme abonné
             setCurrentPlanId(defaultPriceId || null);
+            setOptimisticSubscription(null);
           } else {
             setCurrentPlanId(null);
+            setOptimisticSubscription(null);
           }
         }
       } catch (error) {
         console.error('Error fetching current plan:', error);
         setCurrentPlanId(null);
+        setOptimisticSubscription(null);
       }
     };
 
     fetchCurrentPlan();
-  }, [user, dbUser]);
+  }, [user, dbUser, defaultPriceId]);
 
   const handleSubscribe = async () => {
     try {
       setError(null);
       setLoading(true);
+      
+      // Mise à jour optimiste : afficher immédiatement que l'utilisateur est abonné
+      setOptimisticSubscription(defaultPriceId || null);
 
       // Create subscription checkout session
       const courseId = searchParams?.get('courseId') || undefined;
@@ -65,13 +77,15 @@ function PaymentContent() {
 
       const data = await res.json();
       if (!res.ok || !data?.url) {
+        // En cas d'erreur, annuler la mise à jour optimiste
+        setOptimisticSubscription(null);
         throw new Error(data?.error || 'Failed to start checkout');
       }
 
+      // Rediriger vers Stripe
       window.location.href = data.url as string;
     } catch (e: any) {
       setError(e?.message || 'Something went wrong');
-    } finally {
       setLoading(false);
     }
   };
@@ -109,7 +123,8 @@ function PaymentContent() {
                 "Accès sécurisé et paiement Stripe",
                 "Annulable à tout moment"
               ]}
-              isCurrent={currentPlanId === defaultPriceId}
+              isCurrent={optimisticSubscription === defaultPriceId || currentPlanId === defaultPriceId}
+              isOptimistic={optimisticSubscription === defaultPriceId && currentPlanId !== defaultPriceId}
               onSubscribe={handleSubscribe}
               onLoginToSubscribe={handleLoginToSubscribe}
               loading={loading}

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { NavigationLink } from '@/components/navigation/NavigationLink';
 import { CourseCategory } from '@/types/supabase';
 
 interface CategoryGridViewProps {
@@ -91,7 +92,7 @@ export function CategoryGridView({ categories }: CategoryGridViewProps) {
         const icon = getCategoryIcon(category.categorie);
 
         return (
-          <Link
+          <NavigationLink
             key={category.categorie}
             href={`/courses?category=${encodeURIComponent(category.categorie)}`}
             className="group block"
@@ -100,19 +101,18 @@ export function CategoryGridView({ categories }: CategoryGridViewProps) {
               className={`
               relative rounded-2xl border-2 p-8 ${colors.border}
               bg-gradient-to-br ${colors.bg}
-              transition-all duration-300 ease-in-out
-              group-hover:scale-105 group-hover:shadow-xl
+              group-hover:shadow-xl
               group-hover:shadow-gray-200/50 dark:group-hover:shadow-gray-900/30
             `}
             >
               {/* Category Icon */}
-              <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-white/50 text-4xl shadow-sm transition-colors duration-300 group-hover:bg-white/70 dark:bg-gray-800/30 dark:group-hover:bg-gray-800/50">
+              <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-white/50 text-4xl shadow-sm group-hover:bg-white/70 dark:bg-gray-800/30 dark:group-hover:bg-gray-800/50">
                 {icon}
               </div>
 
               {/* Category Title */}
               <h3
-                className={`mb-3 text-center text-xl font-bold ${colors.text} transition-transform duration-300 group-hover:scale-105`}
+                className={`mb-3 text-center text-xl font-bold ${colors.text}`}
               >
                 {category.categorie}
               </h3>
@@ -120,14 +120,14 @@ export function CategoryGridView({ categories }: CategoryGridViewProps) {
               {/* Course Count */}
               <div className="text-center">
                 <span
-                  className={`inline-flex items-center rounded-full px-4 py-2 text-sm font-medium ${colors.text} bg-white/40 transition-colors duration-300 group-hover:bg-white/60 dark:bg-gray-800/40 dark:group-hover:bg-gray-800/60`}
+                  className={`inline-flex items-center rounded-full px-4 py-2 text-sm font-medium ${colors.text} bg-white/40 group-hover:bg-white/60 dark:bg-gray-800/40 dark:group-hover:bg-gray-800/60`}
                 >
                   {category.count} cours
                 </span>
               </div>
 
               {/* Hover Arrow */}
-              <div className="absolute right-4 top-4 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+              <div className="absolute right-4 top-4 opacity-0 group-hover:opacity-100">
                 <svg
                   className={`h-5 w-5 ${colors.text}`}
                   fill="none"
@@ -143,7 +143,7 @@ export function CategoryGridView({ categories }: CategoryGridViewProps) {
                 </svg>
               </div>
             </div>
-          </Link>
+          </NavigationLink>
         );
       })}
     </div>

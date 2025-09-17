@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { Container } from './Container';
 import { ThemeToggle } from './ThemeToggle';
 import { ActiveLink } from './ActiveLink';
+import { NavigationLink } from '@/components/navigation/NavigationLink';
 import { Logo } from './Logo';
 import { DropdownMenu } from './DropdownMenu';
 import { DropdownMenuItem } from './DropdownMenuItem';
@@ -132,14 +133,13 @@ export function Header() {
           <div className="hidden items-center space-x-8 md:flex">
             <div className="flex items-center space-x-6">
               {getNavItems().map((item) => (
-                <ActiveLink
+                <NavigationLink
                   key={item.name}
                   href={item.href}
                   className="font-medium text-[#1D4ED8] decoration-2 underline-offset-4 transition-colors duration-200 hover:text-blue-700 hover:underline"
-                  activeClassName="text-blue-700 font-semibold"
                 >
                   {item.name}
-                </ActiveLink>
+                </NavigationLink>
               ))}
               {/* Ajout du bouton Créer une vidéo pour admin/creator */}
               <CreateVideoButton />
@@ -231,18 +231,18 @@ export function Header() {
                 </DropdownMenu>
               ) : (
                 <div className="flex items-center space-x-4">
-                  <Link
+                  <NavigationLink
                     href="/signin"
                     className="font-medium text-[#1D4ED8] transition-colors duration-200 hover:text-blue-700"
                   >
                     Se connecter
-                  </Link>
-                  <Link
+                  </NavigationLink>
+                  <NavigationLink
                     href="/signup"
                     className="inline-flex h-10 items-center justify-center rounded-lg bg-[#1D4ED8] px-4 py-2 text-sm font-semibold text-white transition-all duration-300 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                   >
                     S&apos;inscrire
-                  </Link>
+                  </NavigationLink>
                 </div>
               )}
             </div>
@@ -375,50 +375,50 @@ export function Header() {
           </h2>
           <div className="space-y-1">
             {getNavItems().map((item) => (
-              <Link
+              <NavigationLink
                 key={item.name}
                 href={item.href}
                 className="block border-b border-gray-200 py-3 text-base font-medium text-[#1D4ED8] transition-colors duration-200 hover:text-blue-700"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 {item.name}
-              </Link>
+              </NavigationLink>
             ))}
             {user && (
               <>
-                <Link
+                <NavigationLink
                   href="/profile"
                   className="block border-b border-blue-200 py-3 text-base font-medium text-gray-900 transition-colors duration-200 dark:border-blue-800 dark:text-gray-100"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   👤 Mon Profil
-                </Link>
-                <Link
+                </NavigationLink>
+                <NavigationLink
                   href="/settings"
                   className="block border-b border-blue-200 py-3 text-base font-medium text-gray-900 transition-colors duration-200 dark:border-blue-800 dark:text-gray-100"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   ⚙️ Paramètres
-                </Link>
+                </NavigationLink>
               </>
             )}
           </div>
           {!user ? (
             <div className="mt-8 space-y-4">
-              <Link
+              <NavigationLink
                 href="/signin"
                 className="flex h-12 w-full items-center justify-center rounded-lg border border-[#1D4ED8] px-4 text-sm font-semibold text-[#1D4ED8] transition-all duration-300 hover:bg-[#1D4ED8] hover:text-white"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Se connecter
-              </Link>
-              <Link
+              </NavigationLink>
+              <NavigationLink
                 href="/signup"
                 className="flex h-12 w-full items-center justify-center rounded-lg bg-[#1D4ED8] px-4 text-sm font-semibold text-white transition-all duration-300 hover:bg-blue-700"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 S&apos;inscrire
-              </Link>
+              </NavigationLink>
             </div>
           ) : (
             <div className="mt-8">

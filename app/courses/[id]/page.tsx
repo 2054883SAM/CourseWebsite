@@ -14,6 +14,7 @@ import { CourseDetailSkeleton } from './components/CourseDetailSkeleton';
 import { CourseActions } from './components/CourseActions';
 import { getCourseById, getCourses, shouldUseMockData, mockData } from '@/lib/supabase';
 import { withAuth } from '@/components/auth/withAuth';
+import { useNavigation } from '@/lib/navigation/NavigationContext';
 import { Course } from '@/lib/supabase/types';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { checkEnrollmentStatus } from '@/lib/supabase/enrollments';
@@ -30,6 +31,7 @@ function CourseDetailPage({ params }: PageProps) {
   const { id } = use(params);
   const router = useRouter();
   const { user, dbUser } = useAuth();
+  const { isNavigating } = useNavigation();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [course, setCourse] = useState<Course | null>(null);
@@ -148,7 +150,7 @@ function CourseDetailPage({ params }: PageProps) {
     };
   }, [fetchData, lastFetchTime, error]);
 
-  if (loading) {
+  if (loading && !isNavigating) {
     return <CourseDetailSkeleton />;
   }
 

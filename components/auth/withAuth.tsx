@@ -1,6 +1,7 @@
 'use client';
 
 import { useAuth } from '@/lib/auth/AuthContext';
+import { useNavigation } from '@/lib/navigation/NavigationContext';
 import { Role } from '@/lib/auth/types';
 
 interface WithAuthProps {
@@ -45,8 +46,9 @@ export function withAuth<P extends object>(
 ) {
   return function WithAuthComponent(props: P) {
     const { user, loading, checkPermission } = useAuth();
+    const { isNavigating } = useNavigation();
 
-    if (loading) {
+    if (loading && !isNavigating) {
       return loadingComponent;
     }
 

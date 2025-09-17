@@ -214,7 +214,7 @@ export function SearchBar({ initialQuery = '', className = '' }: SearchBarProps)
                       <li key={`suggestion-${index}`}>
                         <button
                           type="button"
-                          className="w-full px-4 py-3 text-left rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                          className="w-full px-4 py-3 text-left rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
                           onClick={() => handleSuggestionClick(suggestion)}
                         >
                           🔍 {suggestion}

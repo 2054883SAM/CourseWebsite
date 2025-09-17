@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { NavigationLink } from '@/components/navigation/NavigationLink';
 import Image from 'next/image';
 import { Course } from '@/lib/supabase/types';
 import { SearchHighlight } from './SearchHighlight';
@@ -104,7 +105,7 @@ function CourseListItem({ course, searchQuery = '', onDeleted, onDeleteStart, on
         </div>
 
         <div className="p-4 sm:p-5 flex-1">
-          <Link href={`/courses/${course.id}`} className="block">
+          <NavigationLink href={`/courses/${course.id}`} className="block">
             <div className="flex flex-col sm:flex-row justify-between items-start gap-2">
               <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-1 group-hover:text-gold-600 dark:group-hover:text-gold-400">
                 {searchQuery ? (
@@ -122,7 +123,7 @@ function CourseListItem({ course, searchQuery = '', onDeleted, onDeleteStart, on
                 course.description
               )}
             </p>
-          </Link>
+          </NavigationLink>
 
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
             <div className="flex items-center">
