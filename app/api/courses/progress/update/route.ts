@@ -1,6 +1,16 @@
 import { createRouteHandlerClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 
+type Section = {
+  id: string;
+  duration: number | null;
+};
+
+type SectionProgress = {
+  section_id: string;
+  progress_percentage: number | null;
+};
+
 /**
  * Calculate course progress based on section progress (time-based)
  */
@@ -34,14 +44,14 @@ async function calculateCourseProgress(
       return 0;
     }
 
-    const courseSections = sections || [];
-    const userProgress = sectionProgress || [];
+    const courseSections: Section[] = (sections ?? []) as Section[];
+    const userProgress: SectionProgress[] = (sectionProgress ?? []) as SectionProgress[];
 
     // Calculate total course duration
-    const totalCourseMinutes = courseSections.reduce(
-      (total, section) => total + (section.duration || 0),
-      0
-    );
+    const totalCourseMinutes = courseSections.reduce<number>((total, section) => {
+      const duration = section.duration ?? 0;
+      return total + duration;
+    }, 0);
 
     if (totalCourseMinutes === 0) return 0;
 
@@ -49,11 +59,9 @@ async function calculateCourseProgress(
     let timeWatchedMinutes = 0;
     courseSections.forEach((section) => {
       const sectionProgressData = userProgress.find((p) => p.section_id === section.id);
-      if (sectionProgressData && sectionProgressData.progress_percentage > 0) {
-        const sectionTimeWatched =
-          (section.duration * sectionProgressData.progress_percentage) / 100;
-        timeWatchedMinutes += sectionTimeWatched;
-      }
+      const percent = sectionProgressData?.progress_percentage ?? 0;
+      const duration = section.duration ?? 0;
+      timeWatchedMinutes += (duration * percent) / 100;
     });
 
     // Calculate overall progress as percentage of time watched

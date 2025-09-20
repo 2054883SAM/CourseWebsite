@@ -10,6 +10,8 @@ import { Section } from '@/lib/supabase/types';
 import { normalizeChaptersToVideo } from '@/lib/utils/chapters';
 import VdoCipherPlayer from '@/components/video/VdoCipherPlayer';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import KidQuizModal from '@/components/quiz/KidQuizModal';
+import { AnyQuestion, Flashcard } from '@/lib/types/quiz';
 
 export default function SectionPlayerPage() {
   const params = useParams();
@@ -23,30 +25,6 @@ export default function SectionPlayerPage() {
   const hasRequestedFlashcardsRef = useRef(false);
   const lastPostedProgressRef = useRef<number>(-1);
   const reachedHundredRef = useRef<boolean>(false);
-
-  type Flashcard = { id: number; question: string; choices: string[]; correctAnswer: string };
-  // Additional question types
-  type FillBlankQuestion = {
-    id: number;
-    type: 'fillBlank';
-    title?: string;
-    instructions?: string;
-    sentence: string; // contains exactly one ____
-    choices: string[];
-    correctAnswer: string;
-    feedback?: { correct?: string; incorrect?: string };
-  };
-  type MatchingPair = { left: string; right: string };
-  type MatchingGameQuestion = {
-    id: number;
-    type: 'matchingGame';
-    title?: string;
-    instructions?: string;
-    pairs: MatchingPair[];
-    feedback?: { correct?: string; incorrect?: string };
-  };
-  type AnyQuestion = ({ type: 'flashcard' } & Flashcard) | FillBlankQuestion | MatchingGameQuestion;
-
   const [flashcards, setFlashcards] = useState<Flashcard[] | null>(null);
   const [showFlashcards, setShowFlashcards] = useState(false);
   const [questions, setQuestions] = useState<AnyQuestion[] | null>(null);
@@ -54,39 +32,15 @@ export default function SectionPlayerPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
   const [answerState, setAnswerState] = useState<'idle' | 'correct' | 'incorrect'>('idle');
-  const [matchSelections, setMatchSelections] = useState<Record<number, Record<number, string>>>(
-    {}
-  );
-  const [matchErrors, setMatchErrors] = useState<Record<number, boolean>>({});
-  const [matchSubmitted, setMatchSubmitted] = useState<Record<number, boolean>>({});
   const [chapterFlashcard, setChapterFlashcard] = useState<Flashcard | null>(null);
   const [showChapterFlashcard, setShowChapterFlashcard] = useState(false);
   const [isGeneratingChapterFlashcard, setIsGeneratingChapterFlashcard] = useState(false);
   const [isGeneratingFinalFlashcards, setIsGeneratingFinalFlashcards] = useState(false);
 
-  // Quiz scoring state
-  const [correctAnswers, setCorrectAnswers] = useState(0);
-  const [totalAnswered, setTotalAnswered] = useState(0);
-  const [quizCompleted, setQuizCompleted] = useState(false);
-  const [showScoreResult, setShowScoreResult] = useState(false);
+  // Quiz UI moved to reusable component
 
   const courseId = params.courseId as string;
   const sectionId = params.sectionId as string;
-
-  // Helper functions for quiz scoring
-  const handleCorrectAnswer = () => {
-    setCorrectAnswers((prev) => prev + 1);
-    setTotalAnswered((prev) => prev + 1);
-  };
-
-  const handleIncorrectAnswer = () => {
-    setTotalAnswered((prev) => prev + 1);
-  };
-
-  const calculateScore = () => {
-    if (totalAnswered === 0) return 0;
-    return Math.round((correctAnswers / totalAnswered) * 100);
-  };
 
   const getScoreMessage = (score: number) => {
     if (score >= 90)
@@ -112,17 +66,6 @@ export default function SectionPlayerPage() {
       message: "Continue à t'entraîner ! Essaie d'obtenir 70% ou plus.",
       className: 'kid-result-failure',
     };
-  };
-
-  const resetQuiz = () => {
-    setCurrentIndex(0);
-    setCorrectAnswers(0);
-    setTotalAnswered(0);
-    setQuizCompleted(false);
-    setShowScoreResult(false);
-    setSelectedChoice(null);
-    setAnswerState('idle');
-    setMatchSubmitted({});
   };
 
   const saveQuizScore = async (score: number, passed: boolean) => {
@@ -590,7 +533,6 @@ export default function SectionPlayerPage() {
               const qs = normalizeQuestions((sectionData as any).questions);
               if (qs.length > 0) {
                 setQuestions(qs);
-                resetQuiz(); // Reset quiz state for new attempt
                 setShowQuestions(true);
                 setIsGeneratingFinalFlashcards(false);
                 return;
@@ -612,7 +554,6 @@ export default function SectionPlayerPage() {
               const data = await res.json();
               if (Array.isArray(data?.questions) && data.questions.length > 0) {
                 setQuestions(data.questions);
-                resetQuiz(); // Reset quiz state for new attempt
               }
             } catch (e) {
               console.error('Error generating questions:', e);
@@ -707,511 +648,66 @@ export default function SectionPlayerPage() {
       )}
 
       {/* Final Questions Dialog (Kid-Friendly Quiz Design) */}
-      {showQuestions && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-900/80 to-pink-900/80" />
-          <div className="relative z-10 w-full max-w-2xl">
-            {isGeneratingFinalFlashcards || !questions ? (
-              <div className="kid-quiz-container">
-                <div className="flex flex-col items-center">
-                  <LoadingSpinner />
-                  <p className="mt-3 text-lg font-semibold text-white">
-                    <span className="kid-emoji">🧠</span> Préparation de ton quiz amusant...
-                  </p>
-                </div>
-              </div>
-            ) : showScoreResult ? (
-              <div className="kid-quiz-container">
-                <div className="kid-confetti"></div>
-                <div className="kid-confetti"></div>
-                <div className="kid-confetti"></div>
-                <div className="kid-confetti"></div>
-
-                <div className="text-center">
-                  {(() => {
-                    const score = calculateScore();
-                    const scoreData = getScoreMessage(score);
-                    return (
-                      <div className={`kid-result-message ${scoreData.className}`}>
-                        <div
-                          className="kid-emoji bounce"
-                          style={{ fontSize: '4rem', marginBottom: '1rem' }}
-                        >
-                          {scoreData.emoji}
-                        </div>
-                        <div className="kid-score-display mb-6 justify-center">
-                          <span>Score : {score}%</span>
-                          <span>
-                            ({correctAnswers}/{totalAnswered})
-                          </span>
-                        </div>
-                        <h3 className="mb-4 text-2xl font-bold">{scoreData.message}</h3>
-                        <div className="mt-6 flex flex-col justify-center gap-4 sm:flex-row">
-                          {score >= 70 ? (
-                            <>
-                              <button
-                                className="kid-btn-secondary"
-                                onClick={async () => {
-                                  try {
-                                    setShowQuestions(false);
-                                    const sections = await getCourseSections(courseId);
-                                    if (Array.isArray(sections) && sections.length > 0) {
-                                      const idx = sections.findIndex(
-                                        (s: any) => s.id === sectionData.id
-                                      );
-                                      const next = idx >= 0 ? sections[idx + 1] : undefined;
-                                      if (next) {
-                                        router.push(`/my-learning/${courseId}/section/${next.id}`);
-                                        return;
-                                      }
-                                    }
-                                    router.push(`/my-learning/${courseId}`);
-                                  } catch (e) {
-                                    console.error('Navigate to next section error:', e);
-                                    router.push(`/my-learning/${courseId}`);
-                                  }
-                                }}
-                              >
-                                <span className="kid-emoji">✨</span> Continuer à apprendre
-                              </button>
-                              <button
-                                className="kid-btn-primary"
-                                onClick={async () => {
-                                  try {
-                                    setShowScoreResult(false);
-                                    setIsGeneratingFinalFlashcards(true);
-                                    resetQuiz();
-
-                                    const res = await fetch('/api/video/new-quiz', {
-                                      method: 'POST',
-                                      headers: { 'Content-Type': 'application/json' },
-                                      body: JSON.stringify({
-                                        sectionId,
-                                        maxQuestions: 8,
-                                        previous: Array.isArray(questions) ? questions : undefined,
-                                      }),
-                                    });
-                                    if (res.ok) {
-                                      const data = await res.json();
-                                      if (
-                                        Array.isArray(data?.questions) &&
-                                        data.questions.length > 0
-                                      ) {
-                                        setQuestions(data.questions);
-                                        resetQuiz();
-                                      } else {
-                                        console.error('No new questions returned');
-                                      }
-                                    } else {
-                                      console.error('Failed to fetch new quiz', await res.text());
-                                    }
-                                  } catch (e) {
-                                    console.error('Error regenerating quiz:', e);
-                                  } finally {
-                                    setIsGeneratingFinalFlashcards(false);
-                                  }
-                                }}
-                              >
-                                <span className="kid-emoji">🔁</span> Refaire le quiz
-                              </button>
-                            </>
-                          ) : (
-                            <>
-                              <button
-                                className="kid-btn-primary"
-                                onClick={async () => {
-                                  try {
-                                    // Show loading and prepare for a new quiz
-                                    setShowScoreResult(false);
-                                    setIsGeneratingFinalFlashcards(true);
-                                    resetQuiz();
-
-                                    const res = await fetch('/api/video/new-quiz', {
-                                      method: 'POST',
-                                      headers: { 'Content-Type': 'application/json' },
-                                      body: JSON.stringify({
-                                        sectionId,
-                                        maxQuestions: 8,
-                                        previous: Array.isArray(questions) ? questions : undefined,
-                                      }),
-                                    });
-                                    if (res.ok) {
-                                      const data = await res.json();
-                                      if (
-                                        Array.isArray(data?.questions) &&
-                                        data.questions.length > 0
-                                      ) {
-                                        setQuestions(data.questions);
-                                        resetQuiz();
-                                      } else {
-                                        console.error('No new questions returned');
-                                      }
-                                    } else {
-                                      console.error('Failed to fetch new quiz', await res.text());
-                                    }
-                                  } catch (e) {
-                                    console.error('Error regenerating quiz:', e);
-                                  } finally {
-                                    setIsGeneratingFinalFlashcards(false);
-                                  }
-                                }}
-                              >
-                                <span className="kid-emoji">🔄</span> Réessayer
-                              </button>
-                              <button
-                                className="kid-btn-secondary"
-                                onClick={() => setShowQuestions(false)}
-                              >
-                                <span className="kid-emoji">📚</span> Étudier plus
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })()}
-                </div>
-              </div>
-            ) : currentIndex >= questions.length ? (
-              (() => {
-                // Quiz completed, show score
-                if (!quizCompleted) {
-                  setQuizCompleted(true);
-                  setShowScoreResult(true);
-
-                  // Save quiz score to database
-                  const score = calculateScore();
-                  const passed = score >= 70;
-                  saveQuizScore(score, passed);
+      {false && showQuestions && (
+        <KidQuizModal
+          open={showQuestions}
+          questions={questions}
+          loading={isGeneratingFinalFlashcards || !questions}
+          onClose={() => {
+            setShowQuestions(false);
+            hasRequestedFlashcardsRef.current = false;
+          }}
+          onFinished={(score, passed) => {
+            saveQuizScore(score, passed);
+          }}
+          onRegenerate={async (previous) => {
+            try {
+              setIsGeneratingFinalFlashcards(true);
+              const res = await fetch('/api/video/new-quiz', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  sectionId,
+                  maxQuestions: 8,
+                  previous: Array.isArray(previous) ? previous : undefined,
+                }),
+              });
+              if (res.ok) {
+                const data = await res.json();
+                if (Array.isArray(data?.questions) && data.questions.length > 0) {
+                  setQuestions(data.questions);
+                  return data.questions;
                 }
-                return null;
-              })()
-            ) : (
-              <div className="kid-quiz-container">
-                <div className="kid-confetti"></div>
-                <div className="kid-confetti"></div>
-                <div className="kid-confetti"></div>
-                <div className="kid-confetti"></div>
-
-                {/* Progress Bar */}
-                <div className="mb-6">
-                  <div className="mb-2 flex items-center justify-between">
-                    <span className="text-lg font-bold text-white">
-                      <span className="kid-emoji">🎯</span> Question {currentIndex + 1} sur{' '}
-                      {questions.length}
-                    </span>
-                    <div className="kid-score-display">
-                      <span className="kid-emoji">⭐</span>
-                      <span>
-                        {correctAnswers}/{totalAnswered}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="kid-progress-bar">
-                    <div
-                      className="kid-progress-fill"
-                      style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}
-                    />
-                  </div>
-                </div>
-                {/* Question Content */}
-                <div className="kid-question-card">
-                  {(() => {
-                    const q: any = questions[currentIndex];
-                    if (q.type === 'flashcard') {
-                      const card = q as any;
-                      return (
-                        <div>
-                          <h3 className="mb-6 text-center text-2xl font-bold text-gray-800">
-                            <span className="kid-emoji">🤔</span> {card.question}
-                          </h3>
-                          <div className="grid grid-cols-1 gap-4">
-                            {card.choices.map((choice: string, idx: number) => {
-                              const isSelected = selectedChoice === choice;
-                              const isCorrect =
-                                answerState !== 'idle' && choice === card.correctAnswer;
-                              const isIncorrect =
-                                answerState === 'incorrect' &&
-                                isSelected &&
-                                choice !== card.correctAnswer;
-
-                              let className = 'kid-answer-btn';
-                              if (isCorrect) className += ' correct';
-                              if (isIncorrect) className += ' incorrect';
-
-                              const emojis = ['🅰️', '🅱️', '🅰️', '🅱️']; // Simple alternating pattern
-
-                              return (
-                                <button
-                                  key={idx}
-                                  className={className}
-                                  onClick={() => {
-                                    if (answerState !== 'idle') return;
-                                    setSelectedChoice(choice);
-                                    const correctNow = choice === card.correctAnswer;
-                                    if (correctNow) {
-                                      handleCorrectAnswer();
-                                      setAnswerState('correct');
-                                      setTimeout(() => {
-                                        setAnswerState('idle');
-                                        setSelectedChoice(null);
-                                        setCurrentIndex((i) => i + 1);
-                                      }, 1200);
-                                    } else {
-                                      handleIncorrectAnswer();
-                                      setAnswerState('incorrect');
-                                      setTimeout(() => {
-                                        setAnswerState('idle');
-                                        setSelectedChoice(null);
-                                        setCurrentIndex((i) => i + 1);
-                                      }, 1200);
-                                    }
-                                  }}
-                                  disabled={answerState !== 'idle'}
-                                >
-                                  <span className="text-2xl">{emojis[idx % emojis.length]}</span>
-                                  <span className="flex-1 text-left">{choice}</span>
-                                  {isCorrect && <span className="text-2xl">✅</span>}
-                                  {isIncorrect && <span className="text-2xl">❌</span>}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      );
-                    }
-                    if (q.type === 'fillBlank') {
-                      const fb = q as any;
-                      const displayed = String(fb.sentence || '').replace('____', '______');
-                      return (
-                        <div>
-                          {fb.title && (
-                            <h3 className="mb-4 text-center text-2xl font-bold text-gray-800">
-                              <span className="kid-emoji">✏️</span> {fb.title}
-                            </h3>
-                          )}
-                          {fb.instructions && (
-                            <p className="mb-4 text-center text-lg font-medium text-gray-700">
-                              {fb.instructions}
-                            </p>
-                          )}
-                          <div className="border-3 mb-6 rounded-2xl border-dashed border-blue-300 bg-gradient-to-r from-blue-50 to-purple-50 p-6">
-                            <p className="text-center text-xl font-bold leading-relaxed text-gray-800">
-                              <span className="kid-emoji">📝</span> {displayed}
-                            </p>
-                          </div>
-                          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-                            {fb.choices.map((choice: string, idx: number) => {
-                              const isSelected = selectedChoice === choice;
-                              const isCorrect =
-                                answerState !== 'idle' && choice === fb.correctAnswer;
-                              const isIncorrect =
-                                answerState === 'incorrect' &&
-                                isSelected &&
-                                choice !== fb.correctAnswer;
-
-                              let className = 'kid-answer-btn text-center';
-                              if (isCorrect) className += ' correct';
-                              if (isIncorrect) className += ' incorrect';
-
-                              return (
-                                <button
-                                  key={idx}
-                                  className={className}
-                                  onClick={() => {
-                                    if (answerState !== 'idle') return;
-                                    setSelectedChoice(choice);
-                                    const correctNow = choice === fb.correctAnswer;
-                                    if (correctNow) {
-                                      handleCorrectAnswer();
-                                      setAnswerState('correct');
-                                      setTimeout(() => {
-                                        setAnswerState('idle');
-                                        setSelectedChoice(null);
-                                        setCurrentIndex((i) => i + 1);
-                                      }, 1200);
-                                    } else {
-                                      handleIncorrectAnswer();
-                                      setAnswerState('incorrect');
-                                      setTimeout(() => {
-                                        setAnswerState('idle');
-                                        setSelectedChoice(null);
-                                        setCurrentIndex((i) => i + 1);
-                                      }, 1200);
-                                    }
-                                  }}
-                                  disabled={answerState !== 'idle'}
-                                >
-                                  <span className="font-bold">{choice}</span>
-                                  {isCorrect && <span className="ml-2">✅</span>}
-                                  {isIncorrect && <span className="ml-2">❌</span>}
-                                </button>
-                              );
-                            })}
-                          </div>
-                          {answerState !== 'idle' && fb.feedback && (
-                            <div
-                              className={`mt-6 rounded-xl p-4 text-center font-semibold ${
-                                answerState === 'correct'
-                                  ? 'border-2 border-green-300 bg-green-100 text-green-800'
-                                  : 'border-2 border-orange-300 bg-orange-100 text-orange-800'
-                              }`}
-                            >
-                              <span className="kid-emoji">
-                                {answerState === 'correct' ? '🎉' : '💪'}
-                              </span>{' '}
-                              {answerState === 'correct'
-                                ? fb.feedback.correct || 'Fantastique !'
-                                : fb.feedback.incorrect || 'Continue à essayer !'}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    }
-                    if (q.type === 'matchingGame') {
-                      const mg = q as any;
-                      const lefts: string[] = mg.pairs.map((p: any) => p.left);
-                      const rights: string[] = mg.pairs.map((p: any) => p.right);
-                      const sel: Record<number, string> =
-                        (matchSelections as any)[currentIndex] || {};
-                      const handleSelect = (idx: number, value: string) => {
-                        setMatchSelections(
-                          (prev) =>
-                            ({
-                              ...prev,
-                              [currentIndex]: { ...(prev as any)[currentIndex], [idx]: value },
-                            }) as any
-                        );
-                      };
-                      const handleSubmit = () => {
-                        const errs: Record<number, boolean> = {};
-                        let correctCount = 0;
-                        mg.pairs.forEach((pair: any, idx: number) => {
-                          const chosen = sel[idx];
-                          if (!chosen || chosen !== pair.right) {
-                            errs[idx] = true;
-                          } else {
-                            correctCount++;
-                          }
-                        });
-                        setMatchErrors(errs);
-                        const allCorrect = Object.values(errs).every((v) => v === false);
-
-                        // Mark this question as submitted
-                        setMatchSubmitted((prev) => ({ ...prev, [currentIndex]: true }));
-
-                        if (allCorrect) {
-                          handleCorrectAnswer();
-                          setTimeout(() => {
-                            setMatchErrors({});
-                            setMatchSelections((prev) => ({ ...prev, [currentIndex]: {} }) as any);
-                            setMatchSubmitted((prev) => ({ ...prev, [currentIndex]: false }));
-                            setCurrentIndex((i) => i + 1);
-                          }, 1500);
-                        } else {
-                          handleIncorrectAnswer();
-                        }
-                      };
-
-                      return (
-                        <div>
-                          {mg.title && (
-                            <h3 className="mb-4 text-center text-2xl font-bold text-gray-800">
-                              <span className="kid-emoji">🔗</span> {mg.title}
-                            </h3>
-                          )}
-                          {mg.instructions && (
-                            <p className="mb-6 text-center text-lg font-medium text-gray-700">
-                              {mg.instructions}
-                            </p>
-                          )}
-                          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                            {lefts.map((left, idx) => (
-                              <div
-                                key={idx}
-                                className={`border-3 rounded-2xl p-4 transition-all ${
-                                  matchSubmitted[currentIndex] && matchErrors[idx]
-                                    ? 'animate-wiggle border-red-400 bg-red-50'
-                                    : matchSubmitted[currentIndex] && sel[idx] && !matchErrors[idx]
-                                      ? 'border-green-400 bg-green-50'
-                                      : sel[idx]
-                                        ? 'border-blue-400 bg-blue-100'
-                                        : 'border-blue-300 bg-blue-50'
-                                }`}
-                              >
-                                <div className="mb-3 text-center text-lg font-bold text-gray-800">
-                                  <span className="kid-emoji">🎯</span> {left}
-                                </div>
-                                <select
-                                  className={`w-full rounded-xl border-2 px-4 py-3 text-center text-lg font-semibold ${
-                                    matchSubmitted[currentIndex] && matchErrors[idx]
-                                      ? 'border-red-500 bg-red-100'
-                                      : matchSubmitted[currentIndex] &&
-                                          sel[idx] &&
-                                          !matchErrors[idx]
-                                        ? 'border-green-500 bg-green-100'
-                                        : 'border-blue-400 bg-white'
-                                  }`}
-                                  value={sel[idx] || ''}
-                                  onChange={(e) => handleSelect(idx, e.target.value)}
-                                >
-                                  <option value="" disabled>
-                                    Choisir... 🤔
-                                  </option>
-                                  {rights.map((r, rIdx) => (
-                                    <option key={rIdx} value={r}>
-                                      {r}
-                                    </option>
-                                  ))}
-                                </select>
-                                {matchSubmitted[currentIndex] && matchErrors[idx] && (
-                                  <p className="mt-2 text-center font-bold text-red-600">
-                                    <span className="kid-emoji">❌</span> Réessaie !
-                                  </p>
-                                )}
-                                {matchSubmitted[currentIndex] && sel[idx] && !matchErrors[idx] && (
-                                  <p className="mt-2 text-center font-bold text-green-600">
-                                    <span className="kid-emoji">✅</span> Excellent choix !
-                                  </p>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-
-                          <div className="mt-8 text-center">
-                            <button
-                              className="kid-btn-primary px-8 py-4 text-xl"
-                              onClick={handleSubmit}
-                              disabled={Object.keys(sel).length < lefts.length}
-                            >
-                              <span className="kid-emoji">🎪</span> Vérifier mes associations !
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    }
-                    return null;
-                  })()}
-                </div>
-
-                {/* Exit Button */}
-                <div className="mt-6 text-center">
-                  <button
-                    className="kid-btn-secondary opacity-75 hover:opacity-100"
-                    onClick={() => {
-                      // Allow the quiz to be shown again if the student finishes the video once more
-                      resetQuiz();
-                      setShowQuestions(false);
-                      hasRequestedFlashcardsRef.current = false;
-                    }}
-                  >
-                    <span className="kid-emoji">🚪</span> Quitter le quiz
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+              } else {
+                console.error('Failed to fetch new quiz', await res.text());
+              }
+            } catch (e) {
+              console.error('Error regenerating quiz:', e);
+            } finally {
+              setIsGeneratingFinalFlashcards(false);
+            }
+            return questions;
+          }}
+          onContinue={async () => {
+            try {
+              const sections = await getCourseSections(courseId);
+              if (Array.isArray(sections) && sections.length > 0) {
+                const idx = sections.findIndex((s: any) => s.id === (sectionData?.id as string));
+                const next = idx >= 0 ? sections[idx + 1] : undefined;
+                if (next) {
+                  router.push(`/my-learning/${courseId}/section/${next.id}`);
+                  return;
+                }
+              }
+              router.push(`/my-learning/${courseId}`);
+            } catch (e) {
+              console.error('Navigate to next section error:', e);
+              router.push(`/my-learning/${courseId}`);
+            }
+          }}
+          passThreshold={70}
+          getScoreMessage={getScoreMessage}
+        />
       )}
 
       {/* Final Flashcards Dialog */}
