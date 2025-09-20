@@ -78,8 +78,8 @@ export async function getEnrolledCourses(
 
     // ← use the server‑side helper and pass in Next's cookies
     const supabase = createBrowserClient<Database>(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_ANON_KEY!
     );
 
     // Set up default params
@@ -280,8 +280,8 @@ export async function getEnrolledCourse(
     console.log(`Fetching enrollment for user: ${userId} and course: ${courseId}`);
 
     const supabase = createBrowserClient<Database>(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_ANON_KEY!
     );
 
     // Query for the specific course enrollment

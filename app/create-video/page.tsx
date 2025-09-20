@@ -13,10 +13,7 @@ import Image from 'next/image';
 export default function CreateVideoPage() {
   const { user, dbUser, loading } = useAuth();
   const router = useRouter();
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const supabase = createBrowserClient(process.env.SUPABASE_URL!, process.env.SUPABASE_ANON_KEY!);
 
   // Initialize all state hooks first (React hooks must be called in the same order)
   const [formData, setFormData] = useState({

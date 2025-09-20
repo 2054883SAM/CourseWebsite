@@ -36,7 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Extract project reference from URL for cookie debugging
     const getProjectRef = () => {
-      const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const SUPABASE_URL = process.env.SUPABASE_URL;
       if (!SUPABASE_URL) return 'default';
       // Extract the project reference from the URL
       const matches = SUPABASE_URL.match(/https:\/\/([a-z0-9-]+)\.supabase\.co/);

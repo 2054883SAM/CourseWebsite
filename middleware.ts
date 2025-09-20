@@ -14,30 +14,26 @@ export async function middleware(request: NextRequest) {
     const response = NextResponse.next();
 
     // Create supabase server client
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          get(name) {
-            return request.cookies.get(name)?.value;
-          },
-          set(name, value, options) {
-            response.cookies.set({
-              name,
-              value,
-              ...options,
-            });
-          },
-          remove(name, options) {
-            response.cookies.delete({
-              name,
-              ...options,
-            });
-          },
+    const supabase = createServerClient(process.env.SUPABASE_URL!, process.env.SUPABASE_ANON_KEY!, {
+      cookies: {
+        get(name) {
+          return request.cookies.get(name)?.value;
         },
-      }
-    );
+        set(name, value, options) {
+          response.cookies.set({
+            name,
+            value,
+            ...options,
+          });
+        },
+        remove(name, options) {
+          response.cookies.delete({
+            name,
+            ...options,
+          });
+        },
+      },
+    });
 
     // Refresh session
     await supabase.auth.getUser();

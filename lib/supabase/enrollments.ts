@@ -14,8 +14,8 @@ export async function checkEnrollmentStatus(userId?: string, courseId?: string) 
 
   try {
     const supabase = createBrowserClient<Database>(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_ANON_KEY!
     );
 
     const { data, error } = await supabase
@@ -34,7 +34,7 @@ export async function checkEnrollmentStatus(userId?: string, courseId?: string) 
 
     return {
       isEnrolled: !!data,
-      enrollment: data
+      enrollment: data,
     };
   } catch (error) {
     console.error('Failed to check enrollment:', error);
@@ -54,8 +54,8 @@ export async function verifyEnrollmentEligibility(
   try {
     if (userId) {
       const supabase = createBrowserClient<Database>(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        process.env.SUPABASE_URL!,
+        process.env.SUPABASE_ANON_KEY!
       );
       const { data: u } = await supabase
         .from('users')
@@ -104,8 +104,8 @@ export async function verifyEnrollmentEligibility(
   try {
     if (userId) {
       const supabase = createBrowserClient<Database>(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        process.env.SUPABASE_URL!,
+        process.env.SUPABASE_ANON_KEY!
       );
       const { data: u } = await supabase
         .from('users')
@@ -125,7 +125,7 @@ export async function verifyEnrollmentEligibility(
   // Check if the user is already enrolled
   try {
     const { isEnrolled } = await checkEnrollmentStatus(userId, courseId);
-    
+
     if (isEnrolled) {
       return {
         status: 'enrolled',
@@ -148,4 +148,4 @@ export async function verifyEnrollmentEligibility(
       canEnroll: true,
     };
   }
-} 
+}

@@ -21,8 +21,8 @@ export async function validateApiAuth(request: NextRequest): Promise<AuthResult>
   try {
     // Create a Supabase client using the cookies from the request
     const supabase = createServerClient<Database>(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_ANON_KEY!,
       {
         cookies: {
           get(name) {
@@ -166,7 +166,7 @@ async function fetchUserRole(userId: string): Promise<string> {
 
   try {
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/users?select=role&id=eq.${userId}`,
+      `${process.env.SUPABASE_URL}/rest/v1/users?select=role&id=eq.${userId}`,
       {
         headers: {
           Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
@@ -242,7 +242,7 @@ async function validateToken(token: string): Promise<AuthResult> {
 
     // Fetch the user's role from the database
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/users?select=role&id=eq.${userId}`,
+      `${process.env.SUPABASE_URL}/rest/v1/users?select=role&id=eq.${userId}`,
       {
         headers: {
           Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,

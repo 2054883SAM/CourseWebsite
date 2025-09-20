@@ -12,13 +12,13 @@ export default function StripeTestClient() {
       setLoading(true);
       setError(null);
 
-      if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
-        setError('Missing NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY');
+      if (!process.env.STRIPE_PUBLISHABLE_KEY) {
+        setError('Missing STRIPE_PUBLISHABLE_KEY');
         setLoading(false);
         return;
       }
 
-      const stripe = await loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
+      const stripe = await loadStripe(process.env.STRIPE_PUBLISHABLE_KEY);
       if (!stripe) {
         setError('Failed to initialize Stripe.js');
         setLoading(false);
@@ -28,7 +28,7 @@ export default function StripeTestClient() {
       const res = await fetch('/api/stripe/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ priceId: process.env.NEXT_PUBLIC_STRIPE_TEST_PRICE_ID }),
+        body: JSON.stringify({ priceId: process.env.STRIPE_TEST_PRICE_ID }),
       });
 
       if (!res.ok) {
@@ -76,5 +76,3 @@ export default function StripeTestClient() {
     </div>
   );
 }
-
-

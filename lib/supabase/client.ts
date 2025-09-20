@@ -31,11 +31,11 @@ function createFetchWithTimeout(
 }
 
 // Validate required environment variables
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
 
-if (!SUPABASE_URL) throw new Error('Missing env.NEXT_PUBLIC_SUPABASE_URL');
-if (!SUPABASE_ANON_KEY) throw new Error('Missing env.NEXT_PUBLIC_SUPABASE_ANON_KEY');
+if (!SUPABASE_URL) throw new Error('Missing env.SUPABASE_URL');
+if (!SUPABASE_ANON_KEY) throw new Error('Missing env.SUPABASE_ANON_KEY');
 
 // Determine if we're running on the server or client
 const isServer = typeof window === 'undefined';

@@ -13,7 +13,7 @@ function PaymentContent() {
   const [error, setError] = useState<string | null>(null);
   const [currentPlanId, setCurrentPlanId] = useState<string | null>(null);
   const [optimisticSubscription, setOptimisticSubscription] = useState<string | null>(null);
-  const defaultPriceId = process.env.NEXT_PUBLIC_STRIPE_TEST_PRICE_ID;
+  const defaultPriceId = process.env.STRIPE_TEST_PRICE_ID;
 
   // Récupérer l'ID du plan actuel de l'utilisateur
   useEffect(() => {
@@ -63,7 +63,7 @@ function PaymentContent() {
     try {
       setError(null);
       setLoading(true);
-      
+
       // Mise à jour optimiste : afficher immédiatement que l'utilisateur est abonné
       setOptimisticSubscription(defaultPriceId || null);
 
@@ -118,13 +118,17 @@ function PaymentContent() {
               originalPrice={70}
               discount={29}
               features={[
-                "Accès illimité à tous les cours",
-                "Nouveau contenu ajouté chaque mois",
-                "Accès sécurisé et paiement Stripe",
-                "Annulable à tout moment"
+                'Accès illimité à tous les cours',
+                'Nouveau contenu ajouté chaque mois',
+                'Accès sécurisé et paiement Stripe',
+                'Annulable à tout moment',
               ]}
-              isCurrent={optimisticSubscription === defaultPriceId || currentPlanId === defaultPriceId}
-              isOptimistic={optimisticSubscription === defaultPriceId && currentPlanId !== defaultPriceId}
+              isCurrent={
+                optimisticSubscription === defaultPriceId || currentPlanId === defaultPriceId
+              }
+              isOptimistic={
+                optimisticSubscription === defaultPriceId && currentPlanId !== defaultPriceId
+              }
               onSubscribe={handleSubscribe}
               onLoginToSubscribe={handleLoginToSubscribe}
               loading={loading}
