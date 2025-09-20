@@ -4,6 +4,8 @@ import { ThemeProvider } from '../components/layout';
 import { Header } from '@/components/layout/Header';
 import ErrorSuppressor from '@/components/ErrorSuppressor';
 import { AuthProvider } from '@/lib/auth/AuthContext';
+import { NavigationProvider } from '@/lib/navigation/NavigationContext';
+import { NavigationWrapper } from '@/components/navigation/NavigationWrapper';
 import Script from 'next/script';
 // Import diagnostics script
 import '../lib/utils/vdoPlayerDiagnostics';
@@ -15,11 +17,12 @@ export default function RootLayoutClient({
 }>) {
   return (
     <AuthProvider>
-      <ThemeProvider>
-        <ErrorSuppressor />
-        <div className="flex min-h-full flex-col">
-          <Header />
-          <main className="flex-1">
+      <NavigationProvider>
+        <ThemeProvider>
+          <ErrorSuppressor />
+          <div className="flex min-h-full flex-col">
+            <Header />
+            <main className="flex-1">
             {/* Use the official VdoCipher API.js URL */}
             <Script
               src="https://player.vdocipher.com/v2/api.js"
@@ -45,10 +48,13 @@ export default function RootLayoutClient({
                 document.head.appendChild(script);
               }}
             />
-            {children}
+            <NavigationWrapper>
+              {children}
+            </NavigationWrapper>
           </main>
         </div>
-      </ThemeProvider>
+        </ThemeProvider>
+      </NavigationProvider>
     </AuthProvider>
   );
 }

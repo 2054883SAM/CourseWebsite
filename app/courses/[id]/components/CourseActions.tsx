@@ -297,7 +297,7 @@ export function CourseActions({
   // Don't show anything until enrollment is checked to prevent UI flickering
   if (!isEnrollmentChecked && !authLoading) {
     return (
-      <div className="animate-pulse rounded-lg border border-gray-200 bg-white p-6 shadow-md">
+      <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-md">
         <div className="mb-4 h-7 w-1/3 rounded bg-gray-200"></div>
         <div className="mb-4 h-10 rounded bg-gray-200"></div>
         <div className="space-y-3">

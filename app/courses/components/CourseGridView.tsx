@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { NavigationLink } from '@/components/navigation/NavigationLink';
 import Image from 'next/image';
 import { Course } from '@/lib/supabase/types';
 import { SearchHighlight } from './SearchHighlight';
@@ -84,8 +85,7 @@ function CourseCard({ course, searchQuery = '', index, onDeleted, onDeleteStart,
 
   return (
     <div 
-      className="group relative overflow-hidden rounded-2xl bg-white dark:bg-gray-800 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 animate-fade-in-up"
-      style={{ animationDelay: `${index * 100}ms` }}
+      className="group relative overflow-hidden rounded-2xl bg-white dark:bg-gray-800 shadow-lg hover:shadow-2xl"
     >
       {/* Image avec overlay */}
       <div className="relative h-56 w-full overflow-hidden">
@@ -95,7 +95,7 @@ function CourseCard({ course, searchQuery = '', index, onDeleted, onDeleteStart,
             alt={course.title}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-            className="object-cover transition-transform duration-500 group-hover:scale-110"
+            className="object-cover"
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 flex items-center justify-center">
@@ -107,7 +107,7 @@ function CourseCard({ course, searchQuery = '', index, onDeleted, onDeleteStart,
         )}
         
         {/* Overlay au survol */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100"></div>
         
         {/* Badge: sign in prompt */}
         <div className="absolute top-4 right-4">
@@ -130,8 +130,8 @@ function CourseCard({ course, searchQuery = '', index, onDeleted, onDeleteStart,
 
       {/* Contenu de la carte */}
       <div className="p-6">
-        <Link href={`/courses/${course.id}`} className="block">
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 group-hover:text-gold-600 dark:group-hover:text-gold-400 transition-colors duration-200 line-clamp-2">
+        <NavigationLink href={`/courses/${course.id}`} className="block">
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 group-hover:text-gold-600 dark:group-hover:text-gold-400 line-clamp-2">
             {searchQuery ? (
               <SearchHighlight text={course.title} query={searchQuery} />
             ) : (
@@ -146,7 +146,7 @@ function CourseCard({ course, searchQuery = '', index, onDeleted, onDeleteStart,
               course.description
             )}
           </p>
-        </Link>
+        </NavigationLink>
 
         {/* Informations du créateur */}
         <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700">
@@ -190,21 +190,21 @@ function CourseCard({ course, searchQuery = '', index, onDeleted, onDeleteStart,
               <button
                 onClick={handleDelete}
                 title="Supprimer"
-                className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-red-600 text-white shadow-lg hover:bg-red-700 transition-all duration-200 transform hover:scale-110 group-hover:shadow-xl"
+                className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-red-600 text-white shadow-lg hover:bg-red-700 group-hover:shadow-xl"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6m-7 0V5a2 2 0 012-2h2a2 2 0 012 2v2m-7 0h8" />
                 </svg>
               </button>
             )}
-            <Link
+            <NavigationLink
             href={`/courses/${course.id}`}
-            className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-gray-600 to-gray-800 text-white shadow-lg hover:from-gray-700 hover:to-gray-900 transition-all duration-200 transform hover:scale-110 group-hover:shadow-xl"
+            className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-gray-600 to-gray-800 text-white shadow-lg hover:from-gray-700 hover:to-gray-900 group-hover:shadow-xl"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
-            </Link>
+            </NavigationLink>
           </div>
         </div>
 
@@ -219,7 +219,7 @@ function CourseCard({ course, searchQuery = '', index, onDeleted, onDeleteStart,
         )}
 
         {dbUser?.role === 'admin' && (
-          <Link
+          <NavigationLink
             href={`/courses/${course.id}/edit`}
             className="mt-6 w-full inline-flex items-center justify-center px-4 py-2 rounded-lg bg-gold-600 text-white font-semibold shadow hover:bg-gold-700 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:ring-offset-2"
           >
@@ -227,12 +227,12 @@ function CourseCard({ course, searchQuery = '', index, onDeleted, onDeleteStart,
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536M4 13.5V19h5.5l9.621-9.621a1.5 1.5 0 000-2.121l-3.379-3.379a1.5 1.5 0 00-2.121 0L4 13.5z" />
             </svg>
             Modifier
-          </Link>
+          </NavigationLink>
         )}
       </div>
 
       {/* Effet de brillance au survol */}
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full"></div>
     </div>
   );
 } 

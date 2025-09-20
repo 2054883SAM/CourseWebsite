@@ -1,7 +1,7 @@
 'use client';
 
-import Link from 'next/link';
 import { ReactNode } from 'react';
+import { NavigationLink } from '@/components/navigation/NavigationLink';
 
 interface DropdownMenuItemProps {
   children: ReactNode;
@@ -26,15 +26,14 @@ export function DropdownMenuItem({
 
   if (href) {
     return (
-      <Link 
+      <NavigationLink 
         href={href}
         className={className}
-        role={role}
-        tabIndex={tabIndex}
-        aria-selected={isActive}
       >
-        {children}
-      </Link>
+        <span role={role} tabIndex={tabIndex} aria-selected={isActive}>
+          {children}
+        </span>
+      </NavigationLink>
     );
   }
 
