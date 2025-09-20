@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
       data: { user },
       error,
     } = await supabase.auth.getUser();
-    
+
     if (error || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
 
     // Récupérer les abonnements Stripe de l'utilisateur
     const stripe = getStripeServerClient();
-    
+
     // Récupérer le customer Stripe de l'utilisateur
     const customers = await stripe.customers.list({
       email: user.email,
@@ -60,14 +60,18 @@ export async function GET(req: NextRequest) {
 
     const subscription = subscriptions.data[0];
     const priceId = subscription.items.data[0]?.price?.id;
+    // Handle Stripe API/SDK type variations for period end
+    const currentPeriodEnd =
+      (subscription as any).current_period_end ??
+      (subscription as any).current_period_ends_at ??
+      null;
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       priceId,
       status: 'active',
       subscriptionId: subscription.id,
-      currentPeriodEnd: subscription.current_period_end
+      currentPeriodEnd,
     });
-
   } catch (err: any) {
     console.error('Error fetching subscription:', err);
     return NextResponse.json({ error: err.message || 'Internal error' }, { status: 500 });
