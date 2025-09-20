@@ -648,7 +648,7 @@ export default function SectionPlayerPage() {
       )}
 
       {/* Final Questions Dialog (Kid-Friendly Quiz Design) */}
-      {false && showQuestions && (
+      {showQuestions && (
         <KidQuizModal
           open={showQuestions}
           questions={questions}

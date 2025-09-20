@@ -19,16 +19,30 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
 
-  const startNavigation = useCallback((href: string) => {
-    if (href === pathname) return; // Ne pas naviguer si on est déjà sur la même page
-    
-    setIsNavigating(true);
-    setPendingPath(href);
-    setShouldShowContent(false); // Cacher le contenu de la page actuelle
-    
-    // Utiliser router.push pour la navigation
-    router.push(href);
-  }, [router, pathname]);
+  const startNavigation = useCallback(
+    (href: string) => {
+      if (href === pathname) return; // Ne pas naviguer si on est déjà sur la même page
+
+      // Extraire uniquement le pathname (sans query ni hash) pour la comparaison
+      const targetPathname = href.startsWith('/')
+        ? href.split('?')[0]
+        : (() => {
+            try {
+              return new URL(href, window.location.origin).pathname;
+            } catch {
+              return href;
+            }
+          })();
+
+      setIsNavigating(true);
+      setPendingPath(targetPathname);
+      setShouldShowContent(false); // Cacher le contenu de la page actuelle
+
+      // Utiliser router.push pour la navigation
+      router.push(href);
+    },
+    [router, pathname]
+  );
 
   const completeNavigation = useCallback(() => {
     setIsNavigating(false);
@@ -49,7 +63,9 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
   }, [pathname, isNavigating, pendingPath, completeNavigation]);
 
   return (
-    <NavigationContext.Provider value={{ isNavigating, startNavigation, completeNavigation, shouldShowContent }}>
+    <NavigationContext.Provider
+      value={{ isNavigating, startNavigation, completeNavigation, shouldShowContent }}
+    >
       {children}
     </NavigationContext.Provider>
   );
