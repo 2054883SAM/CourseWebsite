@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getStripeServerClient } from '@/lib/stripe/server';
+import { getBaseUrl } from '@/lib/utils/url';
 import { createRouteHandlerClient } from '@/lib/supabase/server';
 
 export async function POST(req: NextRequest) {
@@ -28,7 +29,8 @@ export async function POST(req: NextRequest) {
     const userId = user.id;
     const customerEmail = user.email || undefined;
 
-    const origin = req.nextUrl.origin;
+    // Build absolute URLs based on environment; in production uses URL_LINK
+    const origin = getBaseUrl();
 
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',

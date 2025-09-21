@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { User } from '@supabase/supabase-js';
 import { Database } from '@/types/supabase';
 import { supabase } from '@/lib/supabase/client';
+import { getAbsoluteUrl } from '@/lib/utils/url';
 
 type DbUser = Database['public']['Tables']['users']['Row'];
 
@@ -245,7 +246,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: redirectTo ?? `${window.location.origin}/`,
+          // Use absolute URL that respects production URL_LINK in prod
+          redirectTo: redirectTo ?? getAbsoluteUrl('/'),
           queryParams: { prompt: 'select_account' },
         },
       });

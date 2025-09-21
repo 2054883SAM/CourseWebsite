@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getStripeServerClient } from '@/lib/stripe/server';
+import { getBaseUrl } from '@/lib/utils/url';
 import { createRouteHandlerClient } from '@/lib/supabase/server';
 
 export async function POST(req: NextRequest) {
@@ -31,7 +32,7 @@ export async function POST(req: NextRequest) {
       customerId = created.id;
     }
 
-    const origin = req.nextUrl.origin;
+    const origin = getBaseUrl();
     const portal = await stripe.billingPortal.sessions.create({
       customer: customerId,
       return_url: `${origin}/profile`,

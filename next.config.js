@@ -9,6 +9,7 @@ const nextConfig = {
     STRIPE_TEST_PRICE_ID: process.env.STRIPE_TEST_PRICE_ID,
     SUPABASE_URL: process.env.SUPABASE_URL,
     SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
+    NEXT_PUBLIC_URL_LINK: process.env.URL_LINK || process.env.NEXT_PUBLIC_URL_LINK,
   },
   /* config options here */
   images: {
