@@ -7,6 +7,7 @@ import { Container } from './Container';
 import { ThemeToggle } from './ThemeToggle';
 import { ActiveLink } from './ActiveLink';
 import { NavigationLink } from '@/components/navigation/NavigationLink';
+import { CoursesMenu } from '@/components/navigation/CoursesMenu';
 import { Logo } from './Logo';
 import { DropdownMenu } from './DropdownMenu';
 import { DropdownMenuItem } from './DropdownMenuItem';
@@ -15,7 +16,7 @@ import CreateVideoButton from '@/app/video-player/CreateVideoButton';
 import { useRouter } from 'next/navigation';
 
 const navigation = [
-  { name: 'Accueil', href: '/' },
+  { name: 'Accue', href: '/' },
   { name: 'Cours', href: '/courses' },
   { name: 'Membership', href: '/payment' },
 ];
@@ -132,15 +133,21 @@ export function Header() {
           {/* Desktop navigation */}
           <div className="hidden items-center space-x-8 md:flex">
             <div className="flex items-center space-x-6">
-              {getNavItems().map((item) => (
-                <NavigationLink
-                  key={item.name}
-                  href={item.href}
-                  className="font-medium text-[#1D4ED8] decoration-2 underline-offset-4 transition-colors duration-200 hover:text-blue-700 hover:underline"
-                >
-                  {item.name}
-                </NavigationLink>
-              ))}
+              {getNavItems().map((item) => {
+                // Use CoursesMenu for the "Cours" item
+                if (item.name === 'Cours') {
+                  return <CoursesMenu key={item.name} />;
+                }
+                return (
+                  <NavigationLink
+                    key={item.name}
+                    href={item.href}
+                    className="font-medium text-[#1D4ED8] decoration-2 underline-offset-4 transition-colors duration-200 hover:text-blue-700 hover:underline"
+                  >
+                    {item.name}
+                  </NavigationLink>
+                );
+              })}
               {/* Ajout du bouton Créer une vidéo pour admin/creator */}
               <CreateVideoButton />
             </div>
