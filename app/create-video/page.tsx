@@ -40,7 +40,7 @@ export default function CreateVideoPage() {
       id: crypto.randomUUID(),
       title: '',
       videoFile: null,
-      aiGeneratedChapters: false,
+      aiGeneratedChapters: true,
       chapters: [],
       uploadProgress: 0,
       status: 'pending',
@@ -137,7 +137,7 @@ export default function CreateVideoPage() {
       id: crypto.randomUUID(),
       title: '',
       videoFile: null,
-      aiGeneratedChapters: false,
+      aiGeneratedChapters: true,
       chapters: [],
       uploadProgress: 0,
       status: 'pending',
@@ -480,10 +480,10 @@ export default function CreateVideoPage() {
         uploadProgress: 65,
       });
 
-      // Step 3: Generate AI chapters if requested
+      // Step 3: Generate AI chapters for every section
       let generatedChapters: VideoChapter[] = section.chapters;
 
-      if (section.aiGeneratedChapters && captionData?.captions) {
+      if (captionData?.captions) {
         updateSectionStatus(sectionIndex, {
           currentStep: 'Génération des chapitres IA...',
           uploadProgress: 70,
@@ -520,6 +520,23 @@ export default function CreateVideoPage() {
         } catch (genErr) {
           console.warn('CHAPTERS: Error during AI generation', genErr);
         }
+      }
+
+      // Ensure at least one chapter exists per section
+      if (!Array.isArray(generatedChapters) || generatedChapters.length === 0) {
+        const fallbackDurationSec = Math.max(60, (videoDurationMinutes || 1) * 60);
+        generatedChapters = [
+          {
+            id: crypto.randomUUID(),
+            title: section.title?.trim() || `Section ${sectionIndex + 1}`,
+            startTime: 0,
+            duration: fallbackDurationSec,
+            description: undefined,
+            flashcard: false,
+          },
+        ];
+        updateSectionStatus(sectionIndex, { chapters: generatedChapters });
+        console.log('CHAPTERS: Fallback chapter created for section', section.title);
       }
 
       updateSectionStatus(sectionIndex, {
@@ -804,7 +821,7 @@ export default function CreateVideoPage() {
           id: crypto.randomUUID(),
           title: '',
           videoFile: null,
-          aiGeneratedChapters: false,
+          aiGeneratedChapters: true,
           chapters: [],
           uploadProgress: 0,
           status: 'pending',

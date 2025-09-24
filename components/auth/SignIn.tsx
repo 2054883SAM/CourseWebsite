@@ -11,9 +11,16 @@ export function SignIn() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { signIn, signInWithProvider, user, loading: authLoading } = useAuth();
+  const { signIn, signInWithProvider, user, dbUser, loading: authLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [hasRedirected, setHasRedirected] = useState(false);
+
+  const getRoleBasedRedirect = () => {
+    if (dbUser?.role === 'student') return '/learning?page=dashboard';
+    if (dbUser?.role === 'admin') return '/dashboard?page=dashboard';
+    return null;
+  };
 
   // Helper function to check authentication status
   const verifyAuthStatus = async () => {
@@ -28,21 +35,24 @@ export function SignIn() {
   };
 
   useEffect(() => {
-    if (!authLoading && user) {
-      const redirectTo =
-        searchParams.get('redirectTo') || sessionStorage.getItem('redirectAfterLogin') || '/';
+    if (!authLoading && user && !hasRedirected) {
+      const explicitRedirect =
+        searchParams.get('redirectTo') || sessionStorage.getItem('redirectAfterLogin') || undefined;
+      const roleRedirect = getRoleBasedRedirect();
+      const finalRedirect = explicitRedirect ?? roleRedirect ?? '/';
 
       // Verify auth status before redirecting
       verifyAuthStatus().then((isAuthenticated) => {
         if (isAuthenticated) {
           sessionStorage.removeItem('redirectAfterLogin');
-          router.replace(redirectTo);
+          setHasRedirected(true);
+          router.replace(finalRedirect);
         } else {
           setError('Authentication issue detected. Please try signing in again.');
         }
       });
     }
-  }, [user, authLoading, router, searchParams]);
+  }, [user, dbUser, authLoading, router, searchParams, hasRedirected]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,15 +74,7 @@ export function SignIn() {
         throw new Error('Authentication failed. Please try again.');
       }
 
-      // Get redirect destination
-      const redirectTo =
-        searchParams.get('redirectTo') || sessionStorage.getItem('redirectAfterLogin') || '/';
-
-      // Clean up stored redirect
-      sessionStorage.removeItem('redirectAfterLogin');
-
-      // Redirect to the appropriate page
-      router.push(redirectTo);
+      // Let the auth state effect handle redirect based on role or explicit redirect
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to sign in');
     } finally {
