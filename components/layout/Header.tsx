@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Container } from './Container';
-import { ThemeToggle } from './ThemeToggle';
 import { ActiveLink } from './ActiveLink';
 import { NavigationLink } from '@/components/navigation/NavigationLink';
 import { CoursesMenu } from '@/components/navigation/CoursesMenu';
@@ -18,7 +17,6 @@ import { useRouter } from 'next/navigation';
 const navigation = [
   { name: 'Accue', href: '/' },
   { name: 'Cours', href: '/courses' },
-  { name: 'Membership', href: '/payment' },
 ];
 
 export function Header() {
@@ -102,11 +100,6 @@ export function Header() {
   const getNavItems = () => {
     const baseItems = [...navigation];
 
-    // Add "Mes formations" for authenticated users with subscribed membership
-    if (user && dbUser?.role !== 'admin' && dbUser?.membership === 'subscribed') {
-      baseItems.splice(2, 0, { name: 'Mes formations', href: '/my-learning' });
-    }
-
     // Add "Membership" for users not signed in or students with free membership
     if (!user || (dbUser?.role === 'student' && dbUser?.membership === 'free')) {
       if (!baseItems.some((item) => item.href === '/payment')) {
@@ -153,8 +146,6 @@ export function Header() {
             </div>
 
             <div className="flex items-center space-x-4">
-              <ThemeToggle />
-
               {user ? (
                 <DropdownMenu
                   trigger={
@@ -257,7 +248,6 @@ export function Header() {
 
           {/* Mobile menu button */}
           <div className="flex items-center md:hidden">
-            <ThemeToggle />
             <button
               type="button"
               className="ml-4 text-gray-700 transition-colors duration-200 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400"

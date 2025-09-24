@@ -8,11 +8,25 @@ import { useAuth } from '@/lib/auth/AuthContext';
 import { getCourses, shouldUseMockData, mockData } from '@/lib/supabase';
 import { Course } from '@/lib/supabase/types';
 
+import { StudentLayout } from '@/components/layout/StudentLayout';
+import { useRouter } from 'next/navigation';
+
 function Home() {
   const { user, dbUser } = useAuth();
   const [featuredCourses, setFeaturedCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const isStudent = dbUser?.role === 'student';
+  const isAdmin = dbUser?.role === 'admin';
+  const router = useRouter();
+
+  // Redirect users based on role
+  useEffect(() => {
+    if (isStudent) {
+      router.push('/learning?page=dashboard');
+    } else if (isAdmin) {
+      router.push('/dashboard?page=dashboard');
+    }
+  }, [isStudent, isAdmin, router]);
 
   // Fetch featured courses on component mount
   useEffect(() => {
@@ -39,6 +53,15 @@ function Home() {
 
     fetchFeaturedCourses();
   }, []);
+
+  // Show loading while redirecting users
+  if (isStudent || isAdmin) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen w-full bg-white">
@@ -130,10 +153,10 @@ function Home() {
                   >
                     <div className="mb-4 aspect-video overflow-hidden rounded-lg bg-gray-100">
                       {course.thumbnail_url ? (
-                        <img
-                          src={course.thumbnail_url}
-                          alt={course.title}
-                          className="h-full w-full object-cover"
+                        /* Replaced img with div for now - consider using next/image in future */
+                        <div
+                          className="h-full w-full bg-cover bg-center"
+                          style={{ backgroundImage: `url(${course.thumbnail_url})` }}
                         />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center">
@@ -352,7 +375,7 @@ function Home() {
                     href="/payment"
                     className="inline-flex h-14 items-center justify-center rounded-full bg-green-500 px-10 text-lg font-semibold text-white transition-colors hover:bg-green-600"
                   >
-                    🚀 Commencer l'abonnement
+                    🚀 Commencer l&apos;abonnement
                   </Link>
                   <Link
                     href="/signup"
