@@ -12,7 +12,7 @@ When a user's section progress is updated via `/api/progress/section`, the syste
 
 - Updates or creates the section progress record
 - Automatically calculates and updates the overall course progress
-- Stores the calculated progress in the `courses_progress` table
+- Stores the calculated progress in the `enrollments.progress` column
 
 ### 2. Course Progress Calculation
 
@@ -68,18 +68,9 @@ If a course has 3 sections:
 
 ## Database Schema
 
-### courses_progress Table
+### enrollments.progress
 
-```sql
-CREATE TABLE courses_progress (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-    course_id UUID NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
-    progress NUMERIC NOT NULL DEFAULT 0 CHECK (progress >= 0 AND progress <= 100),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    UNIQUE (user_id, course_id)
-);
-```
+Course progress is stored directly on the user's enrollment row as a numeric percentage (0..100).
 
 ### section_progress Table
 

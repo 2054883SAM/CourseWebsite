@@ -36,11 +36,11 @@ export function useEnrolledCourses(
 
     setIsLoading(true);
     setError(null);
-    
+
     try {
       console.log(`useEnrolledCourses: Fetching for user ${user.id} with params:`, params);
       const { data, error, count } = await getEnrolledCourses(user.id, params);
-      
+
       if (error) {
         console.error('useEnrolledCourses: Error fetching courses:', error);
         setError(error);
@@ -49,6 +49,7 @@ export function useEnrolledCourses(
         setCourses(data);
         setTotalCount(count);
       }
+      console.log('Data : ', data);
     } catch (err: any) {
       console.error('useEnrolledCourses: Exception during fetch:', err);
       setError(err.message || 'Failed to fetch enrolled courses');
@@ -60,21 +61,14 @@ export function useEnrolledCourses(
   // Update parameters with partial new params
   const updateParams = (newParams: Partial<EnrolledCoursesParams>) => {
     console.log('useEnrolledCourses: Updating params:', newParams);
-    setParams(prev => ({ ...prev, ...newParams }));
+    setParams((prev) => ({ ...prev, ...newParams }));
   };
 
   // Fetch courses when params change or user changes
   useEffect(() => {
     console.log('useEnrolledCourses: Effect triggered, user ID:', user?.id);
     fetchCourses();
-  }, [
-    user?.id,
-    params.limit,
-    params.offset,
-    params.sortBy,
-    params.sortOrder,
-    params.status
-  ]);
+  }, [user?.id, params.limit, params.offset, params.sortBy, params.sortOrder, params.status]);
 
   return {
     courses,
@@ -82,6 +76,6 @@ export function useEnrolledCourses(
     error,
     totalCount,
     refetch: fetchCourses,
-    setParams: updateParams
+    setParams: updateParams,
   };
-} 
+}

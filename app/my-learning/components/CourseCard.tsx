@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { EnrolledCourse } from '@/lib/supabase/learning';
+import ProgressBar from '@/components/ui/ProgressBar';
 
 interface CourseCardProps {
   viewMode: 'grid' | 'list';
@@ -19,12 +20,12 @@ export default function CourseCard({
     thumbnail_url: '/images/placeholders/course-thumbnail.jpg',
     creator_id: 'demo',
     created_at: '2025-06-01',
-    progress: 35,
     lastAccessedAt: '2025-07-20',
     enrollment: {
       id: 'demo-enrollment',
       status: 'active' as const,
       enrolled_at: '2025-06-10',
+      progress: 85,
     },
   },
 }: CourseCardProps) {
@@ -42,6 +43,7 @@ export default function CourseCard({
 
   // Link to the course player page for enrolled courses
   const courseLink = `/my-learning/${course.id}`;
+  const progress = (course as any)?.enrollment?.progress ?? (course as any)?.progress ?? 0;
 
   return viewMode === 'grid' ? (
     // Grid view
@@ -88,6 +90,9 @@ export default function CourseCard({
         <p className="mt-2 line-clamp-2 text-sm text-gray-500 dark:text-gray-400">
           {course.description}
         </p>
+        <div className="mt-3">
+          <ProgressBar value={progress} />
+        </div>
         {lastAccessedDate && (
           <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
             Dernier accès le {lastAccessedDate}
@@ -139,13 +144,14 @@ export default function CourseCard({
           </Link>
           <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">{course.description}</p>
         </div>
-        {lastAccessedDate && (
-          <div className="mt-4">
-            <p className="text-xs text-gray-500 dark:text-gray-400">
+        <div className="mt-4">
+          <ProgressBar value={progress} />
+          {lastAccessedDate && (
+            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
               Dernier accès le {lastAccessedDate}
             </p>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

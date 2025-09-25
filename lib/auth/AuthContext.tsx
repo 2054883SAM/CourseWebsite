@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { User } from '@supabase/supabase-js';
 import { Database } from '@/types/supabase';
 import { supabase } from '@/lib/supabase/client';
+import { updateLastConnectedAt } from '@/lib/supabase/users';
 import { getAbsoluteUrl } from '@/lib/utils/url';
 
 type DbUser = Database['public']['Tables']['users']['Row'];
@@ -164,6 +165,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }),
           credentials: 'include',
         });
+
+        // Update last connected time (non-blocking)
+        updateLastConnectedAt();
       }
 
       return { error: error };
@@ -209,6 +213,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Profile row is now created automatically via DB trigger.
       if (data.user) {
+        // If a session exists (no email confirmation required), update last connected
+        if (data.session) {
+          updateLastConnectedAt();
+        }
         return {
           error: null,
           requiresEmailConfirmation,

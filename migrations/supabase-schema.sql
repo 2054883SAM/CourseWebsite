@@ -6,6 +6,7 @@ CREATE TABLE users (
     name TEXT NOT NULL,
     email TEXT NOT NULL,
     photo_url TEXT,
+    last_connected_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
@@ -36,6 +37,7 @@ CREATE TABLE enrollments (
   course_id UUID NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
   enrolled_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   status TEXT NOT NULL CHECK (status IN ('active', 'refunded', 'disputed')),
+  progress NUMERIC NOT NULL DEFAULT 0 CHECK (progress >= 0 AND progress <= 100),
   UNIQUE (user_id, course_id)
 );
 
@@ -182,6 +184,13 @@ WITH CHECK (
         AND role = 'admin'
     )
 );
+
+-- Allow students to update their own enrollments (to write progress)
+CREATE POLICY "Students can update their own enrollments."
+ON enrollments FOR UPDATE
+TO authenticated
+USING ((select auth.uid()) = user_id)
+WITH CHECK ((select auth.uid()) = user_id);
 
 -- Only admins can delete enrollments
 CREATE POLICY "Only admins can delete enrollments."

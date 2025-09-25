@@ -1,77 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createRouteHandlerClient } from '@/lib/supabase/server';
+import { updateEnrollmentProgressFromSections } from '@/lib/supabase/courseProgress';
 
-/**
- * Calculate and update course-level progress based on section progress
- */
-async function updateCourseProgress(supabase: any, userId: string, courseId: string) {
-  try {
-    // Get all sections for the course with their durations
-    const { data: sections, error: sectionsError } = await supabase
-      .from('sections')
-      .select('id, duration')
-      .eq('course_id', courseId)
-      .order('section_number');
-
-    if (sectionsError) {
-      console.error('Error fetching sections for course progress:', sectionsError);
-      return;
-    }
-
-    // Get all section progress for the user in this course
-    const { data: sectionProgress, error: progressError } = await supabase
-      .from('section_progress')
-      .select('section_id, progress_percentage')
-      .eq('user_id', userId)
-      .eq('course_id', courseId);
-
-    if (progressError) {
-      console.error('Error fetching section progress for course progress:', progressError);
-      return;
-    }
-
-    const courseSections = sections || [];
-    const userProgress = sectionProgress || [];
-
-    // Calculate total course duration
-    const totalCourseMinutes = courseSections.reduce(
-      (total: number, section: any) => total + (section.duration || 0),
-      0
-    );
-
-    // Calculate time watched based on progress percentage
-    let timeWatchedMinutes = 0;
-    courseSections.forEach((section: any) => {
-      const sectionProgressData = userProgress.find((p: any) => p.section_id === section.id);
-      if (sectionProgressData && sectionProgressData.progress_percentage > 0) {
-        const sectionTimeWatched =
-          (section.duration * sectionProgressData.progress_percentage) / 100;
-        timeWatchedMinutes += sectionTimeWatched;
-      }
-    });
-
-    // Calculate overall progress as percentage of time watched
-    const overallProgress =
-      totalCourseMinutes > 0 ? Math.round((timeWatchedMinutes / totalCourseMinutes) * 100) : 0;
-
-    // Update or insert course progress
-    const { error: upsertError } = await supabase.from('courses_progress').upsert({
-      user_id: userId,
-      course_id: courseId,
-      progress: Math.min(100, Math.max(0, overallProgress)),
-      updated_at: new Date().toISOString(),
-    });
-
-    if (upsertError) {
-      console.error('Error updating course progress:', upsertError);
-      // Don't throw error, just log it - section progress should still be saved
-    } else {
-      console.log(`Course progress updated: ${overallProgress}% for course ${courseId}`);
-    }
-  } catch (error) {
-    console.error('Error in updateCourseProgress:', error);
-  }
-}
+// Course progress update is handled via shared utility
 
 export async function POST(request: NextRequest) {
   try {
@@ -222,8 +153,8 @@ export async function POST(request: NextRequest) {
           { status: 500 }
         );
       }
-      // Update course-level progress after inserting section progress
-      await updateCourseProgress(supabase, user.id, courseId);
+      // Update course-level progress after inserting section progress (time-weighted)
+      await updateEnrollmentProgressFromSections(supabase, user.id, courseId);
 
       return NextResponse.json({ success: true, data: inserted });
     }
@@ -260,8 +191,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Update course-level progress after updating section progress
-    await updateCourseProgress(supabase, user.id, courseId);
+    // Update course-level progress after updating section progress (time-weighted)
+    await updateEnrollmentProgressFromSections(supabase, user.id, courseId);
 
     return NextResponse.json({ success: true, data: updated });
   } catch (error) {

@@ -1,4 +1,29 @@
-import { supabase } from './client';
+import { supabase } from '@/lib/supabase/client';
+
+/**
+ * Update the `last_connected_at` field for the current authenticated user.
+ * Safe to call after a successful sign-in or sign-up when a session exists.
+ */
+export async function updateLastConnectedAt(): Promise<void> {
+  try {
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user?.id) return;
+
+    // Update user's last_connected_at to now (server will set timestamp value)
+    // Using 'now()' via RPC is not available; we set client-side ISO string.
+    await supabase
+      .from('users')
+      .update({ last_connected_at: new Date().toISOString() })
+      .eq('id', user.id);
+  } catch {
+    // Silently ignore; this metadata is non-critical
+  }
+}
+
 import { User, Enrollment } from './types';
 
 /**
@@ -31,11 +56,7 @@ export async function getCurrentUser(): Promise<User | null> {
  */
 export async function getUserById(id: string): Promise<User | null> {
   try {
-    const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', id)
-      .single();
+    const { data, error } = await supabase.from('users').select('*').eq('id', id).single();
 
     if (error) throw error;
     return data as User;
@@ -50,10 +71,7 @@ export async function getUserById(id: string): Promise<User | null> {
  */
 export async function getCourseCreators(): Promise<User[]> {
   try {
-    const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('role', 'teacher');
+    const { data, error } = await supabase.from('users').select('*').eq('role', 'teacher');
 
     if (error) throw error;
     return data as User[];
@@ -91,8 +109,8 @@ export async function enrollUserInCourse(userId: string, courseId: string): Prom
           user_id: userId,
           course_id: courseId,
           enrolled_at: new Date().toISOString(),
-          payment_status: 'pending' // Will be updated to 'paid' after payment processing
-        }
+          payment_status: 'pending', // Will be updated to 'paid' after payment processing
+        },
       ])
       .select()
       .single();
@@ -128,7 +146,7 @@ export async function getUserEnrollments(userId: string): Promise<Enrollment[]> 
  * Update enrollment payment status
  */
 export async function updateEnrollmentStatus(
-  enrollmentId: string, 
+  enrollmentId: string,
   status: 'paid' | 'pending'
 ): Promise<Enrollment> {
   try {
@@ -145,18 +163,17 @@ export async function updateEnrollmentStatus(
     console.error(`Error updating enrollment ${enrollmentId}:`, error);
     throw error;
   }
-} 
+}
 
 /**
  * Check if a user has a specific role
  */
-export async function checkUserRole(userId: string, role: 'admin' | 'teacher' | 'student'): Promise<boolean> {
+export async function checkUserRole(
+  userId: string,
+  role: 'admin' | 'teacher' | 'student'
+): Promise<boolean> {
   try {
-    const { data, error } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', userId)
-      .single();
+    const { data, error } = await supabase.from('users').select('role').eq('id', userId).single();
 
     if (error) throw error;
     return data?.role === role;
@@ -170,7 +187,7 @@ export async function checkUserRole(userId: string, role: 'admin' | 'teacher' | 
  * Update a user's role (admin only)
  */
 export async function updateUserRole(
-  userId: string, 
+  userId: string,
   newRole: 'admin' | 'teacher' | 'student'
 ): Promise<User | null> {
   try {
@@ -200,10 +217,7 @@ export async function updateUserRole(
  */
 export async function getUsersByRole(role: 'admin' | 'teacher' | 'student'): Promise<User[]> {
   try {
-    const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('role', role);
+    const { data, error } = await supabase.from('users').select('*').eq('role', role);
 
     if (error) throw error;
     return data as User[];
@@ -232,4 +246,4 @@ export async function isCreator(userId: string): Promise<boolean> {
  */
 export async function isStudent(userId: string): Promise<boolean> {
   return checkUserRole(userId, 'student');
-} 
+}

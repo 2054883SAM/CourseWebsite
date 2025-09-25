@@ -15,7 +15,7 @@ import CreateVideoButton from '@/app/video-player/CreateVideoButton';
 import { useRouter } from 'next/navigation';
 
 const navigation = [
-  { name: 'Accue', href: '/' },
+  { name: 'Accueil', href: '/' },
   { name: 'Cours', href: '/courses' },
 ];
 

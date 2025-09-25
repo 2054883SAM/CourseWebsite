@@ -1,7 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { createBrowserClient } from '@supabase/ssr';
+import type { Database } from '@/types/supabase';
 
 interface StatCardProps {
   title: string;
@@ -56,6 +58,10 @@ const ChartCard = ({ title, children }: ChartCardProps) => {
 
 export default function DashboardContent() {
   const router = useRouter();
+  const [recentEnrollmentProgress, setRecentEnrollmentProgress] = useState<
+    { id: string; courseId: string; courseTitle: string; progress: number }[]
+  >([]);
+  const [loadingProgress, setLoadingProgress] = useState<boolean>(true);
 
   // Placeholder data - would be fetched from API in a real implementation
   const stats = [
@@ -184,6 +190,57 @@ export default function DashboardContent() {
     },
   ];
 
+  // Fetch recent enrollments with progress directly from enrollments table
+  useEffect(() => {
+    const fetchRecentProgress = async () => {
+      try {
+        const supabase = createBrowserClient<Database>(
+          process.env.SUPABASE_URL!,
+          process.env.SUPABASE_ANON_KEY!
+        );
+
+        const { data, error } = await supabase
+          .from('enrollments')
+          .select(
+            `
+            id,
+            progress,
+            course:course_id (
+              id,
+              title
+            )
+          `
+          )
+          .eq('status', 'active')
+          .order('enrolled_at', { ascending: false })
+          .limit(5);
+
+        if (error) {
+          // eslint-disable-next-line no-console
+          console.error('Failed to fetch enrollments progress:', error);
+          setRecentEnrollmentProgress([]);
+        } else {
+          const list = (data || []).map((row: any) => ({
+            id: row.id as string,
+            courseId: (Array.isArray(row.course) ? row.course[0]?.id : row.course?.id) as string,
+            courseTitle: (Array.isArray(row.course)
+              ? row.course[0]?.title
+              : row.course?.title) as string,
+            progress: Number(row.progress ?? 0),
+          }));
+          setRecentEnrollmentProgress(list);
+        }
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.error('Unexpected error fetching enrollments progress:', e);
+        setRecentEnrollmentProgress([]);
+      } finally {
+        setLoadingProgress(false);
+      }
+    };
+    fetchRecentProgress();
+  }, []);
+
   return (
     <div className="px-4 py-8">
       <div className="mb-8 flex items-center justify-between">
@@ -236,6 +293,47 @@ export default function DashboardContent() {
             <p className="text-gray-500 dark:text-gray-400">Graphique de revenus</p>
           </div>
         </ChartCard>
+      </div>
+
+      {/* Recent Enrollment Progress (from enrollments.progress) */}
+      <div className="mb-8 rounded-xl bg-white p-6 shadow-md transition-all hover:shadow-lg dark:bg-gray-800">
+        <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+          Progression des cours (dernières inscriptions)
+        </h3>
+        {loadingProgress ? (
+          <div className="space-y-3">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="flex items-center">
+                <div className="h-3 w-2/3 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+              </div>
+            ))}
+          </div>
+        ) : recentEnrollmentProgress.length === 0 ? (
+          <p className="text-sm text-gray-500 dark:text-gray-400">Aucune inscription récente.</p>
+        ) : (
+          <div className="space-y-4">
+            {recentEnrollmentProgress.map((item) => (
+              <div key={item.id} className="flex items-center justify-between">
+                <div className="min-w-0 flex-1 pr-4">
+                  <p className="truncate text-sm font-medium text-gray-900 dark:text-white">
+                    {item.courseTitle}
+                  </p>
+                </div>
+                <div className="flex w-1/2 items-center">
+                  <div className="h-2 flex-1 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-600">
+                    <div
+                      className="h-full rounded-full bg-blue-600 dark:bg-blue-400"
+                      style={{ width: `${Math.min(100, Math.max(0, item.progress))}%` }}
+                    />
+                  </div>
+                  <span className="ml-2 w-12 text-right text-xs text-gray-500 dark:text-gray-400">
+                    {Math.round(item.progress)}%
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Recent Activity */}

@@ -18,6 +18,7 @@ export interface Database {
           name: string;
           email: string;
           photo_url: string | null;
+          last_connected_at: string | null;
           bio: string | null;
           created_at: string;
         };
@@ -28,6 +29,7 @@ export interface Database {
           name: string;
           email: string;
           photo_url?: string | null;
+          last_connected_at?: string | null;
           bio?: string | null;
           created_at?: string;
         };
@@ -38,6 +40,7 @@ export interface Database {
           name?: string;
           email?: string;
           photo_url?: string | null;
+          last_connected_at?: string | null;
           bio?: string | null;
           created_at?: string;
         };
@@ -160,6 +163,7 @@ export interface Database {
           course_id: string;
           enrolled_at: string;
           status: 'active' | 'refunded' | 'disputed';
+          progress: number;
         };
         Insert: {
           id?: string;
@@ -167,6 +171,7 @@ export interface Database {
           course_id: string;
           enrolled_at?: string;
           status?: 'active' | 'refunded' | 'disputed';
+          progress?: number;
         };
         Update: {
           id?: string;
@@ -174,6 +179,7 @@ export interface Database {
           course_id?: string;
           enrolled_at?: string;
           status?: 'active' | 'refunded' | 'disputed';
+          progress?: number;
         };
       };
     };

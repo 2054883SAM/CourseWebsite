@@ -8,12 +8,12 @@ import { VideoChapter } from '@/lib/types/vdocipher';
  * Course with additional learning progress data
  */
 export interface EnrolledCourse extends Course {
-  progress: number;
   lastAccessedAt?: string;
   enrollment: {
     id: string;
     status: 'active' | 'refunded' | 'disputed';
     enrolled_at: string;
+    progress?: number;
   };
   playbackId?: string;
   chapters?: VideoChapter[];
@@ -101,6 +101,10 @@ export async function getEnrolledCourses(
       case 'title':
         orderBy = 'course.title';
         break;
+      case 'progress':
+        // progress comes from enrollments.progress
+        orderBy = 'progress';
+        break;
       default:
         orderBy = 'enrolled_at';
         break;
@@ -114,6 +118,7 @@ export async function getEnrolledCourses(
         id,
         status,
         enrolled_at,
+        progress,
         course:course_id (
           id,
           title,
@@ -147,35 +152,7 @@ export async function getEnrolledCourses(
       return { data: [], error: null, count: count ?? 0 };
     }
 
-    // Build a map of persisted progress per course for this user
-    let courseIdToProgress: Record<string, { progress: number; updated_at?: string }> = {};
-    try {
-      const courseIds = data
-        .map((row: any) => (Array.isArray(row.course) ? row.course[0]?.id : row.course?.id))
-        .filter(Boolean);
-      if (courseIds.length > 0) {
-        const { data: progressRows, error: progressError } = await supabase
-          .from('courses_progress')
-          .select('course_id, progress, updated_at')
-          .eq('user_id', userId)
-          .in('course_id', courseIds as string[]);
-
-        if (!progressError && progressRows) {
-          courseIdToProgress = progressRows.reduce(
-            (acc: Record<string, { progress: number; updated_at?: string }>, row: any) => {
-              acc[row.course_id] = {
-                progress: Number(row.progress ?? 0),
-                updated_at: row.updated_at,
-              };
-              return acc;
-            },
-            {}
-          );
-        }
-      }
-    } catch (e) {
-      console.warn('Could not fetch persistent course progress:', e);
-    }
+    // Progress now lives on enrollments.progress; local fallback stays for resiliency
 
     // Map into your EnrolledCourse shape
     const enrolledCourses: EnrolledCourse[] = data.map((row: any) => {
@@ -184,6 +161,7 @@ export async function getEnrolledCourses(
         id: row.id,
         status: row.status,
         enrolled_at: row.enrolled_at,
+        progress: Number(row.progress ?? 0),
       };
 
       // Make sure we correctly handle the course data
@@ -199,9 +177,9 @@ export async function getEnrolledCourses(
         playback_id: rawCourseData.playback_id,
       };
 
-      // Prefer persisted DB progress; fallback to localStorage
-      let progress = courseIdToProgress[courseData.id]?.progress ?? 0;
-      let lastAccessedAt: string | undefined = courseIdToProgress[courseData.id]?.updated_at;
+      // Prefer persisted DB progress on the enrollment row; fallback to localStorage
+      let progress = Number(row.progress ?? 0);
+      let lastAccessedAt: string | undefined;
       if (progress === 0 || lastAccessedAt === undefined) {
         try {
           if (typeof window !== 'undefined') {
@@ -226,7 +204,6 @@ export async function getEnrolledCourses(
         thumbnail_url: courseData.thumbnail_url,
         created_at: courseData.created_at,
         creator_id: courseData.creator_id,
-        progress: progress,
         lastAccessedAt: lastAccessedAt,
         playbackId: courseData.playback_id,
         enrollment: enrollment,
@@ -292,6 +269,7 @@ export async function getEnrolledCourse(
         id,
         status,
         enrolled_at,
+        progress,
         course:course_id (
           id,
           title,
@@ -322,24 +300,9 @@ export async function getEnrolledCourse(
     // Extract the course data from the response (Supabase may return it as an array)
     const courseData = (Array.isArray(data.course) ? data.course[0] : data.course) as CourseData;
 
-    // Fetch persisted progress, fallback to localStorage
-    let progress = 0;
+    // Fetch persisted progress from enrollment row, fallback to localStorage
+    let progress = Number((data as any)?.progress ?? 0);
     let lastAccessedAt: string | undefined;
-    try {
-      const { data: progressRow, error: progressError } = await supabase
-        .from('courses_progress')
-        .select('progress, updated_at')
-        .eq('user_id', userId)
-        .eq('course_id', courseData.id)
-        .maybeSingle();
-
-      if (!progressError && progressRow) {
-        progress = Number(progressRow.progress ?? 0);
-        lastAccessedAt = progressRow.updated_at ?? undefined;
-      }
-    } catch (e) {
-      console.warn('Could not fetch persisted progress:', e);
-    }
     if (lastAccessedAt === undefined) {
       try {
         if (typeof window !== 'undefined') {
@@ -384,7 +347,6 @@ export async function getEnrolledCourse(
       thumbnail_url: courseData.thumbnail_url,
       created_at: courseData.created_at,
       creator_id: courseData.creator_id,
-      progress: progress,
       lastAccessedAt: lastAccessedAt ?? now,
       // Normalize chapters JSONB -> VideoChapter[] safely
       chapters: normalizeChaptersToVideo((courseData as any).chapters),

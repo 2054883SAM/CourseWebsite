@@ -1,3 +1,27 @@
+// Reusable helpers for enrollment-related updates
+
+type SupabaseClientLike = any;
+
+/**
+ * Touch the enrollment by updating its last_accessed_at to the provided time or now.
+ */
+export async function touchEnrollmentLastAccessed(
+  supabase: SupabaseClientLike,
+  userId: string,
+  courseId: string,
+  at?: Date | string
+): Promise<void> {
+  const when = at instanceof Date ? at.toISOString() : (at ?? new Date().toISOString());
+  const { error } = await supabase
+    .from('enrollments')
+    .update({ last_accessed_at: when })
+    .eq('user_id', userId)
+    .eq('course_id', courseId);
+  if (error) {
+    console.error('Error touching enrollment last_accessed_at:', error);
+  }
+}
+
 import { createBrowserClient } from '@supabase/ssr';
 import { Database } from '@/types/supabase';
 

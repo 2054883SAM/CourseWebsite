@@ -4,6 +4,7 @@ import { useAuth } from '@/lib/auth/AuthContext';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEnrolledCourses } from '@/app/my-learning/hooks/useEnrolledCourses';
+import ProgressBar from '@/components/ui/ProgressBar';
 
 export default function DashboardContent() {
   const { user, dbUser } = useAuth();
@@ -99,16 +100,8 @@ export default function DashboardContent() {
                 </div>
                 <div className="ml-4 flex-1">
                   <h3 className="font-medium text-gray-900 dark:text-white">{course.title}</h3>
-                  <div className="mt-1 flex items-center">
-                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-600">
-                      <div
-                        className="h-full rounded-full bg-blue-600 dark:bg-blue-400"
-                        style={{ width: `${course.progress || 0}%` }}
-                      />
-                    </div>
-                    <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
-                      {course.progress || 0}%
-                    </span>
+                  <div className="mt-1">
+                    <ProgressBar value={course.enrollment.progress || 0} />
                   </div>
                 </div>
               </Link>

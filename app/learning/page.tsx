@@ -7,7 +7,7 @@ import { StudentLayout } from '@/components/layout/StudentLayout';
 
 // Import dashboard components
 import DashboardContent from './components/DashboardContent';
-import MyLearningContent from './components/MyLearningContent';
+import MyLearningContent from '@/app/learning/components/MyLearningContent';
 import { Container } from '@/components/layout/Container';
 
 function LearningPage() {
