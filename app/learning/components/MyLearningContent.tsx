@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useEnrolledCourses } from '@/app/my-learning/hooks/useEnrolledCourses';
 import CourseCard from '@/app/my-learning/components/CourseCard';
 import EmptyState from '@/app/my-learning/components/EmptyState';
@@ -9,6 +9,9 @@ import ViewToggle from '@/app/my-learning/components/ViewToggle';
 
 export default function MyLearningContent() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [selectedFilter, setSelectedFilter] = useState<
+    'Tous' | 'En cours' | 'Terminés' | 'Non commencés'
+  >('Tous');
 
   // Use our custom hook to fetch enrolled courses
   const { courses, isLoading, error, totalCount, setParams, refetch } = useEnrolledCourses({
@@ -16,6 +19,32 @@ export default function MyLearningContent() {
     sortBy: 'enrolledAt',
     sortOrder: 'desc',
   });
+
+  // Client-side filter based on enrollment progress
+  const filteredCourses = useMemo(() => {
+    if (!courses?.length) return [];
+
+    // Helper to read progress consistently
+    const getProgress = (course: any): number => {
+      return Number(course?.enrollment?.progress ?? course?.progress ?? 0);
+    };
+
+    switch (selectedFilter) {
+      case 'En cours':
+        // Assumption: in-progress excludes completed courses
+        return courses.filter((c) => {
+          const p = getProgress(c);
+          return p > 0 && p < 100;
+        });
+      case 'Terminés':
+        return courses.filter((c) => getProgress(c) === 100);
+      case 'Non commencés':
+        return courses.filter((c) => getProgress(c) === 0);
+      case 'Tous':
+      default:
+        return courses;
+    }
+  }, [courses, selectedFilter]);
 
   return (
     <div className="space-y-8">
@@ -73,8 +102,9 @@ export default function MyLearningContent() {
         {['Tous', 'En cours', 'Terminés', 'Non commencés'].map((filter) => (
           <button
             key={filter}
+            onClick={() => setSelectedFilter(filter as typeof selectedFilter)}
             className={`rounded-full px-4 py-1 text-sm transition-colors ${
-              filter === 'Tous'
+              filter === selectedFilter
                 ? 'bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
             }`}
@@ -87,7 +117,7 @@ export default function MyLearningContent() {
       {/* Content section */}
       {isLoading ? (
         <LoadingSkeleton viewMode={viewMode} />
-      ) : courses.length === 0 ? (
+      ) : filteredCourses.length === 0 ? (
         <EmptyState />
       ) : (
         <div
@@ -99,7 +129,7 @@ export default function MyLearningContent() {
             }
           `}
         >
-          {courses.map((course) => (
+          {filteredCourses.map((course) => (
             <CourseCard key={course.id} viewMode={viewMode} course={course} />
           ))}
         </div>

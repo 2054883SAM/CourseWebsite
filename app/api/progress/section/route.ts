@@ -55,6 +55,47 @@ export async function POST(request: NextRequest) {
     const computedQuizPassed =
       quizPassed === true || (typeof quizScore === 'number' && quizScore >= 70);
 
+    // Fetch section metadata needed for watch time event recording
+    const { data: sectionMeta, error: sectionMetaError } = await supabase
+      .from('sections')
+      .select('duration, playback_id')
+      .eq('id', sectionId)
+      .maybeSingle();
+    if (sectionMetaError && sectionMetaError.code !== 'PGRST116') {
+      console.warn('Failed to fetch section metadata for watch events:', sectionMetaError.message);
+    }
+
+    // Helper to record a watch_time_events row based on progress delta
+    const recordWatchEvent = async (deltaPercent: number) => {
+      try {
+        if (!sectionMeta || typeof sectionMeta.duration !== 'number') return;
+        const durationMinutes = Number(sectionMeta.duration);
+        if (!(durationMinutes > 0)) return;
+        const secondsWatched = Math.round(durationMinutes * 60 * (deltaPercent / 100));
+        if (secondsWatched <= 0) return;
+
+        const now = new Date();
+        const bucket = new Date(now);
+        bucket.setSeconds(0, 0);
+
+        await supabase.from('watch_time_events').upsert(
+          {
+            user_id: user.id,
+            course_id: courseId,
+            section_id: sectionId,
+            occurred_at: now.toISOString(),
+            seconds_watched: Math.min(3600, secondsWatched),
+            event_source: 'web',
+            playback_id: sectionMeta.playback_id ?? null,
+            occurred_at_bucket: bucket.toISOString(),
+          },
+          { onConflict: 'user_id,section_id,occurred_at_bucket', ignoreDuplicates: true }
+        );
+      } catch (e) {
+        console.warn('Failed to insert watch_time_event:', e);
+      }
+    };
+
     // Fetch existing progress to decide whether we need to write
     const { data: existing, error: fetchError } = await supabase
       .from('section_progress')
@@ -153,6 +194,10 @@ export async function POST(request: NextRequest) {
           { status: 500 }
         );
       }
+      // Record watch time event for the progress delta from 0 to bucketedProgress
+      if (shouldUpdateProgress && bucketedProgress > 0) {
+        await recordWatchEvent(bucketedProgress);
+      }
       // Update course-level progress after inserting section progress (time-weighted)
       await updateEnrollmentProgressFromSections(supabase, user.id, courseId);
 
@@ -189,6 +234,15 @@ export async function POST(request: NextRequest) {
         { error: 'Failed to update progress', details: updateError.message },
         { status: 500 }
       );
+    }
+
+    // Record watch time event for the increased progress amount
+    if (shouldUpdateProgress) {
+      const previous = typeof existingProgress === 'number' ? existingProgress : 0;
+      const delta = Math.max(0, bucketedProgress - previous);
+      if (delta > 0) {
+        await recordWatchEvent(delta);
+      }
     }
 
     // Update course-level progress after updating section progress (time-weighted)

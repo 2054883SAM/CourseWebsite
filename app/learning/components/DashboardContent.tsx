@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEnrolledCourses } from '@/app/my-learning/hooks/useEnrolledCourses';
 import ProgressBar from '@/components/ui/ProgressBar';
+import { supabase } from '@/lib/supabase/client';
+import { useEffect, useState } from 'react';
 
 export default function DashboardContent() {
   const { user, dbUser } = useAuth();
@@ -14,6 +16,96 @@ export default function DashboardContent() {
     sortBy: 'lastAccessed',
     sortOrder: 'desc',
   });
+
+  // Step 1: Weekly watch time (sum of watch_time_events in last 7 days)
+  const [weeklyWatchSeconds, setWeeklyWatchSeconds] = useState<number>(0);
+  const [completedQuizzesCount, setCompletedQuizzesCount] = useState<number>(0);
+  const [inProgressCoursesCount, setInProgressCoursesCount] = useState<number>(0);
+
+  useEffect(() => {
+    const fetchWeeklyWatchTime = async () => {
+      if (!user?.id) return;
+      try {
+        const now = new Date();
+        const weekAgo = new Date();
+        weekAgo.setDate(now.getDate() - 7);
+
+        const { data, error } = await supabase
+          .from('watch_time_events')
+          .select('seconds_watched, occurred_at')
+          .eq('user_id', user.id)
+          .gte('occurred_at', weekAgo.toISOString())
+          .lte('occurred_at', now.toISOString());
+
+        if (error) {
+          console.error('Failed to load weekly watch time:', error);
+          setWeeklyWatchSeconds(0);
+          return;
+        }
+
+        const total = (data || []).reduce(
+          (sum: number, row: any) => sum + Number(row.seconds_watched || 0),
+          0
+        );
+        setWeeklyWatchSeconds(total);
+      } catch (e) {
+        console.error('Error computing weekly watch time:', e);
+        setWeeklyWatchSeconds(0);
+      }
+    };
+
+    fetchWeeklyWatchTime();
+  }, [user?.id]);
+
+  // Step 2: Total quizzes completed (count of section_progress.completed = true)
+  // Step 3: Courses in progress count (enrollments with progress > 0 and status active)
+  useEffect(() => {
+    const fetchCounts = async () => {
+      if (!user?.id) return;
+      try {
+        const [quizzesRes, coursesRes] = await Promise.all([
+          supabase
+            .from('section_progress')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', user.id)
+            .gte('quiz_score', 70),
+          supabase
+            .from('enrollments')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', user.id)
+            .eq('status', 'active')
+            .gt('progress', 0),
+        ]);
+
+        if (quizzesRes.error) {
+          console.error('Failed to count completed quizzes:', quizzesRes.error);
+          setCompletedQuizzesCount(0);
+        } else {
+          setCompletedQuizzesCount(quizzesRes.count ?? 0);
+        }
+
+        if (coursesRes.error) {
+          console.error('Failed to count in-progress courses:', coursesRes.error);
+          setInProgressCoursesCount(0);
+        } else {
+          setInProgressCoursesCount(coursesRes.count ?? 0);
+        }
+      } catch (e) {
+        console.error('Error fetching stats counts:', e);
+        setCompletedQuizzesCount(0);
+        setInProgressCoursesCount(0);
+      }
+    };
+
+    fetchCounts();
+  }, [user?.id]);
+
+  const formatDuration = (totalSeconds: number) => {
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    if (hours > 0) return `${hours}h ${minutes}min`;
+    return `${minutes}min`;
+  };
 
   return (
     <div className="space-y-8">
@@ -145,64 +237,23 @@ export default function DashboardContent() {
               <span className="text-sm text-gray-500 dark:text-gray-400">
                 Temps d&apos;apprentissage cette semaine
               </span>
-              <span className="font-medium text-gray-900 dark:text-white">2h 15min</span>
+              <span className="font-medium text-gray-900 dark:text-white">
+                {formatDuration(weeklyWatchSeconds)}
+              </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-500 dark:text-gray-400">Quiz complétés</span>
-              <span className="font-medium text-gray-900 dark:text-white">7 / 12</span>
+              <span className="font-medium text-gray-900 dark:text-white">
+                {completedQuizzesCount}
+              </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-500 dark:text-gray-400">Cours en cours</span>
-              <span className="font-medium text-gray-900 dark:text-white">{totalCount || 0}</span>
+              <span className="font-medium text-gray-900 dark:text-white">
+                {inProgressCoursesCount}
+              </span>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Recommended courses section */}
-      <div className="rounded-lg bg-white p-6 shadow dark:bg-gray-800">
-        <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Cours recommandés</h2>
-          <Link
-            href="/courses"
-            className="text-sm font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400"
-          >
-            Explorer tous les cours
-          </Link>
-        </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
-          {[
-            {
-              id: 'rec1',
-              title: 'Les additions et soustractions',
-              level: 'CE1',
-              image: '📐',
-            },
-            {
-              id: 'rec2',
-              title: 'Lecture et compréhension',
-              level: 'CP',
-              image: '📚',
-            },
-            {
-              id: 'rec3',
-              title: 'Les sciences naturelles',
-              level: 'CE2',
-              image: '🔬',
-            },
-          ].map((rec) => (
-            <Link
-              key={rec.id}
-              href={`/courses/${rec.id}`}
-              className="flex flex-col rounded-lg border border-gray-200 p-4 transition-shadow hover:shadow-md dark:border-gray-700"
-            >
-              <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-2xl dark:bg-blue-900/30">
-                {rec.image}
-              </div>
-              <h3 className="mb-1 font-medium text-gray-900 dark:text-white">{rec.title}</h3>
-              <span className="text-xs text-gray-500 dark:text-gray-400">Niveau: {rec.level}</span>
-            </Link>
-          ))}
         </div>
       </div>
     </div>
