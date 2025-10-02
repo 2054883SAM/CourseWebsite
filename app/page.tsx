@@ -453,12 +453,12 @@ function Home() {
         
         <Container maxWidth="7xl" className="relative z-10">
           <div className="mb-16 text-center">
-            <div className="mb-8 flex items-center justify-center">
-              <div className="relative">
-                <span className="text-6xl animate-bounce">👩‍🏫</span>
-                <div className="absolute -inset-2 bg-blue-500/20 rounded-full blur-lg animate-pulse"></div>
+              <div className="mb-8 flex items-center justify-center">
+                <div className="relative animate-bounce">
+                  <span className="text-6xl">👩‍🏫</span>
+                  <div className="absolute -inset-2 bg-blue-500/20 rounded-full blur-lg animate-pulse"></div>
+                </div>
               </div>
-            </div>
             <h2 className="mb-8 text-4xl font-bold text-blue-500">
               Enseignants : Partagez votre passion
             </h2>

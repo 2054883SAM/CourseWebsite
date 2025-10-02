@@ -53,7 +53,7 @@ export function SignUp() {
   return (
     <div className="w-full space-y-6">
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Créez votre compte</h2>
+        <h2 className="auth-text-gray-900 text-2xl font-bold">Créez votre compte</h2>
         <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
           Ou{' '}
           <Link
@@ -111,7 +111,7 @@ export function SignUp() {
           <div>
             <label
               htmlFor="name"
-              className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+              className="auth-label mb-2 block text-sm font-medium"
             >
               Nom complet
             </label>
@@ -124,7 +124,7 @@ export function SignUp() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 disabled={loading}
-                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 transition-all duration-200 placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400"
+                className="auth-input w-full rounded-lg px-4 py-3 transition-all duration-200 placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
                 placeholder="Nom complet"
               />
               <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
@@ -147,7 +147,7 @@ export function SignUp() {
           <div>
             <label
               htmlFor="email-address"
-              className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+              className="auth-label mb-2 block text-sm font-medium"
             >
               Adresse e-mail
             </label>
@@ -161,7 +161,7 @@ export function SignUp() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={loading}
-                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 transition-all duration-200 placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400"
+                className="auth-input w-full rounded-lg px-4 py-3 transition-all duration-200 placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
                 placeholder="votre@email.com"
               />
               <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
@@ -184,7 +184,7 @@ export function SignUp() {
           <div>
             <label
               htmlFor="password"
-              className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+              className="auth-label mb-2 block text-sm font-medium"
             >
               Mot de passe
             </label>
@@ -198,7 +198,7 @@ export function SignUp() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={loading}
-                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 transition-all duration-200 placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400"
+                className="auth-input w-full rounded-lg px-4 py-3 transition-all duration-200 placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
                 placeholder="Votre mot de passe"
               />
               <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
@@ -224,8 +224,9 @@ export function SignUp() {
           <button
             type="submit"
             disabled={loading}
-            className="flex w-full transform items-center justify-center rounded-lg border border-transparent bg-gradient-to-r from-blue-600 to-blue-800 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:scale-[1.02] hover:from-blue-700 hover:to-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+            className="primary-button group flex w-full transform items-center justify-center rounded-lg border border-transparent px-4 py-3 text-sm font-semibold shadow-sm transition-all duration-200 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 relative overflow-hidden"
           >
+            <span className="button-glow"></span>
             {loading ? (
               <div className="flex items-center">
                 <svg
@@ -257,21 +258,17 @@ export function SignUp() {
         </div>
       </form>
 
-      <div className="relative py-2">
-        <div className="absolute inset-0 flex items-center" aria-hidden="true">
-          <div className="w-full border-t border-gray-200 dark:border-gray-600" />
+        <div className="relative flex justify-center text-base">
+          <span className="auth-text-gray-500 px-2 bg-transparent">ou continuer avec</span>
         </div>
-        <div className="relative flex justify-center text-sm">
-          <span className="px-2 bg-transparent text-gray-500 dark:text-gray-400">ou continuer avec</span>
-        </div>
-      </div>
 
       <div className="grid grid-cols-1 gap-3">
         <button
           type="button"
           onClick={() => signInWithProvider('google')}
-          className="w-full inline-flex justify-center items-center gap-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+          className="auth-button group w-full inline-flex justify-center items-center gap-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors relative overflow-hidden"
         >
+          <span className="button-glow"></span>
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" className="h-5 w-5">
             <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12 s5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24 s8.955,20,20,20s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/>
             <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,16.018,18.961,13,24,13c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657 C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/>

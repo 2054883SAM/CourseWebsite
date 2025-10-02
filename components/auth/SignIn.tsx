@@ -85,7 +85,7 @@ export function SignIn() {
   return (
     <div className="w-full space-y-6">
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Se connecter</h2>
+        <h2 className="auth-text-gray-900 text-2xl font-bold">Se connecter</h2>
         <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
           Ou{' '}
           <Link
@@ -121,7 +121,7 @@ export function SignIn() {
           <div>
             <label
               htmlFor="email-address"
-              className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+              className="auth-label mb-2 block text-sm font-medium"
             >
               Adresse email
             </label>
@@ -134,7 +134,7 @@ export function SignIn() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 transition-all duration-200 placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400"
+                className="auth-input w-full rounded-lg px-4 py-3 transition-all duration-200 placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
                 placeholder="votre@email.com"
               />
               <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
@@ -157,7 +157,7 @@ export function SignIn() {
           <div>
             <label
               htmlFor="password"
-              className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+              className="auth-label mb-2 block text-sm font-medium"
             >
               Mot de passe
             </label>
@@ -170,7 +170,7 @@ export function SignIn() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 transition-all duration-200 placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400"
+                className="auth-input w-full rounded-lg px-4 py-3 transition-all duration-200 placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
                 placeholder="Votre mot de passe"
               />
               <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
@@ -195,7 +195,7 @@ export function SignIn() {
         <div className="flex items-center justify-between">
           <Link
             href="/reset-password"
-            className="text-sm font-medium text-blue-600 transition-colors duration-200 hover:text-blue-500 hover:underline dark:text-blue-400"
+            className="auth-link text-sm font-medium transition-colors duration-200 hover:underline"
           >
             Mot de passe oublié ?
           </Link>
@@ -205,8 +205,9 @@ export function SignIn() {
           <button
             type="submit"
             disabled={loading}
-            className="flex w-full transform items-center justify-center rounded-lg border border-transparent bg-gradient-to-r from-blue-600 to-blue-800 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:scale-[1.02] hover:from-blue-700 hover:to-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+            className="primary-button group flex w-full transform items-center justify-center rounded-lg border border-transparent px-4 py-3 text-sm font-semibold shadow-sm transition-all duration-200 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 relative overflow-hidden"
           >
+            <span className="button-glow"></span>
             {loading ? (
               <div className="flex items-center">
                 <svg
@@ -238,11 +239,8 @@ export function SignIn() {
         </div>
 
         <div className="relative py-2">
-          <div className="absolute inset-0 flex items-center" aria-hidden="true">
-            <div className="w-full border-t border-gray-200 dark:border-gray-600" />
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="bg-transparent px-2 text-gray-500 dark:text-gray-400">
+          <div className="relative flex justify-center text-base">
+            <span className="auth-text-gray-500 bg-transparent px-2">
               ou continuer avec
             </span>
           </div>
@@ -252,8 +250,9 @@ export function SignIn() {
           <button
             type="button"
             onClick={() => signInWithProvider('google')}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+            className="auth-button group inline-flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 relative overflow-hidden"
           >
+            <span className="button-glow"></span>
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" className="h-5 w-5">
               <path
                 fill="#FFC107"
