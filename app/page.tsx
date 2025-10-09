@@ -87,10 +87,10 @@ function Home() {
   return (
     <div className="min-h-screen w-full background-beige relative overflow-hidden">
       {/* Bannière d'accueil */}
-        <section className="relative min-h-[calc(100vh-73px)] flex items-center justify-center overflow-hidden pl-4 pr-4 sm:pl-8 sm:pr-8 lg:pl-24 lg:pr-24 max-w-[1440px] mx-auto">
+        <section className="relative min-h-[calc(100vh-73px)] flex items-center justify-center overflow-visible px-4 sm:px-8 lg:px-24 max-w-[1440px] mx-auto">
         {/* Div avec image en background */}
         <div 
-          className="w-full max-w-[1200px] h-[400px] sm:h-[500px] lg:h-[600px] flex items-center justify-center bg-cover bg-center bg-no-repeat transition-all duration-1000 ease-in-out rounded-3xl shadow-2xl"
+          className="w-full max-w-[1200px] h-[400px] sm:h-[450px] md:h-[500px] lg:h-[550px] xl:h-[600px] flex items-center justify-center bg-cover bg-center bg-no-repeat transition-all duration-1000 ease-in-out rounded-3xl shadow-2xl"
           style={{
             backgroundImage: `url('${backgroundImages[currentImageIndex]}')`,
             backgroundSize: 'cover',
@@ -100,13 +100,13 @@ function Home() {
           
           
         {/* Contenu principal avec animations d'images*/}
-        <div className="relative z-20 flex flex-col items-center justify-center px-8 pb-8 pt-0 gap-8 w-full">
+        <div className="relative z-20 flex flex-col items-center justify-center px-4 sm:px-6 md:px-8 pb-8 pt-0 gap-4 sm:gap-6 md:gap-8 w-full">
           {/* Titre en haut */}
-          <div className="text-left self-start sm:translate-y-0 translate-y-2.5">
-            <h1 className="text-4xl font-bold text-white md:text-5xl lg:text-6xl xl:text-7xl hero-title-enhanced leading-tight">
+            <div className="text-center self-start translate-y-2.5 custom-text-center">
+            <h1 className="text-3xl sm:text-5xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white hero-title-enhanced leading-tight">
               {user ? `Bon retour, ${dbUser?.name}!` : 'Apprendre devient'}
-              <span className="block hero-subtitle mt-3" style={{
-                background: 'linear-gradient(135deg, #3B82F6, #1D4ED8, #1E40AF)',
+              <span className="block hero-subtitle mt-2 sm:mt-3" style={{
+                background: 'linear-gradient(180deg, #3B82F6, #1D4ED8, #1E40AF)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text'
@@ -116,10 +116,10 @@ function Home() {
             </h1>
           </div>
             
-          {/* Rectangle futuriste dans le bas */}
-          <div className="max-w-4xl w-full transform translate-y-1/2">
+           {/* Rectangle futuriste dans le bas */}
+           <div className="max-w-4xl w-full transform translate-y-[83%] lg:translate-y-1/2 md:translate-y-1/3 sm:translate-y-[83%]">
               {/* Indicateurs de images */}
-              <div className="flex justify-center space-x-4 mb-4">
+              <div className="flex justify-center space-x-3 sm:space-x-4 mb-3 sm:mb-4">
                 {backgroundImages.map((_, index) => (
                   <button
                     key={index}
@@ -136,39 +136,39 @@ function Home() {
                   </button>
                 ))}
               </div>
-              <div className="relative bg-amber-50/95 backdrop-blur-sm rounded-2xl p-8 border border-amber-300 shadow-2xl overflow-hidden" style={{boxShadow: '0 0 30px rgba(245, 158, 11, 0.3), 0 0 60px rgba(245, 158, 11, 0.15)'}}>
+              <div className="relative bg-amber-50/95 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 lg:p-7 xl:p-8 border border-amber-300 shadow-2xl overflow-hidden" style={{boxShadow: '0 0 30px rgba(245, 158, 11, 0.3), 0 0 60px rgba(245, 158, 11, 0.15)'}}>
                 {/* Effet glow futuriste */}
-                <div className="absolute inset-0 bg-gradient-to-r from-amber-200/20 via-amber-100/15 to-amber-300/20 rounded-2xl"></div>
-                <div className="absolute inset-0 bg-gradient-to-br from-transparent via-amber-200/10 to-amber-300/10 rounded-2xl"></div>
-                <div className="absolute -inset-1 bg-gradient-to-r from-amber-300/30 via-amber-200/25 to-amber-400/30 rounded-2xl blur-sm opacity-50"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-amber-200/20 via-amber-100/15 to-amber-300/20 rounded-xl sm:rounded-2xl"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-transparent via-amber-200/10 to-amber-300/10 rounded-xl sm:rounded-2xl"></div>
+                <div className="absolute -inset-1 bg-gradient-to-r from-amber-300/30 via-amber-200/25 to-amber-400/30 rounded-xl sm:rounded-2xl blur-sm opacity-50"></div>
                 
-                {/* Contenu en flex horizontal pour text*/}
-                <div className="relative z-10 flex items-center gap-8">
-                  {/* Texte à gauche */}
-                  <div className="flex-1">
-                      <p className="text-lg leading-loose text-amber-900 ultra-text-shadow font-medium tracking-wide">
+                {/* Contenu responsive */}
+                <div className="relative z-10 flex flex-col lg:flex-row items-center gap-6 lg:gap-8">
+                  {/* Texte */}
+                  <div className="flex-1 text-center lg:text-left">
+                      <p className="text-base sm:text-lg leading-relaxed sm:leading-loose text-amber-900 ultra-text-shadow font-medium tracking-wide">
                         Une plateforme éducative conçue spécialement pour les élèves du primaire. Des cours
                         créés par des enseignants passionnés pour rendre l&apos;apprentissage captivant et
                         accessible à tous les enfants.
                       </p>
                   </div>
                   
-                  {/* Séparateur esthétique */}
-                  <div className="flex flex-col items-center gap-2">
+                  {/* Séparateur esthétique - caché sur mobile */}
+                  <div className="hidden lg:flex flex-col items-center gap-2">
                     <div className="w-2 h-2 bg-blue-400/80 rounded-full animate-pulse"></div>
                     <div className="w-1 h-1 bg-blue-300/60 rounded-full animate-pulse" style={{animationDelay: '0.5s'}}></div>
                     <div className="w-1.5 h-1.5 bg-blue-500/70 rounded-full animate-pulse" style={{animationDelay: '1s'}}></div>
                   </div>
                   
-                  {/* Boutons à droite */}
-                  <div className="flex flex-col gap-6 min-w-[200px]">
+                  {/* Boutons */}
+                  <div className="flex flex-col gap-4 sm:gap-6 w-full lg:min-w-[200px] lg:w-auto">
                     <Link
                       href="/courses"
                       className="group ultra-button primary-button text-center"
                     >
                       <span className="button-glow"></span>
-                      <span className="mr-3 text-xl">🚀</span>
-                      <span>Découvrir les cours</span>
+                      <span className="mr-3 text-lg sm:text-xl">🚀</span>
+                      <span className="text-sm sm:text-base">Découvrir les cours</span>
                     </Link>
                     {!user ? (
                       <>
@@ -177,8 +177,8 @@ function Home() {
                           className="group ultra-button secondary-button text-center"
                         >
                           <span className="button-glow"></span>
-                          <span className="mr-3 text-xl">👨‍👩‍👧‍👦</span>
-                          <span>S&apos;abonner</span>
+                          <span className="mr-3 text-lg sm:text-xl">👨‍👩‍👧‍👦</span>
+                          <span className="text-sm sm:text-base">S&apos;abonner</span>
                         </Link>
                         <Link
                           href="/signin"
@@ -191,8 +191,8 @@ function Home() {
                           }}
                         >
                           <span className="button-glow"></span>
-                          <span className="mr-3 text-xl">🔐</span>
-                          <span>Se connecter</span>
+                          <span className="mr-3 text-lg sm:text-xl">🔐</span>
+                          <span className="text-sm sm:text-base">Se connecter</span>
                         </Link>
                       </>
                     ) : (
@@ -202,8 +202,8 @@ function Home() {
                           className="group ultra-button secondary-button text-center"
                         >
                           <span className="button-glow"></span>
-                          <span className="mr-3 text-xl">👨‍👩‍👧‍👦</span>
-                          <span>Mon abonnement</span>
+                          <span className="mr-3 text-lg sm:text-xl">👨‍👩‍👧‍👦</span>
+                          <span className="text-sm sm:text-base">Mon abonnement</span>
                         </Link>
                       )
                     )}
@@ -216,28 +216,28 @@ function Home() {
       </section>
 
       {/* Section Cours */}
-      <section className="relative py-20 overflow-hidden bg-gradient-to-b from-background-beige via-gray-100 to-background-beige">
+      <section className="relative py-12 sm:py-16 lg:py-20 overflow-hidden bg-gradient-to-b from-background-beige via-gray-100 to-background-beige section-courses-mobile">
         {/* Background decorative leger glow */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
+          <div className="absolute top-1/4 left-1/4 w-32 sm:w-48 lg:w-64 h-32 sm:h-48 lg:h-64 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-40 sm:w-60 lg:w-80 h-40 sm:h-60 lg:h-80 bg-purple-500/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
         </div>
         
         <Container maxWidth="7xl" className="relative z-10">
-          <div className="mb-12 text-center">
-            <div className="mb-6 flex items-center justify-center">
-              <span className="text-6xl animate-bounce">📚</span>
+          <div className="mb-8 sm:mb-10 lg:mb-12 text-center px-4">
+            <div className="mb-4 sm:mb-6 flex items-center justify-center">
+              <span className="text-4xl sm:text-5xl lg:text-6xl animate-bounce">📚</span>
             </div>
-            <h2 className="text-4xl font-bold bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600 bg-clip-text text-transparent mb-6">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600 bg-clip-text text-transparent mb-4 sm:mb-6">
               Nos cours populaires
             </h2>
-            <p className="mx-auto max-w-3xl text-lg text-gray-600 leading-relaxed">
+            <p className="mx-auto max-w-3xl text-base sm:text-lg text-gray-600 leading-relaxed">
               Découvrez nos cours les plus appréciés par les élèves et leurs parents. 
               <span className="font-semibold text-gray-800"> Apprentissage ludique et efficace garanti !</span>
             </p>
           </div>
 
-          <div className="mb-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="mb-8 sm:mb-10 lg:mb-12 grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3 px-4">
             {loading
               ? // Loading placeholders
                 Array(3)
@@ -245,7 +245,7 @@ function Home() {
                   .map((_, i) => (
                     <div
                       key={`loading-${i}`}
-                      className="group relative rounded-2xl border border-blue-500/30 bg-white/90 backdrop-blur-sm p-6 shadow-xl hover:shadow-blue-500/25 transition-all duration-500 hover:-translate-y-2"
+                      className="group relative rounded-xl sm:rounded-2xl border border-blue-500/30 bg-white/90 backdrop-blur-sm p-4 sm:p-6 shadow-xl hover:shadow-blue-500/25 transition-all duration-500 hover:-translate-y-2"
                     >
                       <div className="mb-6 aspect-video animate-pulse rounded-2xl bg-gradient-to-br from-blue-500/20 to-purple-500/20"></div>
                       <div className="mb-4 h-8 w-3/4 animate-pulse rounded-lg bg-gradient-to-r from-blue-500/20 to-purple-500/20"></div>
@@ -257,14 +257,14 @@ function Home() {
                 featuredCourses.map((course: Course) => (
                   <div
                     key={course.id}
-                    className="group relative rounded-2xl border border-blue-500/30 bg-white/60 backdrop-blur-sm p-6 shadow-xl hover:shadow-blue-500/25 transition-all duration-500 hover:-translate-y-2 overflow-hidden"
+                    className="group relative rounded-xl sm:rounded-2xl border border-blue-500/30 bg-white/60 backdrop-blur-sm p-4 sm:p-6 shadow-xl hover:shadow-blue-500/25 transition-all duration-500 hover:-translate-y-2 overflow-hidden"
                     style={{boxShadow: '0 0 20px rgba(59, 130, 246, 0.1), 0 0 40px rgba(59, 130, 246, 0.05)'}}
                   >
                     <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-cyan-500/5 rounded-2xl"></div>
                     <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-cyan-500/20 rounded-2xl blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                     
                     {/* Course thumbnail */}
-                    <div className="mb-6 aspect-video overflow-hidden rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 relative">
+                    <div className="mb-4 sm:mb-6 aspect-video overflow-hidden rounded-lg sm:rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 relative">
                       {course.thumbnail_url ? (
                         <div
                           className="h-full w-full bg-cover bg-center transition-transform duration-500 group-hover:scale-110"
@@ -280,17 +280,17 @@ function Home() {
                     
                     {/*  Content carte */}
                     <div className="relative z-10">
-                      <h3 className="mb-3 text-xl font-bold text-gray-800 group-hover:text-blue-600 transition-colors duration-300">
+                      <h3 className="mb-2 sm:mb-3 text-lg sm:text-xl font-bold text-gray-800 group-hover:text-blue-600 transition-colors duration-300">
                         {course.title}
                       </h3>
-                      <p className="mb-6 line-clamp-2 text-gray-600 leading-relaxed">
+                      <p className="mb-4 sm:mb-6 line-clamp-2 text-sm sm:text-base text-gray-600 leading-relaxed">
                         {course.description}
                       </p>
                       
                       {/*  Button dans carte */}
                       <Link
                         href={`/courses/${course.id}`}
-                        className="group/btn relative inline-flex h-12 items-center justify-center rounded-full bg-gradient-to-r from-blue-600 to-purple-600 px-8 text-sm font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 overflow-hidden"
+                        className="group/btn relative inline-flex h-10 sm:h-12 items-center justify-center rounded-full bg-gradient-to-r from-blue-600 to-purple-600 px-6 sm:px-8 text-xs sm:text-sm font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 overflow-hidden"
                         style={{boxShadow: '0 0 15px rgba(59, 130, 246, 0.3), 0 0 30px rgba(59, 130, 246, 0.1)'}}
                       >
                         <span className="relative z-10 flex items-center gap-3">
@@ -304,15 +304,15 @@ function Home() {
                 ))}
           </div>
 
-          <div className="text-center">
+          <div className="text-center px-4">
             <Link
               href="/courses"
-              className="group relative inline-flex h-14 items-center justify-center rounded-full bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 bg-size-200 bg-pos-0 px-10 text-lg font-semibold text-white shadow-xl hover:shadow-blue-500/25 transition-all duration-500 hover:scale-105 hover:bg-pos-100 overflow-hidden"
+              className="group relative inline-flex h-12 sm:h-14 items-center justify-center rounded-full bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 bg-size-200 bg-pos-0 px-8 sm:px-10 text-base sm:text-lg font-semibold text-white shadow-xl hover:shadow-blue-500/25 transition-all duration-500 hover:scale-105 hover:bg-pos-100 overflow-hidden"
               style={{boxShadow: '0 0 20px rgba(59, 130, 246, 0.3), 0 0 40px rgba(59, 130, 246, 0.1)'}}
             >
-              <span className="relative z-10 flex items-center gap-3">
-                <span className="text-2xl group-hover:rotate-12 transition-transform duration-300">🚀</span>
-                <span>Voir tous les cours</span>
+              <span className="relative z-10 flex items-center gap-2 sm:gap-3">
+                <span className="text-xl sm:text-2xl group-hover:rotate-12 transition-transform duration-300">🚀</span>
+                <span className="text-sm sm:text-base">Voir tous les cours</span>
                 <span className="group-hover:translate-x-2 transition-transform duration-300">→</span>
               </span>
               <div className="absolute inset-0 bg-gradient-to-r from-blue-700 via-purple-700 to-blue-700 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
@@ -322,38 +322,38 @@ function Home() {
       </section>
 
       {/* Section Fonctionnalités */}
-      <section className="relative py-20 overflow-hidden background-beige">
+      <section className="relative py-12 sm:py-16 lg:py-20 overflow-hidden background-beige">
         {/* Background decorative "Glow" */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-yellow-500/10 to-yellow-400/10 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute top-1/4 right-1/4 w-64 h-64 bg-yellow-500/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1s'}}></div>
-          <div className="absolute bottom-1/4 left-1/4 w-80 h-80 bg-yellow-400/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 sm:w-72 lg:w-96 h-48 sm:h-72 lg:h-96 bg-gradient-to-r from-yellow-500/10 to-yellow-400/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute top-1/4 right-1/4 w-32 sm:w-48 lg:w-64 h-32 sm:h-48 lg:h-64 bg-yellow-500/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1s'}}></div>
+          <div className="absolute bottom-1/4 left-1/4 w-40 sm:w-60 lg:w-80 h-40 sm:h-60 lg:h-80 bg-yellow-400/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
         </div>
         
         <Container maxWidth="7xl" className="relative z-10">
-          <div className="mb-16 text-center">
-            <div className="mb-8 flex items-center justify-center">
-              <span className="text-6xl animate-bounce">🚀</span>
+          <div className="mb-12 sm:mb-14 lg:mb-16 text-center px-4">
+            <div className="mb-6 sm:mb-8 flex items-center justify-center">
+              <span className="text-4xl sm:text-5xl lg:text-6xl animate-bounce">🚀</span>
             </div>
-            <h2 className="mb-8 text-4xl font-bold bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 bg-clip-text text-transparent">
+            <h2 className="mb-6 sm:mb-8 text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 bg-clip-text text-transparent">
               Pourquoi EduKids Academy ?
             </h2>
             <div className="mx-auto max-w-4xl">
-               <p className="text-xl text-gray-600 leading-relaxed mb-4">
-                 Une approche pédagogique <span className="font-bold text-gray-800 bg-gradient-to-r from-yellow-400/20 to-yellow-500/20 px-3 py-1 rounded-full border border-yellow-400/30 shadow-lg">innovante</span> qui transforme l&apos;apprentissage en aventure
+               <p className="text-base sm:text-lg lg:text-xl text-gray-600 leading-relaxed mb-4">
+                 Une approche pédagogique <span className="font-bold text-gray-800 bg-gradient-to-r from-yellow-400/20 to-yellow-500/20 px-2 sm:px-3 py-1 rounded-full border border-yellow-400/30 shadow-lg">innovante</span> qui transforme l&apos;apprentissage en aventure
                  passionnante pour vos enfants.
                </p>
-              <div className="flex items-center justify-center space-x-4 text-sm text-gray-400">
+              <div className="flex flex-col sm:flex-row items-center justify-center space-y-2 sm:space-y-0 sm:space-x-4 text-xs sm:text-sm text-gray-400">
                 <div className="flex items-center space-x-2">
                   <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
                   <span>Méthodes certifiées</span>
                 </div>
-                <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+                <div className="hidden sm:block w-1 h-1 bg-gray-500 rounded-full"></div>
                 <div className="flex items-center space-x-2">
                   <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse" style={{animationDelay: '0.5s'}}></div>
                   <span>Résultats garantis</span>
                 </div>
-                <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+                <div className="hidden sm:block w-1 h-1 bg-gray-500 rounded-full"></div>
                 <div className="flex items-center space-x-2">
                   <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse" style={{animationDelay: '1s'}}></div>
                   <span>Suivi personnalisé</span>
@@ -362,7 +362,7 @@ function Home() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:gap-8 md:grid-cols-2 lg:grid-cols-3 px-4">
             {[
               {
                 icon: '🎨',
@@ -403,7 +403,7 @@ function Home() {
             ].map((feature) => (
               <div
                 key={feature.title}
-                className="group relative rounded-3xl border border-yellow-500/30 bg-white/60 backdrop-blur-sm p-8 shadow-2xl hover:shadow-yellow-500/25 transition-all duration-500 hover:-translate-y-3 overflow-hidden"
+                className="group relative rounded-2xl sm:rounded-3xl border border-yellow-500/30 bg-white/60 backdrop-blur-sm p-4 sm:p-6 lg:p-8 shadow-2xl hover:shadow-yellow-500/25 transition-all duration-500 hover:-translate-y-3 overflow-hidden"
                 style={{boxShadow: '0 0 30px rgba(234, 179, 8, 0.1), 0 0 60px rgba(234, 179, 8, 0.05)'}}
               >
                 {/* Enhanced glow effect */}
@@ -411,9 +411,9 @@ function Home() {
                 <div className="absolute -inset-1 bg-gradient-to-r from-yellow-500/20 via-yellow-400/20 to-yellow-600/20 rounded-3xl blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 
                 <div className="relative z-10">
-                  <div className="mb-4 text-4xl group-hover:scale-110 transition-transform duration-300">{feature.icon}</div>
-                  <h3 className="mb-4 text-base font-bold text-gray-800 group-hover:text-yellow-600 transition-colors duration-300">{feature.title}</h3>
-                  <p className="text-gray-600 group-hover:text-gray-700 transition-colors duration-300 leading-relaxed">{feature.description}</p>
+                  <div className="mb-3 sm:mb-4 text-3xl sm:text-4xl group-hover:scale-110 transition-transform duration-300">{feature.icon}</div>
+                  <h3 className="mb-3 sm:mb-4 text-sm sm:text-base font-bold text-gray-800 group-hover:text-yellow-600 transition-colors duration-300">{feature.title}</h3>
+                  <p className="text-xs sm:text-sm text-gray-600 group-hover:text-gray-700 transition-colors duration-300 leading-relaxed">{feature.description}</p>
                 </div>
               </div>
             ))}
@@ -452,37 +452,37 @@ function Home() {
         </div>
         
         {/* Section Enseignants */}
-        <section className="relative py-20 overflow-hidden">
+        <section className="relative py-12 sm:py-16 lg:py-20 overflow-hidden">
         
         <Container maxWidth="7xl" className="relative z-10">
-          <div className="mb-16 text-center">
-              <div className="mb-8 flex items-center justify-center">
+          <div className="mb-12 sm:mb-14 lg:mb-16 text-center px-4">
+              <div className="mb-6 sm:mb-8 flex items-center justify-center">
                 <div className="relative animate-bounce">
-                  <span className="text-6xl">👩‍🏫</span>
+                  <span className="text-4xl sm:text-5xl lg:text-6xl">👩‍🏫</span>
                   <div className="absolute -inset-2 bg-blue-500/20 rounded-full blur-lg animate-pulse"></div>
                 </div>
               </div>
-            <h2 className="mb-8 text-4xl font-bold text-blue-500">
+            <h2 className="mb-6 sm:mb-8 text-2xl sm:text-3xl lg:text-4xl font-bold text-blue-500">
               Enseignants : Partagez votre passion
             </h2>
-            <p className="mx-auto max-w-4xl text-xl text-gray-700 leading-relaxed">
+            <p className="mx-auto max-w-4xl text-base sm:text-lg lg:text-xl text-gray-700 leading-relaxed">
               Transformez votre expertise pédagogique en une source de revenus complémentaires tout
               en aidant des milliers d&apos;enfants à apprendre.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2">
-            <div className="space-y-6">
-              <div className="relative rounded-2xl border border-blue-500/30 bg-white/60 backdrop-blur-sm p-6 shadow-xl overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-blue-400/5 to-blue-600/5 rounded-2xl"></div>
+          <div className="grid grid-cols-1 items-center gap-8 sm:gap-10 lg:gap-12 lg:grid-cols-2 px-4">
+            <div className="space-y-4 sm:space-y-6">
+              <div className="relative rounded-xl sm:rounded-2xl border border-blue-500/30 bg-white/60 backdrop-blur-sm p-4 sm:p-6 shadow-xl overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-blue-400/5 to-blue-600/5 rounded-xl sm:rounded-2xl"></div>
                 
-                <div className="relative z-10 flex items-start space-x-4">
-                  <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-500/20 border border-blue-400/30">
-                    <span className="text-2xl">💡</span>
+                <div className="relative z-10 flex items-start space-x-3 sm:space-x-4">
+                  <div className="flex h-10 w-10 sm:h-12 sm:w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-500/20 border border-blue-400/30">
+                    <span className="text-xl sm:text-2xl">💡</span>
                   </div>
                   <div>
-                    <h3 className="mb-2 text-lg font-bold text-gray-800">Créez vos cours en ligne</h3>
-                    <p className="text-gray-600">
+                    <h3 className="mb-2 text-base sm:text-lg font-bold text-gray-800">Créez vos cours en ligne</h3>
+                    <p className="text-sm sm:text-base text-gray-600">
                       Utilisez vos méthodes pédagogiques éprouvées pour créer des cours vidéo
                       engageants.
                     </p>
@@ -490,18 +490,18 @@ function Home() {
                 </div>
               </div>
 
-              <div className="relative rounded-2xl border border-blue-500/30 bg-white/60 backdrop-blur-sm p-6 shadow-xl overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-blue-400/5 to-blue-600/5 rounded-2xl"></div>
+              <div className="relative rounded-xl sm:rounded-2xl border border-blue-500/30 bg-white/60 backdrop-blur-sm p-4 sm:p-6 shadow-xl overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-blue-400/5 to-blue-600/5 rounded-xl sm:rounded-2xl"></div>
                 
-                <div className="relative z-10 flex items-start space-x-4">
-                  <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-500/20 border border-blue-400/30">
-                    <span className="text-2xl">💰</span>
+                <div className="relative z-10 flex items-start space-x-3 sm:space-x-4">
+                  <div className="flex h-10 w-10 sm:h-12 sm:w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-500/20 border border-blue-400/30">
+                    <span className="text-xl sm:text-2xl">💰</span>
                   </div>
                   <div>
-                    <h3 className="mb-2 text-lg font-bold text-gray-800">
+                    <h3 className="mb-2 text-base sm:text-lg font-bold text-gray-800">
                       Générez des revenus passifs
                     </h3>
-                    <p className="text-gray-600">
+                    <p className="text-sm sm:text-base text-gray-600">
                       Recevez une commission sur chaque inscription à vos cours, créant un revenu
                       durable.
                     </p>
@@ -509,18 +509,18 @@ function Home() {
                 </div>
               </div>
 
-              <div className="relative rounded-2xl border border-blue-500/30 bg-white/60 backdrop-blur-sm p-6 shadow-xl overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-blue-400/5 to-blue-600/5 rounded-2xl"></div>
+              <div className="relative rounded-xl sm:rounded-2xl border border-blue-500/30 bg-white/60 backdrop-blur-sm p-4 sm:p-6 shadow-xl overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-blue-400/5 to-blue-600/5 rounded-xl sm:rounded-2xl"></div>
                 
-                <div className="relative z-10 flex items-start space-x-4">
-                  <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-500/20 border border-blue-400/30">
-                    <span className="text-2xl">🌟</span>
+                <div className="relative z-10 flex items-start space-x-3 sm:space-x-4">
+                  <div className="flex h-10 w-10 sm:h-12 sm:w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-500/20 border border-blue-400/30">
+                    <span className="text-xl sm:text-2xl">🌟</span>
                   </div>
                   <div>
-                    <h3 className="mb-2 text-lg font-bold text-gray-800">
+                    <h3 className="mb-2 text-base sm:text-lg font-bold text-gray-800">
                       Valorisez votre expertise
                     </h3>
-                    <p className="text-gray-600">
+                    <p className="text-sm sm:text-base text-gray-600">
                       Construisez votre réputation et montrez vos compétences pédagogiques à un large
                       public.
                     </p>
@@ -529,22 +529,22 @@ function Home() {
               </div>
             </div>
 
-            <div className="relative rounded-3xl border border-blue-500/30 bg-white/60 backdrop-blur-sm p-8 shadow-2xl overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-blue-400/5 to-blue-600/5 rounded-3xl"></div>
+            <div className="relative rounded-2xl sm:rounded-3xl border border-blue-500/30 bg-white/60 backdrop-blur-sm p-4 sm:p-6 lg:p-8 shadow-2xl overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-blue-400/5 to-blue-600/5 rounded-2xl sm:rounded-3xl"></div>
               
               <div className="relative z-10">
-                <h3 className="mb-4 text-2xl font-bold text-gray-800">
+                <h3 className="mb-3 sm:mb-4 text-lg sm:text-xl lg:text-2xl font-bold text-gray-800">
                   Rejoignez notre équipe d&apos;enseignants
                 </h3>
-                <p className="mb-6 text-gray-600">
+                <p className="mb-4 sm:mb-6 text-sm sm:text-base text-gray-600">
                   Nous recherchons des enseignants passionnés pour enrichir notre catalogue de cours.
                   Bénéficiez d&apos;un support technique complet et d&apos;une plateforme optimisée
                   pour l&apos;enseignement.
                 </p>
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
             <Link
               href="/signup"
-              className="inline-flex h-14 w-full items-center justify-center rounded-full bg-gradient-to-r from-blue-500 to-blue-600 text-lg font-semibold text-white transition-all duration-300 hover:text-blue-500 hover:shadow-lg hover:shadow-blue-500/25 hover:-translate-y-1"
+              className="inline-flex h-12 sm:h-14 w-full items-center justify-center rounded-full bg-gradient-to-r from-blue-500 to-blue-600 text-sm sm:text-base lg:text-lg font-semibold text-white transition-all duration-300 hover:text-blue-500 hover:shadow-lg hover:shadow-blue-500/25 hover:-translate-y-1"
               style={{
                 background: 'linear-gradient(to right, #3B82F6, #2563EB)',
                 boxShadow: '0 0 20px rgba(59, 130, 246, 0.3)'
@@ -558,20 +558,20 @@ function Home() {
                 e.currentTarget.style.boxShadow = '0 0 20px rgba(59, 130, 246, 0.3)';
               }}
             >
-              <span className="mr-3 text-xl">👩‍🏫</span>
-              Devenir enseignant partenaire
+              <span className="mr-2 sm:mr-3 text-lg sm:text-xl">👩‍🏫</span>
+              <span className="text-xs sm:text-sm lg:text-base">Devenir enseignant partenaire</span>
             </Link>
-                  <div className="flex items-center justify-center space-x-4 text-sm text-gray-400">
+                  <div className="flex flex-col sm:flex-row items-center justify-center space-y-2 sm:space-y-0 sm:space-x-4 text-xs sm:text-sm text-gray-400">
                     <div className="flex items-center space-x-2">
                       <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
                       <span>Inscription gratuite</span>
                     </div>
-                    <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+                    <div className="hidden sm:block w-1 h-1 bg-gray-500 rounded-full"></div>
                     <div className="flex items-center space-x-2">
                       <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" style={{animationDelay: '0.5s'}}></div>
                       <span>Support dédié</span>
                     </div>
-                    <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+                    <div className="hidden sm:block w-1 h-1 bg-gray-500 rounded-full"></div>
                     <div className="flex items-center space-x-2">
                       <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" style={{animationDelay: '1s'}}></div>
                       <span>Commission attractive</span>
@@ -585,7 +585,7 @@ function Home() {
       </section>
 
         {/* Section Appel à l'action */}
-        <section className="py-20 relative z-10 overflow-hidden">
+        <section className="py-12 sm:py-16 lg:py-20 relative z-10 overflow-hidden">
           {/* Particules flottantes jusqua le Top*/}
           <div className="fixed bottom-0 left-0 w-full h-screen overflow-hidden pointer-events-none z-0">
             <div className="floating-particles">
@@ -602,16 +602,16 @@ function Home() {
           {/* Éléments décoratifs (forme geometriques) */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <div className="absolute top-1/2 left-0 w-full h-px bg-gradient-to-r from-transparent via-blue-500/20 to-transparent animate-pulse"></div>
-            <div className="absolute top-1/3 right-1/4 w-12 h-12 border border-blue-500/30 rotate-45 animate-spin" style={{animationDuration: '20s'}}></div>
-            <div className="absolute bottom-1/3 left-1/4 w-8 h-8 bg-blue-500/15 rounded-full animate-bounce" style={{animationDuration: '3s'}}></div>
-            <div className="absolute top-1/2 right-1/3 w-40 h-40 bg-blue-500/5 rounded-full blur-2xl animate-pulse" style={{animationDelay: '1s'}}></div>
+            <div className="absolute top-1/3 right-1/4 w-8 sm:w-12 h-8 sm:h-12 border border-blue-500/30 rotate-45 animate-spin" style={{animationDuration: '20s'}}></div>
+            <div className="absolute bottom-1/3 left-1/4 w-6 sm:w-8 h-6 sm:h-8 bg-blue-500/15 rounded-full animate-bounce" style={{animationDuration: '3s'}}></div>
+            <div className="absolute top-1/2 right-1/3 w-20 sm:w-32 lg:w-40 h-20 sm:h-32 lg:h-40 bg-blue-500/5 rounded-full blur-2xl animate-pulse" style={{animationDelay: '1s'}}></div>
           </div>
 
           <Container maxWidth="2xl" className="relative z-10">
-            <div className="text-center text-gray-800">
+            <div className="text-center text-gray-800 px-4">
               {/* Titre avec effet futuriste */}
-              <div className="mb-8">
-                <h2 className="mb-4 text-5xl font-bold bg-gradient-to-r from-gray-800 via-blue-600 to-gray-800 bg-clip-text text-transparent" style={{
+              <div className="mb-6 sm:mb-8">
+                <h2 className="mb-3 sm:mb-4 text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold bg-gradient-to-r from-gray-800 via-blue-600 to-gray-800 bg-clip-text text-transparent" style={{
                   textShadow: '0 0 20px rgba(59, 130, 246, 0.3)',
                   filter: 'drop-shadow(0 0 10px rgba(59, 130, 246, 0.2))'
                 }}>
@@ -619,11 +619,11 @@ function Home() {
                     ? "Continuez l'aventure d'apprentissage"
                     : "Offrez à votre enfant le meilleur de l'éducation"}
                 </h2>
-                <div className="w-24 h-1 bg-gradient-to-r from-blue-500 to-blue-400 mx-auto rounded-full animate-pulse"></div>
+                <div className="w-16 sm:w-20 lg:w-24 h-1 bg-gradient-to-r from-blue-500 to-blue-400 mx-auto rounded-full animate-pulse"></div>
               </div>
 
               {/* Description */}
-              <p className="mx-auto mb-12 max-w-3xl text-xl text-gray-600 leading-relaxed" style={{
+              <p className="mx-auto mb-8 sm:mb-10 lg:mb-12 max-w-3xl text-base sm:text-lg lg:text-xl text-gray-600 leading-relaxed" style={{
                 textShadow: '0 0 15px rgba(59, 130, 246, 0.2)'
               }}>
                 {user
@@ -632,31 +632,31 @@ function Home() {
               </p>
 
               {/* Boutons */}
-              <div className="flex flex-col justify-center gap-6 sm:flex-row">
+              <div className="flex flex-col justify-center gap-4 sm:gap-6 sm:flex-row">
                 {user ? (
                   <>
                     <Link
                       href="/courses"
-                      className="group relative inline-flex h-16 items-center justify-center rounded-2xl bg-gradient-to-r from-blue-500 to-blue-600 px-12 text-lg font-bold text-white transition-all duration-300 hover:from-blue-400 hover:to-blue-500 hover:shadow-2xl hover:shadow-blue-500/30 hover:-translate-y-2"
+                      className="group relative inline-flex h-12 sm:h-14 lg:h-16 items-center justify-center rounded-xl sm:rounded-2xl bg-gradient-to-r from-blue-500 to-blue-600 px-8 sm:px-10 lg:px-12 text-sm sm:text-base lg:text-lg font-bold text-white transition-all duration-300 hover:from-blue-400 hover:to-blue-500 hover:shadow-2xl hover:shadow-blue-500/30 hover:-translate-y-2"
                       style={{
                         boxShadow: '0 0 25px rgba(59, 130, 246, 0.4)'
                       }}
                     >
-                      <span className="mr-3 text-2xl">📚</span>
-                      Découvrir les cours
-                      <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-400/20 to-blue-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      <span className="mr-2 sm:mr-3 text-lg sm:text-xl lg:text-2xl">📚</span>
+                      <span className="text-xs sm:text-sm lg:text-base">Découvrir les cours</span>
+                      <div className="absolute inset-0 rounded-xl sm:rounded-2xl bg-gradient-to-r from-blue-400/20 to-blue-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                     </Link>
                     {isStudent && (
                       <Link
                         href="/payment"
-                        className="group relative inline-flex h-16 items-center justify-center rounded-2xl bg-gradient-to-r from-green-500 to-green-600 px-12 text-lg font-bold text-white transition-all duration-300 hover:from-green-400 hover:to-green-500 hover:shadow-2xl hover:shadow-green-500/30 hover:-translate-y-2"
+                        className="group relative inline-flex h-12 sm:h-14 lg:h-16 items-center justify-center rounded-xl sm:rounded-2xl bg-gradient-to-r from-green-500 to-green-600 px-8 sm:px-10 lg:px-12 text-sm sm:text-base lg:text-lg font-bold text-white transition-all duration-300 hover:from-green-400 hover:to-green-500 hover:shadow-2xl hover:shadow-green-500/30 hover:-translate-y-2"
                         style={{
                           boxShadow: '0 0 25px rgba(34, 197, 94, 0.4)'
                         }}
                       >
-                        <span className="mr-3 text-2xl">👨‍👩‍👧‍👦</span>
-                        Mon abonnement
-                        <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-green-400/20 to-green-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <span className="mr-2 sm:mr-3 text-lg sm:text-xl lg:text-2xl">👨‍👩‍👧‍👦</span>
+                        <span className="text-xs sm:text-sm lg:text-base">Mon abonnement</span>
+                        <div className="absolute inset-0 rounded-xl sm:rounded-2xl bg-gradient-to-r from-green-400/20 to-green-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                       </Link>
                     )}
                   </>
@@ -664,25 +664,25 @@ function Home() {
                   <>
                     <Link
                       href="/payment"
-                      className="group relative inline-flex h-16 items-center justify-center rounded-2xl bg-gradient-to-r from-green-500 to-green-600 px-12 text-lg font-bold text-white transition-all duration-300 hover:from-green-400 hover:to-green-500 hover:shadow-2xl hover:shadow-green-500/30 hover:-translate-y-2"
+                      className="group relative inline-flex h-12 sm:h-14 lg:h-16 items-center justify-center rounded-xl sm:rounded-2xl bg-gradient-to-r from-green-500 to-green-600 px-8 sm:px-10 lg:px-12 text-sm sm:text-base lg:text-lg font-bold text-white transition-all duration-300 hover:from-green-400 hover:to-green-500 hover:shadow-2xl hover:shadow-green-500/30 hover:-translate-y-2"
                       style={{
                         boxShadow: '0 0 25px rgba(34, 197, 94, 0.4)'
                       }}
                     >
-                      <span className="mr-3 text-2xl">🚀</span>
-                      Commencer l&apos;abonnement
-                      <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-green-400/20 to-green-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      <span className="mr-2 sm:mr-3 text-lg sm:text-xl lg:text-2xl">🚀</span>
+                      <span className="text-xs sm:text-sm lg:text-base">Commencer l&apos;abonnement</span>
+                      <div className="absolute inset-0 rounded-xl sm:rounded-2xl bg-gradient-to-r from-green-400/20 to-green-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                     </Link>
                     <Link
                       href="/signup"
-                      className="group relative inline-flex h-16 items-center justify-center rounded-2xl border-2 border-gray-800 px-12 text-lg font-bold text-gray-800 transition-all duration-300 hover:bg-gray-800 hover:text-white hover:shadow-2xl hover:shadow-gray-800/30 hover:-translate-y-2"
+                      className="group relative inline-flex h-12 sm:h-14 lg:h-16 items-center justify-center rounded-xl sm:rounded-2xl border-2 border-gray-800 px-8 sm:px-10 lg:px-12 text-sm sm:text-base lg:text-lg font-bold text-gray-800 transition-all duration-300 hover:bg-gray-800 hover:text-white hover:shadow-2xl hover:shadow-gray-800/30 hover:-translate-y-2"
                       style={{
                         boxShadow: '0 0 20px rgba(0, 0, 0, 0.2)'
                       }}
                     >
-                      <span className="mr-3 text-2xl">🔐</span>
-                      Créer un compte gratuit
-                      <div className="absolute inset-0 rounded-2xl bg-gray-800/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      <span className="mr-2 sm:mr-3 text-lg sm:text-xl lg:text-2xl">🔐</span>
+                      <span className="text-xs sm:text-sm lg:text-base">Créer un compte gratuit</span>
+                      <div className="absolute inset-0 rounded-xl sm:rounded-2xl bg-gray-800/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                     </Link>
                   </>
                 )}
