@@ -166,7 +166,7 @@ export function SearchBar({ initialQuery = '', className = '' }: SearchBarProps)
             onChange={(e) => setQuery(e.target.value)}
             onFocus={() => setIsFocused(true)}
             placeholder="Rechercher des cours..."
-            className="w-full px-6 py-4 pl-14 pr-12 text-lg border-2 border-gray-200 dark:border-gray-600 rounded-2xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-gold-500/20 focus:border-gold-500 dark:focus:border-gold-400 transition-all duration-300 shadow-lg hover:shadow-xl"
+            className="w-full px-6 py-4 pl-14 pr-16 sm:pr-20 text-lg border-2 border-gray-200 dark:border-gray-600 rounded-2xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-gold-500/20 focus:border-gold-500 dark:focus:border-gold-400 transition-all duration-300 shadow-lg hover:shadow-xl"
             aria-label="Rechercher des cours"
           />
           <div className="absolute inset-y-0 left-0 flex items-center pl-5 pointer-events-none">
@@ -185,10 +185,14 @@ export function SearchBar({ initialQuery = '', className = '' }: SearchBarProps)
         </div>
         <button
           type="submit"
-          className="absolute right-2 top-2 px-6 py-2 font-semibold text-white bg-gradient-to-r from-gray-600 to-gray-800 rounded-xl hover:from-gray-700 hover:to-gray-900 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:ring-offset-2 transition-all duration-300 transform hover:scale-105 shadow-lg"
+          className="absolute right-2 top-1/2 transform -translate-y-1/2 px-3 py-2 sm:px-6 sm:py-2 text-sm sm:text-base font-semibold text-white bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl hover:from-blue-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-300 transform hover:scale-105 shadow-xl"
+          style={{
+            boxShadow: '0 0 20px rgba(59, 130, 246, 0.4), 0 4px 15px rgba(59, 130, 246, 0.2)'
+          }}
           aria-label="Rechercher"
         >
-          Rechercher
+          <span className="hidden sm:inline">Rechercher</span>
+          <span className="sm:hidden">🔍</span>
         </button>
       </form>
       

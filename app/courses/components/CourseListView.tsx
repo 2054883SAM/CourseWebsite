@@ -17,14 +17,50 @@ interface CourseListViewProps {
 export function CourseListView({ courses, searchQuery = '', onCourseDeleted, onDeleteStart, onDeleteEnd, onDeleteError }: CourseListViewProps) {
   if (courses.length === 0) {
     return (
-      <div className="text-center py-12">
-        <h3 className="text-xl font-medium text-gray-900 dark:text-white">Aucun cours trouvé</h3>
-        <p className="mt-2 text-gray-600 dark:text-gray-400">
-          {searchQuery ? 
-            `Aucun résultat ne correspond à votre recherche "${searchQuery}". Essayez d'autres mots-clés.` : 
-            'Essayez d\'ajuster vos critères de recherche ou de filtrage.'
-          }
+      <div className="py-16 text-center relative">
+        {/* Formes géométriques autour du message - Formes sélectionnées */}
+        <div className="absolute bottom-1/4 left-1/4 w-5 h-5 bg-gradient-to-br from-yellow-400/50 to-orange-500/35 rounded-full animate-bounce shadow-lg" style={{
+          animationDuration: '3.2s', 
+          animationDelay: '2.1s',
+          boxShadow: '0 0 18px rgba(251, 191, 36, 0.4)'
+        }}></div>
+        
+        <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-amber-100 shadow-2xl" style={{
+          boxShadow: '0 0 30px rgba(245, 158, 11, 0.3), 0 0 60px rgba(245, 158, 11, 0.15)'
+        }}>
+          <span className="text-3xl animate-bounce">🔍</span>
+        </div>
+        <h3 className="mb-4 text-2xl font-bold text-amber-800" style={{
+          textShadow: '0 0 15px rgba(245, 158, 11, 0.3)'
+        }}>
+          Aucun cours trouvé
+        </h3>
+        <p className="mx-auto max-w-md text-gray-700 font-medium" style={{
+          textShadow: '0 0 10px rgba(245, 158, 11, 0.2)'
+        }}>
+          {searchQuery
+            ? `Aucun résultat ne correspond à votre recherche "${searchQuery}". Essayez d'autres mots-clés.`
+            : "Essayez d'ajuster vos critères de recherche ou de filtres."}
         </p>
+        {searchQuery && (
+          <button
+            onClick={() => {
+              const params = new URLSearchParams(window.location.search);
+              params.delete('query');
+              window.location.search = params.toString();
+            }}
+            className="mt-6 group relative inline-flex items-center rounded-full bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-3 font-semibold text-white shadow-xl hover:shadow-amber-500/25 transition-all duration-300 hover:scale-105 overflow-hidden"
+            style={{
+              boxShadow: '0 0 20px rgba(245, 158, 11, 0.4)'
+            }}
+          >
+            <span className="relative z-10 flex items-center gap-2">
+              <span>✨</span>
+              <span>Voir tous les cours</span>
+            </span>
+            <div className="absolute inset-0 bg-gradient-to-r from-amber-600 to-amber-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          </button>
+        )}
       </div>
     );
   }

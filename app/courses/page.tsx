@@ -159,13 +159,21 @@ function CoursesPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen w-full bg-white">
-        <div className="w-full py-20">
+      <div className="min-h-screen w-full background-beige relative overflow-hidden">
+        {/* Background decorative elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-1/4 left-1/4 w-32 sm:w-48 lg:w-64 h-32 sm:h-48 lg:h-64 bg-amber-500/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-40 sm:w-60 lg:w-80 h-40 sm:h-60 lg:h-80 bg-yellow-500/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
+        </div>
+
+        <div className="w-full py-20 relative z-10">
           <div className="container mx-auto px-4">
             <div className="text-center">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100 shadow-2xl" style={{
+                boxShadow: '0 0 30px rgba(239, 68, 68, 0.3), 0 0 60px rgba(239, 68, 68, 0.15)'
+              }}>
                 <svg
-                  className="h-8 w-8 text-red-600 dark:text-red-400"
+                  className="h-8 w-8 text-red-600"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -178,18 +186,29 @@ function CoursesPage() {
                   />
                 </svg>
               </div>
-              <h3 className="mb-2 text-xl font-semibold text-gray-900 dark:text-white">
+              <h3 className="mb-2 text-xl font-bold text-amber-800" style={{
+                textShadow: '0 0 15px rgba(245, 158, 11, 0.3)'
+              }}>
                 Erreur de chargement
               </h3>
-              <p className="mb-6 text-gray-600 dark:text-gray-400">{error}</p>
+              <p className="mb-6 text-gray-700 font-medium" style={{
+                textShadow: '0 0 10px rgba(245, 158, 11, 0.2)'
+              }}>{error}</p>
               <button
                 onClick={() => {
                   setLoading(true);
                   fetchData(true);
                 }}
-                className="inline-flex items-center rounded-full bg-gradient-to-r from-gray-600 to-gray-800 px-6 py-3 font-semibold text-white shadow-lg hover:from-gray-700 hover:to-gray-900 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:ring-offset-2"
+                className="group relative inline-flex items-center rounded-full bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-3 font-semibold text-white shadow-xl hover:shadow-amber-500/25 transition-all duration-300 hover:scale-105 overflow-hidden"
+                style={{
+                  boxShadow: '0 0 20px rgba(245, 158, 11, 0.4)'
+                }}
               >
-                🔄 Réessayer
+                <span className="relative z-10 flex items-center gap-2">
+                  <span>🔄</span>
+                  <span>Réessayer</span>
+                </span>
+                <div className="absolute inset-0 bg-gradient-to-r from-amber-600 to-amber-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               </button>
             </div>
           </div>
@@ -217,22 +236,119 @@ function CoursesPage() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-white">
-      <div className="w-full py-20">
+    <div className="min-h-screen w-full background-beige relative overflow-hidden">
+      {/* Background decorative elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {/* Large floating orbs */}
+          <div className="absolute top-1/2 left-1/4 w-32 sm:w-48 lg:w-64 h-32 sm:h-48 lg:h-64 bg-gradient-to-br from-orange-400/25 to-orange-600/15 rounded-full blur-2xl animate-pulse shadow-2xl" style={{
+            boxShadow: '0 0 45px rgba(245, 158, 11, 0.3), 0 0 90px rgba(251, 146, 60, 0.2)'
+          }}></div>
+          <div className="absolute top-3/4 right-1/4 w-40 sm:w-60 lg:w-80 h-40 sm:h-60 lg:h-80 bg-gradient-to-br from-orange-400/25 to-orange-600/15 rounded-full blur-2xl animate-pulse shadow-2xl" style={{
+            animationDelay: '2s',
+            boxShadow: '0 0 45px rgba(245, 158, 11, 0.3), 0 0 90px rgba(251, 146, 60, 0.2)'
+          }}></div>
+          <div className="absolute top-1/5 right-2/3 w-24 sm:w-36 lg:w-48 h-24 sm:h-36 lg:h-48 bg-gradient-to-br from-orange-400/25 to-orange-600/15 rounded-full blur-2xl animate-pulse shadow-2xl" style={{
+            animationDelay: '1s',
+            boxShadow: '0 0 45px rgba(245, 158, 11, 0.3), 0 0 90px rgba(251, 146, 60, 0.2)'
+          }}></div>
+          <div className="absolute top-1/4 right-1/4 w-24 sm:w-36 lg:w-48 h-24 sm:h-36 lg:h-48 bg-gradient-to-br from-orange-400/25 to-orange-600/15 rounded-full blur-2xl animate-pulse shadow-2xl" style={{
+            animationDelay: '1.5s',
+            boxShadow: '0 0 45px rgba(245, 158, 11, 0.3), 0 0 90px rgba(251, 146, 60, 0.2)'
+          }}></div>
+          
+          {/* Formes géométriques - PARTIE BASSE DE LA PAGE (beaucoup) */}
+          <div className="absolute bottom-1/4 left-1/4 w-5 h-5 bg-gradient-to-br from-yellow-400/50 to-orange-500/35 rounded-full animate-bounce shadow-lg" style={{
+            animationDuration: '3.2s', 
+            animationDelay: '2.1s',
+            boxShadow: '0 0 18px rgba(251, 191, 36, 0.4)'
+          }}></div>
+          <div className="absolute bottom-1/3 right-1/4 w-2 h-2 bg-blue-500/70 rounded-full animate-pulse shadow-lg" style={{
+            animationDelay: '1.2s',
+            boxShadow: '0 0 12px rgba(59, 130, 246, 0.5)'
+          }}></div>
+          <div className="absolute bottom-2/3 left-3/4 w-4 h-4 border-2 border-amber-400/50 rotate-60 animate-spin shadow-lg" style={{
+            animationDuration: '22s', 
+            animationDelay: '2.8s',
+            boxShadow: '0 0 25px rgba(245, 158, 11, 0.3)'
+          }}></div>
+          <div className="absolute bottom-1/2 right-1/3 w-3 h-3 bg-yellow-400/60 rounded-full animate-bounce shadow-lg" style={{
+            animationDuration: '2.8s', 
+            animationDelay: '0.6s',
+            boxShadow: '0 0 15px rgba(251, 191, 36, 0.5)'
+          }}></div>
+          
+          
+          {/* Formes géométriques - TRÈS BAS DE LA PAGE */}
+          <div className="absolute top-1/3 left-1/4 w-3 h-3 bg-amber-400/60 rounded-full animate-bounce shadow-lg" style={{
+            animationDuration: '2.2s', 
+            animationDelay: '0.9s',
+            boxShadow: '0 0 12px rgba(245, 158, 11, 0.5)'
+          }}></div>
+          <div className="absolute top-3/4 right-1/3 w-4 h-4 border-2 border-blue-400/50 rotate-30 animate-spin shadow-lg" style={{
+            animationDuration: '16s', 
+            animationDelay: '1.6s',
+            boxShadow: '0 0 20px rgba(59, 130, 246, 0.3)'
+          }}></div>
+          <div className="absolute bottom-1/3 left-2/4 w-2 h-2 bg-yellow-400/70 rounded-full animate-pulse shadow-lg" style={{
+            animationDelay: '2.4s',
+            boxShadow: '0 0 10px rgba(251, 191, 36, 0.5)'
+          }}></div>
+          
+          <div className="absolute bottom-1/2 left-1/3 w-5 h-5 bg-amber-400/70 squared-full animate-pulse shadow-lg" style={{
+            animationDelay: '1.4s',
+            boxShadow: '0 0 12px rgba(245, 158, 11, 0.5)'
+          }}></div>
+          <div className="absolute bottom-3/4 right-1/4 w-5 h-5 border-2 border-blue-400/50 rotate-75 animate-spin shadow-lg" style={{
+            animationDuration: '23s', 
+            animationDelay: '2.6s',
+            boxShadow: '0 0 28px rgba(59, 130, 246, 0.3)'
+          }}></div>
+      </div>
+
+      <div className="w-full py-20 relative z-10">
         <div className="container mx-auto px-4">
           {/* Header */}
-          <div className="mb-16 text-center">
-            <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700">
-              <span className="text-2xl">📚</span>
+          <div className="mb-16 text-center relative">
+            {/* Floating decorative elements around header */}
+            <div className="absolute top-0 left-1/4 w-3 h-3 bg-blue-400/60 rounded-full animate-bounce shadow-lg" style={{
+              animationDuration: '3s', 
+              animationDelay: '0.5s',
+              boxShadow: '0 0 15px rgba(59, 130, 246, 0.4)'
+            }}></div>
+            <div className="absolute top-8 right-1/4 w-2 h-2 bg-amber-400/70 rounded-full animate-pulse shadow-lg" style={{
+              animationDelay: '1s',
+              boxShadow: '0 0 10px rgba(245, 158, 11, 0.5)'
+            }}></div>
+            <div className="absolute bottom-0 left-1/3 w-4 h-4 border-2 border-blue-300/50 rotate-45 animate-spin shadow-lg" style={{
+              animationDuration: '12s',
+              boxShadow: '0 0 20px rgba(59, 130, 246, 0.3)'
+            }}></div>
+            <div className="absolute bottom-4 right-1/3 w-2.5 h-2.5 bg-gradient-to-br from-amber-300/60 to-yellow-400/45 rounded-full animate-bounce shadow-lg" style={{
+              animationDuration: '2.5s', 
+              animationDelay: '2s',
+              boxShadow: '0 0 12px rgba(245, 158, 11, 0.4)'
+            }}></div>
+            
+            <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-r from-blue-500 to-blue-600 shadow-2xl transition-all duration-300 hover:scale-110 hover:rotate-3" style={{
+              boxShadow: '0 0 30px rgba(59, 130, 246, 0.4), 0 0 60px rgba(59, 130, 246, 0.2)'
+            }}>
+              <span className="text-2xl transition-transform duration-300 hover:scale-110" style={{
+                filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3)) drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2))'
+              }}>📚</span>
             </div>
-            <h1 className="mb-4 text-4xl font-bold text-gray-900 md:text-5xl lg:text-6xl">
+            <h1 className="mb-4 text-4xl font-bold text-gray-900 md:text-5xl lg:text-6xl transition-all duration-500 hover:scale-105" style={{
+              textShadow: '0 0 20px rgba(245, 158, 11, 0.3)',
+              filter: 'drop-shadow(0 0 10px rgba(245, 158, 11, 0.2))'
+            }}>
               {showCategories
-                ? <span className="text-blue-700">Matières Scolaires</span>
+                ? <span className="bg-gradient-to-r from-amber-600 via-amber-700 to-amber-800 bg-clip-text text-transparent hover:from-amber-500 hover:to-amber-700 transition-all duration-300">Matières Scolaires</span>
                 : category
-                  ? `Cours de ${category}`
-                  : 'Catalogue de Cours'}
+                  ? <span className="bg-gradient-to-r from-amber-600 via-amber-700 to-amber-800 bg-clip-text text-transparent hover:from-amber-500 hover:to-amber-700 transition-all duration-300">Cours de {category}</span>
+                  : <span className="bg-gradient-to-r from-amber-600 via-amber-700 to-amber-800 bg-clip-text text-transparent hover:from-amber-500 hover:to-amber-700 transition-all duration-300">Catalogue de Cours</span>}
             </h1>
-            <p className="mx-auto max-w-3xl text-xl text-gray-600 dark:text-gray-300">
+            <p className="mx-auto max-w-3xl text-xl text-gray-700 leading-relaxed transition-all duration-300 hover:text-gray-800" style={{
+              textShadow: '0 0 15px rgba(245, 158, 11, 0.2)'
+            }}>
               {showCategories
                 ? 'Explorez nos matières conformes au programme scolaire québécois'
                 : category
@@ -243,7 +359,13 @@ function CoursesPage() {
 
           {/* Barre de recherche */}
           <div className="relative z-10 mb-12">
-            <div className="mx-auto max-w-3xl">
+            <div className="mx-auto max-w-3xl relative">
+              {/* Decorative elements around search */}
+              <div className="absolute -top-4 -left-4 w-8 h-8 border-2 border-blue-400/30 rotate-45 animate-spin" style={{animationDuration: '15s'}}></div>
+              <div className="absolute -bottom-4 -right-4 w-6 h-6 bg-amber-400/20 rounded-full animate-bounce" style={{animationDuration: '2s', animationDelay: '1s'}}></div>
+              <div className="absolute top-1/2 -left-8 w-4 h-4 border border-blue-300/40 rotate-12 animate-pulse" style={{animationDelay: '0.5s'}}></div>
+              <div className="absolute top-1/2 -right-8 w-5 h-5 bg-gradient-to-br from-amber-300/25 to-yellow-400/20 rounded-full animate-bounce" style={{animationDuration: '3s', animationDelay: '2s'}}></div>
+              
               <SearchBar initialQuery={query} className="w-full" />
             </div>
           </div>
@@ -251,29 +373,36 @@ function CoursesPage() {
           {/* Statistiques et contrôles */}
           <div className="mb-8 flex flex-col justify-between md:flex-row md:items-center">
             <div className="mb-4 md:mb-0">
+              <div className="relative inline-flex items-center space-x-3 px-4 py-3 rounded-2xl bg-white/60 backdrop-blur-sm border border-blue-200/50 shadow-lg" style={{
+                boxShadow: '0 0 20px rgba(59, 130, 246, 0.1), 0 4px 15px rgba(59, 130, 246, 0.05)'
+              }}>
               <div className="flex items-center space-x-2">
-                <div className="h-2 w-2 rounded-full bg-green-500"></div>
-                <p className="text-gray-600 dark:text-gray-400">
+                  <div className="h-3 w-3 rounded-full bg-blue-500 animate-pulse shadow-lg" style={{
+                    boxShadow: '0 0 10px rgba(59, 130, 246, 0.4)'
+                  }}></div>
+                  <p className="text-gray-700 font-medium" style={{
+                    textShadow: '0 0 10px rgba(245, 158, 11, 0.2)'
+                  }}>
                   {showCategories ? (
                     <>
-                      <span className="font-semibold text-gray-900 dark:text-white">
+                        <span className="font-bold text-blue-600">
                         {categories.length}
                       </span>{' '}
                       matières disponibles
                     </>
                   ) : query ? (
                     <>
-                      <span className="font-semibold text-gray-900 dark:text-white">
+                        <span className="font-bold text-blue-600">
                         {courses.length}
                       </span>{' '}
                       cours trouvé{courses.length !== 1 && 's'} pour{' '}
-                      <span className="font-semibold text-gold-600 dark:text-gold-400">
+                        <span className="font-bold text-amber-600">
                         &ldquo;{query}&rdquo;
                       </span>
                     </>
                   ) : (
                     <>
-                      <span className="font-semibold text-gray-900 dark:text-white">
+                        <span className="font-bold text-blue-600">
                         {courses.length}
                       </span>{' '}
                       cours disponibles
@@ -281,7 +410,7 @@ function CoursesPage() {
                         <>
                           {' '}
                           en{' '}
-                          <span className="font-semibold text-gold-600 dark:text-gold-400">
+                            <span className="font-bold text-amber-600">
                             {category}
                           </span>
                         </>
@@ -289,6 +418,10 @@ function CoursesPage() {
                     </>
                   )}
                 </p>
+                </div>
+                {/* Decorative elements */}
+                <div className="absolute -top-1 -right-1 w-2 h-2 bg-blue-400/40 rounded-full animate-pulse"></div>
+                <div className="absolute -bottom-1 -left-1 w-1.5 h-1.5 bg-amber-400/40 rounded-full animate-pulse" style={{animationDelay: '1s'}}></div>
               </div>
             </div>
 
@@ -305,21 +438,46 @@ function CoursesPage() {
           {/* Breadcrumb pour navigation */}
           {category && (
             <div className="mb-8">
-              <nav className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
+              <nav className="flex items-center space-x-2 text-sm text-gray-600">
                 <Link
                   href="/courses"
-                  className="transition-colors hover:text-gold-600 dark:hover:text-gold-400"
+                  className="transition-colors hover:text-amber-600 font-medium"
                 >
                   Matières
                 </Link>
-                <span>/</span>
-                <span className="font-medium text-gray-900 dark:text-white">{category}</span>
+                <span className="text-amber-500">/</span>
+                <span className="font-bold text-amber-800">{category}</span>
               </nav>
             </div>
           )}
 
           {/* Contenu principal */}
           <div className="relative z-0">
+            {/* Formes géométriques autour du contenu */}
+            <div className="absolute -top-8 left-1/4 w-3 h-3 bg-blue-400/60 rounded-full animate-bounce shadow-lg" style={{
+              animationDuration: '2.8s', 
+              animationDelay: '1.3s',
+              boxShadow: '0 0 15px rgba(59, 130, 246, 0.4)'
+            }}></div>
+            <div className="absolute -top-4 right-1/3 w-4 h-4 border-2 border-amber-300/50 rotate-45 animate-spin shadow-lg" style={{
+              animationDuration: '17s', 
+              animationDelay: '2.1s',
+              boxShadow: '0 0 20px rgba(245, 158, 11, 0.3)'
+            }}></div>
+            <div className="absolute top-1/4 -left-6 w-2 h-2 bg-yellow-400/60 rounded-full animate-pulse shadow-lg" style={{
+              animationDelay: '0.8s',
+              boxShadow: '0 0 10px rgba(251, 191, 36, 0.5)'
+            }}></div>
+            <div className="absolute bottom-1/4 -left-0 w-3 h-3 bg-gradient-to-br from-amber-400/50 to-orange-500/35 rounded-full animate-bounce shadow-lg" style={{
+              animationDuration: '3.1s', 
+              animationDelay: '2.4s',
+              boxShadow: '0 0 15px rgba(245, 158, 11, 0.4)'
+            }}></div>
+            <div className="absolute bottom-1/3 -right-0 w-2 h-2 bg-blue-500/70 rounded-full animate-pulse shadow-lg" style={{
+              animationDelay: '1.5s',
+              boxShadow: '0 0 12px rgba(59, 130, 246, 0.5)'
+            }}></div>
+            
             <Suspense fallback={view === 'grid' ? <CourseGridSkeleton /> : <CourseListSkeleton />}>
               {showCategories ? (
                 <CategoryGridView categories={categories} />
@@ -345,47 +503,26 @@ function CoursesPage() {
             </Suspense>
           </div>
 
-          {/* Message si aucune donnée trouvée */}
-          {!showCategories && courses.length === 0 && !loading && (
-            <div className="py-16 text-center">
-              <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
-                <span className="text-3xl">🔍</span>
-              </div>
-              <h3 className="mb-4 text-2xl font-semibold text-gray-900 dark:text-white">
-                Aucun cours trouvé
-              </h3>
-              <p className="mx-auto max-w-md text-gray-600 dark:text-gray-400">
-                {query
-                  ? `Aucun résultat ne correspond à votre recherche "${query}". Essayez d'autres mots-clés.`
-                  : "Essayez d'ajuster vos critères de recherche ou de filtres."}
-              </p>
-              {query && (
-                <button
-                  onClick={() => {
-                    const params = new URLSearchParams(searchParams.toString());
-                    params.delete('query');
-                    window.location.search = params.toString();
-                  }}
-                  className="mt-6 inline-flex items-center rounded-full bg-gradient-to-r from-gray-600 to-gray-700 px-6 py-3 font-semibold text-white shadow-lg hover:from-gray-700 hover:to-gray-800 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:ring-offset-2"
-                >
-                  ✨ Voir tous les cours
-                </button>
-              )}
-            </div>
-          )}
         </div>
       </div>
 
       {/* Deletion loading overlay */}
       {isDeleting && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="flex flex-col items-center gap-4 rounded-xl bg-white/90 p-6 shadow-xl dark:bg-gray-800/90">
+          <div className="flex flex-col items-center gap-4 rounded-xl bg-amber-50/95 backdrop-blur-sm p-6 shadow-2xl border border-amber-300 relative" style={{
+            boxShadow: '0 0 30px rgba(245, 158, 11, 0.3), 0 0 60px rgba(245, 158, 11, 0.15)'
+          }}>
+            {/* Formes géométriques dans la modale */}
+            <div className="absolute -top-2 -left-2 w-3 h-3 bg-blue-400/30 rounded-full animate-bounce" style={{animationDuration: '2.5s', animationDelay: '0.5s'}}></div>
+            <div className="absolute -top-2 -right-2 w-2 h-2 bg-amber-400/40 rounded-full animate-pulse" style={{animationDelay: '1.2s'}}></div>
+            <div className="absolute -bottom-2 -left-2 w-4 h-4 border border-blue-300/25 rotate-45 animate-spin" style={{animationDuration: '12s', animationDelay: '1.8s'}}></div>
+            <div className="absolute -bottom-2 -right-2 w-2.5 h-2.5 bg-yellow-400/30 rounded-full animate-bounce" style={{animationDuration: '3s', animationDelay: '0.8s'}}></div>
             <LoadingSpinner size="large" color="blue" />
             {/* Spinning bar */}
-            <div className="h-2 w-56 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
-              <div className="loading-bar h-full rounded-full bg-gradient-to-r from-gray-300 via-gray-500 to-gray-300"></div>
+            <div className="h-2 w-56 overflow-hidden rounded-full bg-amber-200">
+              <div className="loading-bar h-full rounded-full bg-gradient-to-r from-amber-300 via-amber-500 to-amber-300"></div>
             </div>
-            <p className="text-sm text-gray-700 dark:text-gray-300">
+            <p className="text-sm text-amber-800 font-medium">
               Suppression du cours en cours…
             </p>
             <style jsx>{`
@@ -412,10 +549,17 @@ function CoursesPage() {
       {/* Deletion error friendly modal */}
       {deleteError && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="mx-4 w-full max-w-md rounded-2xl bg-white p-6 text-center shadow-2xl dark:bg-gray-800">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20">
+          <div className="mx-4 w-full max-w-md rounded-2xl bg-amber-50/95 backdrop-blur-sm p-6 text-center shadow-2xl border border-amber-300 relative" style={{
+            boxShadow: '0 0 30px rgba(245, 158, 11, 0.3), 0 0 60px rgba(245, 158, 11, 0.15)'
+          }}>
+            {/* Formes géométriques dans la modale d'erreur */}
+            <div className="absolute -top-3 -left-3 w-4 h-4 border border-blue-400/30 rotate-30 animate-spin" style={{animationDuration: '14s', animationDelay: '1.5s'}}></div>
+            <div className="absolute -top-3 -right-3 w-3 h-3 bg-amber-400/25 rounded-full animate-bounce" style={{animationDuration: '2.8s', animationDelay: '0.7s'}}></div>
+            <div className="absolute -bottom-3 -left-3 w-2 h-2 bg-yellow-400/35 rounded-full animate-pulse" style={{animationDelay: '1.9s'}}></div>
+            <div className="absolute -bottom-3 -right-3 w-3.5 h-3.5 border-2 border-blue-300/25 rotate-60 animate-spin" style={{animationDuration: '16s', animationDelay: '2.2s'}}></div>
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100 shadow-lg">
               <svg
-                className="h-8 w-8 text-red-600 dark:text-red-400"
+                className="h-8 w-8 text-red-600"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -428,22 +572,24 @@ function CoursesPage() {
                 />
               </svg>
             </div>
-            <h3 className="mb-2 text-xl font-semibold text-gray-900 dark:text-white">
+            <h3 className="mb-2 text-xl font-bold text-amber-800" style={{
+              textShadow: '0 0 10px rgba(245, 158, 11, 0.2)'
+            }}>
               Impossible de supprimer le cours
             </h3>
-            <p className="mb-3 text-gray-600 dark:text-gray-300">
+            <p className="mb-3 text-gray-700 font-medium">
               {deleteError.status >= 500 || deleteError.status === -1
                 ? 'Une erreur serveur est survenue.'
                 : 'Une erreur est survenue.'}
             </p>
-            <p className="mb-6 text-xs text-gray-500 dark:text-gray-400">
+            <p className="mb-6 text-xs text-gray-600">
               {deleteError.status > 0 ? `Code ${deleteError.status}` : 'Code inconnu'} ·{' '}
               {deleteError.message}
             </p>
             <div className="flex items-center justify-center gap-3">
               <button
                 onClick={() => setDeleteError(null)}
-                className="rounded-full bg-gray-200 px-5 py-2 text-gray-800 transition hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600"
+                className="rounded-full bg-amber-200 px-5 py-2 text-amber-800 font-medium transition hover:bg-amber-300 shadow-lg"
               >
                 Fermer
               </button>
@@ -453,7 +599,10 @@ function CoursesPage() {
                   setLoading(true);
                   fetchData(true);
                 }}
-                className="rounded-full bg-gradient-to-r from-gray-600 to-gray-800 px-5 py-2 font-semibold text-white shadow transition hover:from-gray-700 hover:to-gray-900"
+                className="rounded-full bg-gradient-to-r from-amber-500 to-amber-600 px-5 py-2 font-semibold text-white shadow-lg transition hover:from-amber-600 hover:to-amber-700 hover:scale-105"
+                style={{
+                  boxShadow: '0 0 15px rgba(245, 158, 11, 0.3)'
+                }}
               >
                 Rafraîchir la liste
               </button>
