@@ -85,7 +85,7 @@ function Home() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-black relative overflow-hidden">
+    <div className="min-h-screen w-full background-beige relative overflow-hidden">
       {/* Bannière d'accueil */}
         <section className="relative min-h-[calc(100vh-73px)] flex items-center justify-center overflow-hidden pl-4 pr-4 sm:pl-8 sm:pr-8 lg:pl-24 lg:pr-24 max-w-[1440px] mx-auto">
         {/* Div avec image en background */}
@@ -97,9 +97,6 @@ function Home() {
             backgroundPosition: 'center center',
           }}
         >
-          {/* Overlay dégradé sombre */}
-          <div className="absolute inset-0 bg-gradient-to-br from-black/50 via-black/30 to-black/50"></div>
-          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/20"></div>
           
           
         {/* Contenu principal avec animations d'images*/}
@@ -139,17 +136,17 @@ function Home() {
                   </button>
                 ))}
               </div>
-              <div className="relative bg-black backdrop-blur-sm rounded-2xl p-8 border border-blue-500 shadow-2xl overflow-hidden" style={{boxShadow: '0 0 30px rgba(59, 130, 246, 0.4), 0 0 60px rgba(59, 130, 246, 0.2)'}}>
+              <div className="relative bg-amber-50/95 backdrop-blur-sm rounded-2xl p-8 border border-amber-300 shadow-2xl overflow-hidden" style={{boxShadow: '0 0 30px rgba(245, 158, 11, 0.3), 0 0 60px rgba(245, 158, 11, 0.15)'}}>
                 {/* Effet glow futuriste */}
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-cyan-500/10 rounded-2xl"></div>
-                <div className="absolute inset-0 bg-gradient-to-br from-transparent via-blue-400/5 to-purple-400/5 rounded-2xl"></div>
-                <div className="absolute -inset-1 bg-gradient-to-r from-blue-400/20 via-purple-400/20 to-cyan-400/20 rounded-2xl blur-sm opacity-50"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-amber-200/20 via-amber-100/15 to-amber-300/20 rounded-2xl"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-transparent via-amber-200/10 to-amber-300/10 rounded-2xl"></div>
+                <div className="absolute -inset-1 bg-gradient-to-r from-amber-300/30 via-amber-200/25 to-amber-400/30 rounded-2xl blur-sm opacity-50"></div>
                 
                 {/* Contenu en flex horizontal pour text*/}
                 <div className="relative z-10 flex items-center gap-8">
                   {/* Texte à gauche */}
                   <div className="flex-1">
-                      <p className="text-lg leading-loose text-white/95 ultra-text-shadow font-medium tracking-wide">
+                      <p className="text-lg leading-loose text-amber-900 ultra-text-shadow font-medium tracking-wide">
                         Une plateforme éducative conçue spécialement pour les élèves du primaire. Des cours
                         créés par des enseignants passionnés pour rendre l&apos;apprentissage captivant et
                         accessible à tous les enfants.
@@ -185,7 +182,13 @@ function Home() {
                         </Link>
                         <Link
                           href="/signin"
-                          className="group ultra-button tertiary-button text-center"
+                          className="group ultra-button text-center"
+                          style={{
+                            background: 'rgba(0, 0, 0, 0.6)',
+                            border: '2px solid rgba(245, 158, 11, 0.3)',
+                            backdropFilter: 'blur(10px)',
+                            boxShadow: '0 10px 25px rgba(245, 158, 11, 0.1), 0 5px 15px rgba(245, 158, 11, 0.05)'
+                          }}
                         >
                           <span className="button-glow"></span>
                           <span className="mr-3 text-xl">🔐</span>
@@ -213,7 +216,7 @@ function Home() {
       </section>
 
       {/* Section Cours */}
-      <section className="relative py-20 overflow-hidden bg-gradient-to-b from-black via-gray-900 to-black">
+      <section className="relative py-20 overflow-hidden bg-gradient-to-b from-background-beige via-gray-100 to-background-beige">
         {/* Background decorative leger glow */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
@@ -228,9 +231,9 @@ function Home() {
             <h2 className="text-4xl font-bold bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600 bg-clip-text text-transparent mb-6">
               Nos cours populaires
             </h2>
-            <p className="mx-auto max-w-3xl text-lg text-gray-300 leading-relaxed">
+            <p className="mx-auto max-w-3xl text-lg text-gray-600 leading-relaxed">
               Découvrez nos cours les plus appréciés par les élèves et leurs parents. 
-              <span className="font-semibold text-white"> Apprentissage ludique et efficace garanti !</span>
+              <span className="font-semibold text-gray-800"> Apprentissage ludique et efficace garanti !</span>
             </p>
           </div>
 
@@ -242,7 +245,7 @@ function Home() {
                   .map((_, i) => (
                     <div
                       key={`loading-${i}`}
-                      className="group relative rounded-2xl border border-blue-500/30 bg-white/10 backdrop-blur-sm p-6 shadow-xl hover:shadow-blue-500/25 transition-all duration-500 hover:-translate-y-2"
+                      className="group relative rounded-2xl border border-blue-500/30 bg-white/90 backdrop-blur-sm p-6 shadow-xl hover:shadow-blue-500/25 transition-all duration-500 hover:-translate-y-2"
                     >
                       <div className="mb-6 aspect-video animate-pulse rounded-2xl bg-gradient-to-br from-blue-500/20 to-purple-500/20"></div>
                       <div className="mb-4 h-8 w-3/4 animate-pulse rounded-lg bg-gradient-to-r from-blue-500/20 to-purple-500/20"></div>
@@ -254,7 +257,7 @@ function Home() {
                 featuredCourses.map((course: Course) => (
                   <div
                     key={course.id}
-                    className="group relative rounded-2xl border border-blue-500/30 bg-white/10 backdrop-blur-sm p-6 shadow-xl hover:shadow-blue-500/25 transition-all duration-500 hover:-translate-y-2 overflow-hidden"
+                    className="group relative rounded-2xl border border-blue-500/30 bg-white/60 backdrop-blur-sm p-6 shadow-xl hover:shadow-blue-500/25 transition-all duration-500 hover:-translate-y-2 overflow-hidden"
                     style={{boxShadow: '0 0 20px rgba(59, 130, 246, 0.1), 0 0 40px rgba(59, 130, 246, 0.05)'}}
                   >
                     <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-cyan-500/5 rounded-2xl"></div>
@@ -277,10 +280,10 @@ function Home() {
                     
                     {/*  Content carte */}
                     <div className="relative z-10">
-                      <h3 className="mb-3 text-xl font-bold text-white group-hover:text-blue-300 transition-colors duration-300">
+                      <h3 className="mb-3 text-xl font-bold text-gray-800 group-hover:text-blue-600 transition-colors duration-300">
                         {course.title}
                       </h3>
-                      <p className="mb-6 line-clamp-2 text-gray-300 leading-relaxed">
+                      <p className="mb-6 line-clamp-2 text-gray-600 leading-relaxed">
                         {course.description}
                       </p>
                       
@@ -319,7 +322,7 @@ function Home() {
       </section>
 
       {/* Section Fonctionnalités */}
-      <section className="relative py-20 overflow-hidden bg-black">
+      <section className="relative py-20 overflow-hidden background-beige">
         {/* Background decorative "Glow" */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-yellow-500/10 to-yellow-400/10 rounded-full blur-3xl animate-pulse"></div>
@@ -336,8 +339,8 @@ function Home() {
               Pourquoi EduKids Academy ?
             </h2>
             <div className="mx-auto max-w-4xl">
-               <p className="text-xl text-gray-300 leading-relaxed mb-4">
-                 Une approche pédagogique <span className="font-bold text-white bg-gradient-to-r from-yellow-400/20 to-yellow-500/20 px-3 py-1 rounded-full border border-yellow-400/30 shadow-lg">innovante</span> qui transforme l&apos;apprentissage en aventure
+               <p className="text-xl text-gray-600 leading-relaxed mb-4">
+                 Une approche pédagogique <span className="font-bold text-gray-800 bg-gradient-to-r from-yellow-400/20 to-yellow-500/20 px-3 py-1 rounded-full border border-yellow-400/30 shadow-lg">innovante</span> qui transforme l&apos;apprentissage en aventure
                  passionnante pour vos enfants.
                </p>
               <div className="flex items-center justify-center space-x-4 text-sm text-gray-400">
@@ -400,7 +403,7 @@ function Home() {
             ].map((feature) => (
               <div
                 key={feature.title}
-                className="group relative rounded-3xl border border-yellow-500/30 bg-black/40 backdrop-blur-sm p-8 shadow-2xl hover:shadow-yellow-500/25 transition-all duration-500 hover:-translate-y-3 overflow-hidden"
+                className="group relative rounded-3xl border border-yellow-500/30 bg-white/60 backdrop-blur-sm p-8 shadow-2xl hover:shadow-yellow-500/25 transition-all duration-500 hover:-translate-y-3 overflow-hidden"
                 style={{boxShadow: '0 0 30px rgba(234, 179, 8, 0.1), 0 0 60px rgba(234, 179, 8, 0.05)'}}
               >
                 {/* Enhanced glow effect */}
@@ -409,8 +412,8 @@ function Home() {
                 
                 <div className="relative z-10">
                   <div className="mb-4 text-4xl group-hover:scale-110 transition-transform duration-300">{feature.icon}</div>
-                  <h3 className="mb-4 text-base font-bold text-white group-hover:text-yellow-300 transition-colors duration-300">{feature.title}</h3>
-                  <p className="text-gray-300 group-hover:text-gray-200 transition-colors duration-300 leading-relaxed">{feature.description}</p>
+                  <h3 className="mb-4 text-base font-bold text-gray-800 group-hover:text-yellow-600 transition-colors duration-300">{feature.title}</h3>
+                  <p className="text-gray-600 group-hover:text-gray-700 transition-colors duration-300 leading-relaxed">{feature.description}</p>
                 </div>
               </div>
             ))}
@@ -419,7 +422,7 @@ function Home() {
       </section>
 
       {/* Conteneur grille background pour les deux sections */}
-      <div className="relative bg-black">
+      <div className="relative background-beige">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute inset-0">
             <div className="absolute top-0 left-0 w-full h-full" style={{
@@ -462,7 +465,7 @@ function Home() {
             <h2 className="mb-8 text-4xl font-bold text-blue-500">
               Enseignants : Partagez votre passion
             </h2>
-            <p className="mx-auto max-w-4xl text-xl text-white leading-relaxed">
+            <p className="mx-auto max-w-4xl text-xl text-gray-700 leading-relaxed">
               Transformez votre expertise pédagogique en une source de revenus complémentaires tout
               en aidant des milliers d&apos;enfants à apprendre.
             </p>
@@ -470,7 +473,7 @@ function Home() {
 
           <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2">
             <div className="space-y-6">
-              <div className="relative rounded-2xl border border-blue-500/30 bg-black/40 backdrop-blur-sm p-6 shadow-xl overflow-hidden">
+              <div className="relative rounded-2xl border border-blue-500/30 bg-white/60 backdrop-blur-sm p-6 shadow-xl overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-blue-400/5 to-blue-600/5 rounded-2xl"></div>
                 
                 <div className="relative z-10 flex items-start space-x-4">
@@ -478,8 +481,8 @@ function Home() {
                     <span className="text-2xl">💡</span>
                   </div>
                   <div>
-                    <h3 className="mb-2 text-lg font-bold text-white">Créez vos cours en ligne</h3>
-                    <p className="text-gray-300">
+                    <h3 className="mb-2 text-lg font-bold text-gray-800">Créez vos cours en ligne</h3>
+                    <p className="text-gray-600">
                       Utilisez vos méthodes pédagogiques éprouvées pour créer des cours vidéo
                       engageants.
                     </p>
@@ -487,7 +490,7 @@ function Home() {
                 </div>
               </div>
 
-              <div className="relative rounded-2xl border border-blue-500/30 bg-black/40 backdrop-blur-sm p-6 shadow-xl overflow-hidden">
+              <div className="relative rounded-2xl border border-blue-500/30 bg-white/60 backdrop-blur-sm p-6 shadow-xl overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-blue-400/5 to-blue-600/5 rounded-2xl"></div>
                 
                 <div className="relative z-10 flex items-start space-x-4">
@@ -495,10 +498,10 @@ function Home() {
                     <span className="text-2xl">💰</span>
                   </div>
                   <div>
-                    <h3 className="mb-2 text-lg font-bold text-white">
+                    <h3 className="mb-2 text-lg font-bold text-gray-800">
                       Générez des revenus passifs
                     </h3>
-                    <p className="text-gray-300">
+                    <p className="text-gray-600">
                       Recevez une commission sur chaque inscription à vos cours, créant un revenu
                       durable.
                     </p>
@@ -506,7 +509,7 @@ function Home() {
                 </div>
               </div>
 
-              <div className="relative rounded-2xl border border-blue-500/30 bg-black/40 backdrop-blur-sm p-6 shadow-xl overflow-hidden">
+              <div className="relative rounded-2xl border border-blue-500/30 bg-white/60 backdrop-blur-sm p-6 shadow-xl overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-blue-400/5 to-blue-600/5 rounded-2xl"></div>
                 
                 <div className="relative z-10 flex items-start space-x-4">
@@ -514,10 +517,10 @@ function Home() {
                     <span className="text-2xl">🌟</span>
                   </div>
                   <div>
-                    <h3 className="mb-2 text-lg font-bold text-white">
+                    <h3 className="mb-2 text-lg font-bold text-gray-800">
                       Valorisez votre expertise
                     </h3>
-                    <p className="text-gray-300">
+                    <p className="text-gray-600">
                       Construisez votre réputation et montrez vos compétences pédagogiques à un large
                       public.
                     </p>
@@ -526,14 +529,14 @@ function Home() {
               </div>
             </div>
 
-            <div className="relative rounded-3xl border border-blue-500/30 bg-black/40 backdrop-blur-sm p-8 shadow-2xl overflow-hidden">
+            <div className="relative rounded-3xl border border-blue-500/30 bg-white/60 backdrop-blur-sm p-8 shadow-2xl overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-blue-400/5 to-blue-600/5 rounded-3xl"></div>
               
               <div className="relative z-10">
-                <h3 className="mb-4 text-2xl font-bold text-white">
+                <h3 className="mb-4 text-2xl font-bold text-gray-800">
                   Rejoignez notre équipe d&apos;enseignants
                 </h3>
-                <p className="mb-6 text-gray-300">
+                <p className="mb-6 text-gray-600">
                   Nous recherchons des enseignants passionnés pour enrichir notre catalogue de cours.
                   Bénéficiez d&apos;un support technique complet et d&apos;une plateforme optimisée
                   pour l&apos;enseignement.
@@ -605,10 +608,10 @@ function Home() {
           </div>
 
           <Container maxWidth="2xl" className="relative z-10">
-            <div className="text-center text-white">
+            <div className="text-center text-gray-800">
               {/* Titre avec effet futuriste */}
               <div className="mb-8">
-                <h2 className="mb-4 text-5xl font-bold bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent" style={{
+                <h2 className="mb-4 text-5xl font-bold bg-gradient-to-r from-gray-800 via-blue-600 to-gray-800 bg-clip-text text-transparent" style={{
                   textShadow: '0 0 20px rgba(59, 130, 246, 0.3)',
                   filter: 'drop-shadow(0 0 10px rgba(59, 130, 246, 0.2))'
                 }}>
@@ -620,7 +623,7 @@ function Home() {
               </div>
 
               {/* Description */}
-              <p className="mx-auto mb-12 max-w-3xl text-xl text-blue-100 leading-relaxed" style={{
+              <p className="mx-auto mb-12 max-w-3xl text-xl text-gray-600 leading-relaxed" style={{
                 textShadow: '0 0 15px rgba(59, 130, 246, 0.2)'
               }}>
                 {user
@@ -672,14 +675,14 @@ function Home() {
                     </Link>
                     <Link
                       href="/signup"
-                      className="group relative inline-flex h-16 items-center justify-center rounded-2xl border-2 border-white px-12 text-lg font-bold text-white transition-all duration-300 hover:bg-white hover:text-blue-500 hover:shadow-2xl hover:shadow-white/30 hover:-translate-y-2"
+                      className="group relative inline-flex h-16 items-center justify-center rounded-2xl border-2 border-gray-800 px-12 text-lg font-bold text-gray-800 transition-all duration-300 hover:bg-gray-800 hover:text-white hover:shadow-2xl hover:shadow-gray-800/30 hover:-translate-y-2"
                       style={{
-                        boxShadow: '0 0 20px rgba(255, 255, 255, 0.2)'
+                        boxShadow: '0 0 20px rgba(0, 0, 0, 0.2)'
                       }}
                     >
                       <span className="mr-3 text-2xl">🔐</span>
                       Créer un compte gratuit
-                      <div className="absolute inset-0 rounded-2xl bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      <div className="absolute inset-0 rounded-2xl bg-gray-800/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                     </Link>
                   </>
                 )}

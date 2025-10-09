@@ -61,18 +61,18 @@ export default function SignInPage() {
           <h2 className="text-4xl font-bold text-amber-800 mb-4" style={{
             textShadow: '0 0 10px rgba(245, 158, 11, 0.4)',
             animation: 'float 8s ease-in-out infinite'
-          }}>Déjà membre ?</h2>
+          }}>Nouveau sur EduKidz ?</h2>
           <p className="text-xl text-amber-700 leading-relaxed mb-6" style={{
             textShadow: '0 0 5px rgba(245, 158, 11, 0.3)'
           }}>
-            Reconnectez-vous à votre compte pour retrouver vos cours et continuer votre apprentissage.
+            Créez votre compte et découvrez une nouvelle façon d'apprendre avec nos cours interactifs.
           </p>
           <a 
             href="/signup" 
             className="auth-hidden-btn group"
           >
             <span className="button-glow"></span>
-            Nouveau ? Créez un compte
+            Créez un compte
           </a>
         </div>
       </div>

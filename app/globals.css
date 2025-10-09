@@ -313,7 +313,7 @@
     position: absolute;
     width: 4px;
     height: 4px;
-    background: rgba(255, 255, 255, 0.6);
+    background: #3b82f6;
     border-radius: 50%;
     animation: floatUp linear infinite;
   }
