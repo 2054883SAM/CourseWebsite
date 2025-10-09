@@ -15,6 +15,16 @@
   }
 }
 
+/* Animation float pour les éléments de background */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
 :root {
   --background: #ffffff;
   --foreground: #000000;
@@ -31,6 +41,11 @@
 
 .background-beige {
   background-color: var(--background-beige);
+}
+
+/* Animation float utility class */
+.animate-float {
+  animation: float 6s ease-in-out infinite;
 }
 
  /* Class input dans signIn et signUp */

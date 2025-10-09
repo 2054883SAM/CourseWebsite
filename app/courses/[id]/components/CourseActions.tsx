@@ -316,17 +316,48 @@ export function CourseActions({
           {/* Titre de la section */}
           <div className="mb-6 flex items-center gap-3">
             <span className="text-3xl">🚀</span>
-            <h3 className="text-xl font-bold text-orange-700">Commencer l'aventure</h3>
+              <h3 className="text-3xl xl:text-3xl lg:text-xl font-bold text-orange-700">Commencer l'aventure</h3>
           </div>
 
           <div className="space-y-4 text-sm">
-            <div className="flex justify-between">
-              <span className="text-gray-600">Durée totale :</span>
-              <span className="font-semibold">{totalDuration} min</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Créé par :</span>
-              <span className="font-semibold">{course.creator?.name || 'Inconnu'}</span>
+            {/* Informations du cours */}
+            <div className="space-y-4">
+              <div className="rounded-xl border border-orange-200 bg-white/60 p-4">
+                <div className="flex items-center justify-center xl:justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">⏰</span>
+                    <span className="font-medium text-gray-700 hidden xl:inline">Durée totale</span>
+                  </div>
+                  <span className="font-bold text-gray-800 xl:ml-0 ml-2">{totalDuration} min</span>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-orange-200 bg-white/60 p-4">
+                <div className="flex items-center justify-center xl:justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">👨‍🏫</span>
+                    <span className="font-medium text-gray-700 hidden xl:inline">Enseignant</span>
+                  </div>
+                  <span className="font-bold text-gray-800 xl:ml-0 ml-2">
+                    {course.creator?.name || 'Inconnu'}
+                  </span>
+                </div>
+              </div>
+
+              {course.playback_id && (
+                <div className="rounded-xl border border-orange-200 bg-white/60 p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">📹</span>
+                      <span className="font-medium text-gray-700">Vidéos</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="h-2 w-2 animate-pulse rounded-full bg-green-500"></span>
+                      <span className="font-bold text-green-600">Disponibles</span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
             {course.playback_id && (
               <div className="flex justify-between">
@@ -336,7 +367,7 @@ export function CourseActions({
             )}
 
             <div className="mb-6 w-full">
-              <div className="group relative">
+              <div className="text-center group relative">
                 <EnrollButton
                   status={enrollmentStatus}
                   onClick={handleEnrollClick}
@@ -387,46 +418,6 @@ export function CourseActions({
                 >
                   Se désinscrire du cours
                 </button>
-              )}
-            </div>
-
-            {/* Informations du cours */}
-            <div className="space-y-4">
-              <div className="rounded-xl border border-orange-200 bg-white/60 p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xl">⏰</span>
-                    <span className="font-medium text-gray-700">Durée totale</span>
-                  </div>
-                  <span className="font-bold text-gray-800">{totalDuration} min</span>
-                </div>
-              </div>
-
-              <div className="rounded-xl border border-orange-200 bg-white/60 p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xl">👨‍🏫</span>
-                    <span className="font-medium text-gray-700">Enseignant</span>
-                  </div>
-                  <span className="font-bold text-gray-800">
-                    {course.creator?.name || 'Inconnu'}
-                  </span>
-                </div>
-              </div>
-
-              {course.playback_id && (
-                <div className="rounded-xl border border-orange-200 bg-white/60 p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xl">📹</span>
-                      <span className="font-medium text-gray-700">Vidéos</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <span className="h-2 w-2 animate-pulse rounded-full bg-green-500"></span>
-                      <span className="font-bold text-green-600">Disponibles</span>
-                    </div>
-                  </div>
-                </div>
               )}
             </div>
 
