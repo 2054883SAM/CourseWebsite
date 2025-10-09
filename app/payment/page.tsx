@@ -95,67 +95,191 @@ function PaymentContent() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-gray-50 px-4 py-16">
-      <div className="mx-auto max-w-6xl">
-        {/* Header de la page */}
-        <div className="mb-16 text-center">
-          <h1 className="mb-4 text-4xl font-bold text-gray-900 md:text-5xl">
-            Choisissez votre abonnement
+    <div className="min-h-screen w-full background-beige">
+      <div className="mx-auto max-w-6xl px-4 py-16">
+        {/* Header amélioré */}
+        <div className="mb-20 text-center">
+          <h1 className="mb-6 text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-gray-800 via-blue-600 to-gray-800 md:text-5xl" style={{
+            textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+            backgroundSize: '200% 200%',
+            animation: 'gradientShift 4s ease-in-out infinite'
+          }}>
+            Débloquez le <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 font-extrabold animate-bounce" style={{
+              backgroundSize: '200% 200%',
+              animation: 'gradientShift 2s ease-in-out infinite, bounce 2s ease-in-out infinite'
+            }}>potentiel infini</span> de votre enfant
           </h1>
-          <p className="mx-auto max-w-2xl text-xl text-gray-600">
-            Accédez à tous nos cours premium et donnez à votre enfant les meilleures chances de
-            réussite
+          
+          <p className="mx-auto max-w-3xl text-xl text-gray-600 leading-relaxed">
+            Accédez à notre <span className="font-bold text-blue-600">écosystème éducatif</span> de nouvelle génération 
+            et donnez à votre enfant les <span className="font-bold text-green-600">meilleures chances de réussite</span>
           </p>
         </div>
 
-        {/* Container pour les cartes de pricing */}
-        <div className="flex justify-center">
-          <div className="w-full max-w-xl">
-            <SubscriptionCard
-              title="Premium"
-              description="Accès complet à tous les cours"
-              price={50}
-              originalPrice={70}
-              discount={29}
-              features={[
-                'Accès illimité à tous les cours',
-                'Nouveau contenu ajouté chaque mois',
-                'Accès sécurisé et paiement Stripe',
-                'Annulable à tout moment',
-              ]}
-              isCurrent={
-                optimisticSubscription === defaultPriceId || currentPlanId === defaultPriceId
-              }
-              isOptimistic={
-                optimisticSubscription === defaultPriceId && currentPlanId !== defaultPriceId
-              }
-              onSubscribe={handleSubscribe}
-              onLoginToSubscribe={handleLoginToSubscribe}
-              loading={loading}
-              error={error}
-              user={user}
-              badge="Le plus populaire"
-            />
+        {/* Premium Subscription Card */}
+        <div className="flex justify-center mb-24">
+          <div className="w-full max-w-lg">
+            <div className="relative">
+              {/* Enhanced Halo Effect */}
+              <div className="absolute -inset-6 bg-gradient-to-r from-blue-400/30 via-amber-400/30 to-green-400/30 rounded-3xl blur-2xl animate-pulse"></div>
+              <div className="absolute -inset-3 bg-gradient-to-r from-blue-500/20 via-amber-500/20 to-green-500/20 rounded-3xl blur-xl"></div>
+              
+              {/* Main Card */}
+              <div className="relative bg-gradient-to-br from-white via-blue-50/50 to-amber-50/30 backdrop-blur-xl border-2 border-blue-200/50 rounded-3xl p-8 shadow-2xl hover:shadow-3xl transition-all duration-500 hover:scale-[1.02]">
+                {/* Le plus populaire Badge */}
+                <div className="absolute -top-5 left-1/2 transform -translate-x-1/2">
+                  <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold text-sm tracking-wider shadow-xl border-2 border-amber-300/50" style={{
+                    boxShadow: '0 0 25px rgba(245, 158, 11, 0.6), 0 4px 15px rgba(245, 158, 11, 0.3)'
+                  }}>
+                    <span className="text-lg">⭐</span>
+                    <span className='text-lg'>Le plus populaire</span>
+                  </div>
+                </div>
+
+                <div className="text-center m-8">
+                  <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 bg-clip-text text-transparent mb-3" style={{
+                    textShadow: '0 2px 4px rgba(59, 130, 246, 0.3)'
+                  }}>
+                    PREMIUM ACCESS
+                  </h2>
+                  <p className="text-gray-600 text-lg font-medium">Accès complet à tous les cours</p>
+                </div>
+
+                <div className="text-center mb-8">
+                  <div className="flex flex-col items-center justify-center gap-2 mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="text-lg text-gray-400 line-through font-mono">$70</div>
+                      <div className="text-sm text-red-600 font-bold tracking-wider bg-red-200 px-2 py-1 rounded-full">-29% OFF</div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-7xl font-black bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent font-mono" style={{
+                        textShadow: '0 2px 8px rgba(59, 130, 246, 0.4)'
+                      }}>$50</span>
+                      <span className="text-lg text-gray-500 font-medium">/mois</span>
+                    </div>
+                  </div>
+                  <div className="text-sm text-gray-500 font-medium tracking-wider bg-gray-100 px-3 py-1 rounded-full inline-block">• Paiement sécurisé</div>
+                </div>
+
+                <div className="space-y-3 mb-8">
+                  {[
+                    'Accès illimité à tous les cours',
+                    'Nouveau contenu ajouté chaque mois',
+                    'Accès sécurisé et paiement Stripe',
+                    'Annulable à tout moment',
+                  ].map((feature, index) => (
+                    <div key={index} className="flex items-center gap-3 text-gray-700 bg-white/60 rounded-xl p-3 border border-blue-100/50">
+                      <div className="w-3 h-3 bg-gradient-to-r from-blue-500 to-green-500 rounded-full animate-pulse flex-shrink-0" style={{
+                        animationDelay: `${index * 0.2}s`,
+                        boxShadow: '0 0 8px rgba(59, 130, 246, 0.6)'
+                      }}></div>
+                      <span className="text-sm font-medium tracking-wide">{feature}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="text-center">
+                  {user ? (
+                    <button
+                      onClick={handleSubscribe}
+                      disabled={loading || (optimisticSubscription === defaultPriceId || currentPlanId === defaultPriceId)}
+                      className="w-full py-4 px-8 rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed border-2 border-transparent hover:shadow-[0_0_50px_rgba(59,130,246,0.8)]"
+                      style={{
+                        background: (optimisticSubscription === defaultPriceId || currentPlanId === defaultPriceId) 
+                          ? 'linear-gradient(135deg, #10b981, #059669, #047857)' 
+                          : 'linear-gradient(135deg, #3b82f6, #1d4ed8, #1e40af)',
+                        color: 'white',
+                        boxShadow: (optimisticSubscription === defaultPriceId || currentPlanId === defaultPriceId)
+                          ? '0 0 40px rgba(16, 185, 129, 0.8), 0 0 20px rgba(16, 185, 129, 0.6), 0 4px 15px rgba(16, 185, 129, 0.4)'
+                          : '0 0 40px rgba(59, 130, 246, 0.8), 0 0 20px rgba(59, 130, 246, 0.6), 0 4px 15px rgba(59, 130, 246, 0.4)'
+                      }}
+                    >
+                      {loading ? (
+                        <div className="flex items-center justify-center gap-3">
+                          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                          <span>INITIALISATION...</span>
+                        </div>
+                      ) : (optimisticSubscription === defaultPriceId || currentPlanId === defaultPriceId) ? (
+                        'ACCÈS ACTIVÉ ✓'
+                      ) : (
+                        'ACTIVER L\'ACCÈS'
+                      )}
+                    </button>
+                  ) : (
+                         <button
+                        onClick={handleLoginToSubscribe}
+                         className="group relative w-full py-4 px-8 rounded-2xl font-bold text-lg overflow-hidden transition-transform duration-300 hover:scale-[1.07]"
+                      style={{
+                        background: 'linear-gradient(135deg, #3b82f6, #1d4ed8, #1e40af)',
+                        color: 'white',
+                        boxShadow: '0 0 40px rgba(59, 130, 246, 0.8), 0 0 20px rgba(59, 130, 246, 0.6), 0 4px 15px rgba(59, 130, 246, 0.4)'
+                      }}
+                        >
+                          <span className="button-glow"></span>
+                          CONNEXION REQUISE
+                      </button>
+                  )}
+                  
+                  {error && (
+                    <div className="mt-6 p-4 rounded-xl bg-red-500/20 border border-red-500/50 text-red-600 text-sm font-mono tracking-wider">
+                      ERREUR: {error}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Section d'informations supplémentaires */}
-        <div className="mt-16 text-center">
-          <div className="mx-auto grid max-w-4xl gap-8 md:grid-cols-3">
-            <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
-              <div className="mb-3 text-3xl">💳</div>
-              <h4 className="mb-2 font-semibold text-gray-900">Paiement sécurisé</h4>
-              <p className="text-sm text-gray-600">Vos données sont protégées par Stripe</p>
+        {/* Cyberpunk Info Section */}
+        <div className="mt-20 text-center">
+          <h3 className="mb-12 text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-amber-600" style={{
+            textShadow: '0 0 20px rgba(59, 130, 246, 0.3)'
+          }}>
+            SYSTÈME DE PROTECTION AVANCÉ
+          </h3>
+          
+          <div className="mx-auto grid max-w-5xl gap-8 md:grid-cols-3">
+            <div className="relative group">
+              <div className="absolute -inset-2 bg-gradient-to-r from-blue-500/20 to-blue-600/20 rounded-2xl blur-lg group-hover:blur-xl transition-all duration-300"></div>
+              <div className="relative bg-white/80 backdrop-blur-xl border border-blue-500/30 rounded-2xl p-8 shadow-2xl">
+                <div className="mb-4 text-4xl">🔐</div>
+                 <h4 className="mb-3 font-bold text-blue-600 text-xl tracking-wider">DONNÉES CHIFFRÉES</h4>
+                <p className="text-sm text-gray-600 font-mono tracking-wider">Paiement protégé par Stripe</p>
+                <div className="mt-4 flex justify-center space-x-1">
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="w-1 h-1 bg-blue-500 rounded-full animate-pulse" style={{ animationDelay: `${i * 0.2}s` }}></div>
+                  ))}
+                </div>
+              </div>
             </div>
-            <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
-              <div className="mb-3 text-3xl">📞</div>
-              <h4 className="mb-2 font-semibold text-gray-900">Support 24/7</h4>
-              <p className="text-sm text-gray-600">Notre équipe est là pour vous aider</p>
+            
+            <div className="relative group">
+              <div className="absolute -inset-2 bg-gradient-to-r from-amber-500/20 to-amber-600/20 rounded-2xl blur-lg group-hover:blur-xl transition-all duration-300"></div>
+              <div className="relative bg-white/80 backdrop-blur-xl border border-amber-500/30 rounded-2xl p-8 shadow-2xl">
+                <div className="mb-4 text-4xl">📞</div>
+                <h4 className="mb-3 font-bold text-amber-600 text-lg tracking-wider">SUPPORT 24/7</h4>
+                <p className="text-sm text-gray-600">Notre équipe est là pour vous aider</p>
+                <div className="mt-4 flex justify-center space-x-1">
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="w-1 h-1 bg-amber-500 rounded-full animate-pulse" style={{ animationDelay: `${i * 0.2}s` }}></div>
+                  ))}
+                </div>
+              </div>
             </div>
-            <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
-              <div className="mb-3 text-3xl">🎓</div>
-              <h4 className="mb-2 font-semibold text-gray-900">Contenu premium</h4>
-              <p className="text-sm text-gray-600">Cours créés par des experts</p>
+            
+            <div className="relative group">
+              <div className="absolute -inset-2 bg-gradient-to-r from-green-500/20 to-green-600/20 rounded-2xl blur-lg group-hover:blur-xl transition-all duration-300"></div>
+              <div className="relative bg-white/80 backdrop-blur-xl border border-green-500/30 rounded-2xl p-8 shadow-2xl">
+                <div className="mb-4 text-4xl">🎓</div>
+                <h4 className="mb-3 font-bold text-green-600 text-lg tracking-wider">CONTENU PREMIUM</h4>
+                <p className="text-sm text-gray-600 font-mono tracking-wider">Cours créés par des experts</p>
+                <div className="mt-4 flex justify-center space-x-1">
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="w-1 h-1 bg-green-500 rounded-full animate-pulse" style={{ animationDelay: `${i * 0.2}s` }}></div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>
