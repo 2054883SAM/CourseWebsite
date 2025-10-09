@@ -137,10 +137,10 @@ function PaymentContent() {
                 </div>
 
                 <div className="text-center m-8">
-                  <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 bg-clip-text text-transparent mb-3" style={{
+                  <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 bg-clip-text text-transparent mb-3" style={{
                     textShadow: '0 2px 4px rgba(59, 130, 246, 0.3)'
                   }}>
-                    PREMIUM ACCESS
+                    ABONNEMENT PREMIUM
                   </h2>
                   <p className="text-gray-600 text-lg font-medium">Accès complet à tous les cours</p>
                 </div>
