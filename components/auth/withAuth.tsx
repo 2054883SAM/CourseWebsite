@@ -20,20 +20,12 @@ const DefaultLoading = () => (
   </div>
 );
 
-const DefaultUnauthorized = () => (
-  <div className="flex min-h-screen items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
-    <div className="text-center">
-      <h2 className="mb-4 text-2xl font-bold">Access Denied</h2>
-      <p className="mb-6 text-gray-600">You need to be signed in to access this page.</p>
-      <a
-        href="/signin"
-        className="inline-flex h-10 items-center justify-center rounded-md bg-primary-600 px-4 font-medium text-white transition-colors hover:bg-primary-700"
-      >
-        Sign In
-      </a>
-    </div>
-  </div>
-);
+const DefaultUnauthorized = () => {
+  if (typeof window !== 'undefined') {
+    window.location.href = '/unauthorized';
+  }
+  return null;
+};
 
 export function withAuth<P extends object>(
   WrappedComponent: React.ComponentType<P>,

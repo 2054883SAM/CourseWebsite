@@ -55,40 +55,119 @@ function PaymentSuccessContent() {
   }, [router, searchParams]);
 
   return (
-    <div className="mx-auto max-w-3xl px-6 py-16 text-center">
-      <div className="mx-auto mb-6 h-12 w-12 rounded-full bg-green-100 p-3">
-        <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6 text-green-600">
-          <path
-            d="M5 13l4 4L19 7"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </div>
-      <h1 className="text-3xl font-semibold">Paiement réussi</h1>
-      <p className="mt-2 text-gray-600">
-        Votre abonnement est actif. Profitez d'un accès illimité à tous les cours.
-      </p>
+    <div className="min-h-screen background-beige flex items-center justify-center p-4">
+      <div className="max-w-2xl w-full">
+        {/* Success Card */}
+        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-green-100">
+          {/* Header Section */}
+          <div className="bg-gradient-to-r from-green-700 via-green-500 to-green-700 px-8 py-12 text-center text-white relative overflow-hidden">
+            {/* Background Pattern */}
+            <div className="absolute inset-0 opacity-10">
+              <div className="absolute top-4 left-4 w-8 h-8 border-2 border-white rounded-full"></div>
+              <div className="absolute top-8 right-8 w-6 h-6 border-2 border-white rounded-full"></div>
+              <div className="absolute bottom-4 left-8 w-4 h-4 border-2 border-white rounded-full"></div>
+              <div className="absolute bottom-8 right-4 w-10 h-10 border-2 border-white rounded-full"></div>
+            </div>
+            
+            <div className="relative z-10">
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 rounded-full mb-6 backdrop-blur-sm">
+                <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+              </div>
+              <h1 className="text-4xl font-bold mb-2">Paiement Réussi !</h1>
+              <p className="text-green-100 text-lg">Votre abonnement est maintenant actif</p>
+            </div>
+          </div>
 
-      {confirming && <p className="mt-4 text-sm text-gray-500">Activation de votre abonnement…</p>}
-      {enrolling && <p className="mt-2 text-sm text-gray-500">Inscription au cours…</p>}
-      {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
+          {/* Content Section */}
+          <div className="px-8 py-8">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+                🎉 Félicitations !
+              </h2>
+              <p className="text-gray-600 text-lg leading-relaxed">
+                Vous avez maintenant accès à tous nos cours premium. 
+                Votre aventure d'apprentissage commence maintenant !
+              </p>
+            </div>
 
-      <div className="mt-8 flex items-center justify-center gap-3">
-        <Link
-          href="/"
-          className="rounded-md border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50"
-        >
-          Accueil
-        </Link>
-        <Link
-          href="/my-learning"
-          className="rounded-md bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700"
-        >
-          Commencer à apprendre
-        </Link>
+            {/* Status Messages */}
+            {confirming && (
+              <div className="mb-6 p-4 bg-blue-50 border-l-4 border-blue-400 rounded-r-lg">
+                <div className="flex items-center">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 mr-3"></div>
+                  <span className="text-blue-800 font-medium">Activation de votre abonnement…</span>
+                </div>
+              </div>
+            )}
+            
+            {enrolling && (
+              <div className="mb-6 p-4 bg-purple-50 border-l-4 border-purple-400 rounded-r-lg">
+                <div className="flex items-center">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-600 mr-3"></div>
+                  <span className="text-purple-800 font-medium">Inscription au cours…</span>
+                </div>
+              </div>
+            )}
+            
+            {error && (
+              <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-400 rounded-r-lg">
+                <div className="flex items-center">
+                  <span className="text-red-600 mr-3">⚠️</span>
+                  <span className="text-red-800 font-medium">{error}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Link
+                href="/"
+                className="group flex items-center justify-center px-6 py-4 border-2 border-gray-200 rounded-xl text-gray-700 font-semibold transition-all duration-200 hover:border-gray-300 hover:bg-gray-50 hover:shadow-md"
+              >
+                <svg className="w-5 h-5 mr-2 group-hover:transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                Retour à l'accueil
+              </Link>
+              <Link
+                href="/my-learning"
+                className="group flex items-center justify-center px-6 py-4 bg-gradient-to-r from-green-700 via-green-500 to-green-700 rounded-xl text-white font-semibold transition-all duration-200 hover:shadow-lg hover:scale-105"
+              >
+                Commencer à apprendre
+                <svg className="w-5 h-5 ml-2 group-hover:transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                </svg>
+              </Link>
+            </div>
+
+            {/* Features List */}
+            <div className="mt-8 p-6 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-100">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4 text-center">
+                Ce qui vous attend :
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                <div className="flex items-center text-gray-700">
+                  <span className="text-green-500 mr-2">✓</span>
+                  Accès illimité à tous les cours
+                </div>
+                <div className="flex items-center text-gray-700">
+                  <span className="text-green-500 mr-2">✓</span>
+                  Certificats de completion
+                </div>
+                <div className="flex items-center text-gray-700">
+                  <span className="text-green-500 mr-2">✓</span>
+                  Contenu de qualité
+                </div>
+                <div className="flex items-center text-gray-700">
+                  <span className="text-green-500 mr-2">✓</span>
+                  Mises à jour régulières
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
