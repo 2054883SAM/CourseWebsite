@@ -166,16 +166,16 @@ export function SearchBar({ initialQuery = '', className = '' }: SearchBarProps)
             onChange={(e) => setQuery(e.target.value)}
             onFocus={() => setIsFocused(true)}
             placeholder="Rechercher des cours..."
-            className="w-full px-6 py-4 pl-14 pr-16 sm:pr-20 text-lg border-2 border-gray-200 dark:border-gray-600 rounded-2xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-gold-500/20 focus:border-gold-500 dark:focus:border-gold-400 transition-all duration-300 shadow-lg hover:shadow-xl"
+            className="w-full px-6 py-4 pl-14 pr-16 sm:pr-20 text-lg border-2 border-gray-200 rounded-2xl bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-4 focus:ring-gold-500/20 focus:border-gold-500 transition-all duration-300 shadow-lg hover:shadow-xl"
             aria-label="Rechercher des cours"
           />
           <div className="absolute inset-y-0 left-0 flex items-center pl-5 pointer-events-none">
-            <SearchIcon className="w-6 h-6 text-gray-400 dark:text-gray-500" />
+            <SearchIcon className="w-6 h-6 text-gray-400" />
           </div>
           {query && (
             <button
               type="button"
-              className="absolute inset-y-0 right-0 flex items-center pr-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200"
+              className="absolute inset-y-0 right-0 flex items-center pr-5 text-gray-400 hover:text-gray-600 transition-colors duration-200"
               onClick={handleClearSearch}
               aria-label="Effacer la recherche"
             >
@@ -199,18 +199,18 @@ export function SearchBar({ initialQuery = '', className = '' }: SearchBarProps)
       {isFocused && (
         <div 
           ref={suggestionsRef}
-          className="absolute top-full left-0 right-0 mt-3 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-600 rounded-2xl shadow-2xl backdrop-blur-sm z-[99999]"
+          className="absolute top-full left-0 right-0 mt-3 bg-white border-2 border-gray-200 rounded-2xl shadow-2xl backdrop-blur-sm z-[99999]"
         >
           {query.length >= 2 ? (
             <div className="p-4">
               {isLoading ? (
                 <div className="flex items-center justify-center py-4">
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gold-600"></div>
-                  <span className="ml-3 text-gray-500 dark:text-gray-400">Chargement des suggestions...</span>
+                  <span className="ml-3 text-gray-500">Chargement des suggestions...</span>
                 </div>
               ) : suggestions.length > 0 ? (
                 <div>
-                  <div className="px-2 py-2 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <div className="px-2 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Suggestions
                   </div>
                   <ul className="space-y-1">
@@ -218,7 +218,7 @@ export function SearchBar({ initialQuery = '', className = '' }: SearchBarProps)
                       <li key={`suggestion-${index}`}>
                         <button
                           type="button"
-                          className="w-full px-4 py-3 text-left rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                          className="w-full px-4 py-3 text-left rounded-xl hover:bg-gray-100 text-gray-700 hover:text-gray-900"
                           onClick={() => handleSuggestionClick(suggestion)}
                         >
                           🔍 {suggestion}
@@ -228,7 +228,7 @@ export function SearchBar({ initialQuery = '', className = '' }: SearchBarProps)
                   </ul>
                 </div>
               ) : (
-                <div className="text-center py-6 text-gray-500 dark:text-gray-400">
+                <div className="text-center py-6 text-gray-500">
                   <span className="text-2xl mb-2 block">🔍</span>
                   Aucune suggestion trouvée
                 </div>
@@ -238,7 +238,7 @@ export function SearchBar({ initialQuery = '', className = '' }: SearchBarProps)
             <div className="p-4">
               {recentSearches.length > 0 && (
                 <div className="mb-4">
-                  <div className="px-2 py-2 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <div className="px-2 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Recherches récentes
                   </div>
                   <ul className="space-y-1">
@@ -246,7 +246,7 @@ export function SearchBar({ initialQuery = '', className = '' }: SearchBarProps)
                       <li key={`recent-${index}`}>
                         <button
                           type="button"
-                          className="w-full px-4 py-3 text-left rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                          className="w-full px-4 py-3 text-left rounded-xl hover:bg-gray-100 transition-colors duration-200 text-gray-700 hover:text-gray-900"
                           onClick={() => handleSuggestionClick(search)}
                         >
                           ⏰ {search}
@@ -258,7 +258,7 @@ export function SearchBar({ initialQuery = '', className = '' }: SearchBarProps)
               )}
               
               <div>
-                <div className="px-2 py-2 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <div className="px-2 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider">
                   Recherches populaires
                 </div>
                 <ul className="space-y-1">
@@ -266,7 +266,7 @@ export function SearchBar({ initialQuery = '', className = '' }: SearchBarProps)
                     <li key={`popular-${index}`}>
                       <button
                         type="button"
-                        className="w-full px-4 py-3 text-left rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                        className="w-full px-4 py-3 text-left rounded-xl hover:bg-gray-100 transition-colors duration-200 text-gray-700 hover:text-gray-900"
                         onClick={() => handleSuggestionClick(search)}
                       >
                         🔥 {search}

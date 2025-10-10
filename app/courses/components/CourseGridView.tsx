@@ -143,7 +143,7 @@ function CourseCard({ course, searchQuery = '', index, onDeleted, onDeleteStart,
         )}
         
         {/* Overlay au survol */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-blue-900/60 via-transparent to-transparent opacity-0 group-hover:opacity-100"></div>
         
         {/* Badge: sign in prompt */}
         <div className="absolute top-4 right-4">
@@ -157,7 +157,7 @@ function CourseCard({ course, searchQuery = '', index, onDeleted, onDeleteStart,
         {/* Badge de niveau si disponible */}
         {course.niveau_difficulte && (
           <div className="absolute top-4 left-4">
-            <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm text-gray-700 dark:text-gray-300 px-2 py-1 rounded-full text-xs font-medium">
+            <div className="bg-white/90 backdrop-blur-sm text-gray-700 px-2 py-1 rounded-full text-xs font-medium">
               {course.niveau_difficulte}
             </div>
           </div>
@@ -167,7 +167,7 @@ function CourseCard({ course, searchQuery = '', index, onDeleted, onDeleteStart,
       {/* Contenu de la carte */}
       <div className="p-6">
         <NavigationLink href={`/courses/${course.id}`} className="block">
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 group-hover:text-gold-600 dark:group-hover:text-gold-400 line-clamp-2">
+          <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-amber-600 line-clamp-2">
             {searchQuery ? (
               <SearchHighlight text={course.title} query={searchQuery} />
             ) : (
@@ -175,7 +175,7 @@ function CourseCard({ course, searchQuery = '', index, onDeleted, onDeleteStart,
             )}
           </h3>
           
-          <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-3">
+          <p className="text-gray-600 text-sm mb-4 line-clamp-3">
             {searchQuery ? (
               <SearchHighlight text={course.description} query={searchQuery} />
             ) : (
@@ -185,7 +185,7 @@ function CourseCard({ course, searchQuery = '', index, onDeleted, onDeleteStart,
         </NavigationLink>
 
         {/* Informations du créateur */}
-        <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700">
+        <div className="flex items-center justify-between pt-4 border-t border-gray-100">
           <div className="flex items-center space-x-3">
             {course.creator?.photo_url ? (
               <div className="relative">
@@ -194,26 +194,26 @@ function CourseCard({ course, searchQuery = '', index, onDeleted, onDeleteStart,
                   alt={course.creator.name}
                   width={32}
                   height={32}
-                  className="rounded-full border-2 border-white dark:border-gray-700 shadow-sm"
+                  className="rounded-full border-2 border-white shadow-sm"
                 />
-                <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-700"></div>
+                <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
               </div>
             ) : (
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 flex items-center justify-center">
-                <span className="text-xs font-bold text-gray-600 dark:text-gray-300">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                <span className="text-xs font-bold text-gray-600">
                   {course.creator?.name?.[0]?.toUpperCase() || 'C'}
                 </span>
               </div>
             )}
             <div>
-              <p className="text-sm font-medium text-gray-900 dark:text-white">
+              <p className="text-sm font-medium text-gray-900">
                 {course.creator?.name || 'Créateur'}
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <p className="text-xs text-gray-500">
                 Créateur
               </p>
               {course.creator?.bio && (
-                <p className="text-xs text-gray-600 dark:text-gray-500 mt-1 line-clamp-1">
+                <p className="text-xs text-gray-600 mt-1 line-clamp-1">
                   {course.creator.bio}
                 </p>
               )}
@@ -246,7 +246,7 @@ function CourseCard({ course, searchQuery = '', index, onDeleted, onDeleteStart,
 
         {/* Informations supplémentaires */}
         {course.duree_estimee && (
-          <div className="mt-4 flex items-center text-xs text-gray-500 dark:text-gray-400">
+          <div className="mt-4 flex items-center text-xs text-gray-500">
             <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>

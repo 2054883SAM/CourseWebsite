@@ -118,7 +118,7 @@ function CourseListItem({ course, searchQuery = '', onDeleted, onDeleteStart, on
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+    <div className="group bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md hover:shadow-blue-900/50 transition-shadow">
       <div className="flex flex-col sm:flex-row">
         <div className="relative w-full sm:w-64 h-48 sm:h-auto flex-shrink-0">
           {course.thumbnail_url ? (
@@ -129,8 +129,8 @@ function CourseListItem({ course, searchQuery = '', onDeleted, onDeleteStart, on
               className="object-cover"
             />
           ) : (
-            <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-              <span className="text-gray-400 dark:text-gray-500">Aucune image</span>
+            <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+              <span className="text-gray-400">Aucune image</span>
             </div>
           )}
           {!dbUser && (
@@ -140,19 +140,18 @@ function CourseListItem({ course, searchQuery = '', onDeleted, onDeleteStart, on
           )}
         </div>
 
-        <div className="p-4 sm:p-5 flex-1">
+        <div className="p-6">
           <NavigationLink href={`/courses/${course.id}`} className="block">
-            <div className="flex flex-col sm:flex-row justify-between items-start gap-2">
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-1 group-hover:text-gold-600 dark:group-hover:text-gold-400">
+            
+                <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-amber-600 line-clamp-2">
                 {searchQuery ? (
                   <SearchHighlight text={course.title} query={searchQuery} />
                 ) : (
                   course.title
                 )}
               </h3>
-            </div>
 
-            <p className="text-gray-600 dark:text-gray-300 mb-4">
+            <p className="text-gray-600 mb-4">
               {searchQuery ? (
                 <SearchHighlight text={course.description} query={searchQuery} />
               ) : (
@@ -172,15 +171,15 @@ function CourseListItem({ course, searchQuery = '', onDeleted, onDeleteStart, on
                   className="rounded-full mr-2"
                 />
               ) : (
-                <div className="w-6 h-6 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 text-gray-600 dark:text-gray-300 rounded-full flex items-center justify-center mr-2">
+                <div className="w-6 h-6 bg-gradient-to-br from-gray-100 to-gray-200 text-gray-600 rounded-full flex items-center justify-center mr-2">
                   {course.creator?.name.charAt(0) || 'U'}
                 </div>
               )}
-              <span className="text-sm text-gray-700 dark:text-gray-300">{course.creator?.name || 'Créateur inconnu'}</span>
+              <span className="text-sm text-gray-700">{course.creator?.name || 'Créateur inconnu'}</span>
             </div>
 
             {dbUser && (
-              <div className="flex items-center text-gray-600 dark:text-gray-400">
+              <div className="flex items-center text-gray-600">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-5 w-5 mr-1"
@@ -204,7 +203,7 @@ function CourseListItem({ course, searchQuery = '', onDeleted, onDeleteStart, on
             {!dbUser && (
               <button 
                 onClick={() => window.location.href = '/signin'} 
-                className="text-sm text-gold-600 hover:text-gold-800 dark:text-gold-400 dark:hover:text-gold-300 font-medium"
+                className="text-sm text-gold-600 hover:text-gold-800 font-medium"
               >
                 Connectez-vous pour voir tous les détails
               </button>
@@ -228,7 +227,7 @@ function CourseListItem({ course, searchQuery = '', onDeleted, onDeleteStart, on
         </div>
       </div>
       {dbUser?.role === 'admin' && (
-        <div className="p-4 border-t border-gray-100 dark:border-gray-700">
+        <div className="p-4 border-t border-gray-100">
           <Link
             href={`/courses/${course.id}/edit`}
             className="w-full inline-flex items-center justify-center px-4 py-2 rounded-lg bg-gold-600 text-white font-semibold shadow hover:bg-gold-700 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:ring-offset-2"

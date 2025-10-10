@@ -375,11 +375,11 @@ export function CourseActions({
                   tooltipText={
                     enrollmentStatus === 'enrolled'
                       ? 'Aller au cours'
-                      : !paddleLoaded
+                      : paddleLoaded
                         ? 'Chargement du système de paiement...'
                         : tooltipMessage
                   }
-                  notEnrolledText="s'inscrire maintenant"
+                  notEnrolledText="✏️ Démarrer maintenant"
                   enrolledText="🎯 Commencer à apprendre"
                   className="w-full transform rounded-xl border-2 border-green-400 bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-4 text-lg font-bold text-white shadow-lg transition-all duration-200 hover:scale-105 hover:border-green-500 hover:from-green-600 hover:to-emerald-700 hover:shadow-xl"
                 />

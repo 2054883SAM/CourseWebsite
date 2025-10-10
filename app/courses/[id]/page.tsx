@@ -194,41 +194,6 @@ function CourseDetailPage({ params }: PageProps) {
 
   return (
     <div className="min-h-screen w-full background-beige relative overflow-hidden">
-      {/* Background Elements - Unique to Course Detail Page */}
-      {/* Floating Learning Icons */}
-      <div className="absolute top-20 left-8 w-16 h-16 bg-gradient-to-br from-blue-400/25 to-blue-600/20 rounded-full animate-float flex items-center justify-center text-2xl z-50">
-        📚
-      </div>
-      <div className="absolute right-12 w-12 h-12 bg-gradient-to-br from-green-400/25 to-green-600/20 rounded-full animate-float flex items-center justify-center text-xl z-50" style={{ top: '40rem', animationDelay: '2s' }}>
-        🎯
-      </div>
-      <div className="absolute left-1/4 w-14 h-14 bg-gradient-to-br from-purple-400/25 to-purple-600/20 rounded-full animate-float flex items-center justify-center text-xl z-50" style={{ top: '83rem', animationDelay: '4s' }}>
-        💡
-      </div>
-      <div className="absolute right-1/3 w-10 h-10 bg-gradient-to-br from-amber-400/25 to-amber-600/20 rounded-full animate-float flex items-center justify-center text-lg z-50" style={{ top: '117rem',animationDelay: '1s' }}>
-        ⭐
-      </div>
-      
-      {/* Geometric Learning Shapes */}
-      <div className="absolute top-80 w-8 h-8 bg-gradient-to-br from-blue-300/30 to-blue-500/25 transform rotate-45 animate-spin z-50" style={{ right: '10rem', animationDuration: '20s' }}></div>
-      <div className="absolute left-16 w-6 h-6 bg-gradient-to-br from-green-300/30 to-green-500/25 rounded-full animate-pulse z-50" style={{ top: '80rem', animationDelay: '3s' }}></div>
-      <div className="absolute w-4 h-4 bg-gradient-to-br from-purple-300/30 to-purple-500/25 transform rotate-12 animate-bounce z-50" style={{ top: '90rem', right: '22rem', animationDelay: '2.5s' }}></div>
-      
-      {/* Bottom Learning Elements */}
-      <div className="absolute left-12 w-12 h-12 bg-gradient-to-br from-amber-400/25 to-amber-600/20 rounded-full animate-float flex items-center justify-center text-xl z-50" style={{ top: '175rem', animationDelay: '3.5s' }}>
-        🚀
-      </div>
-      <div className="absolute bottom-48 right-16 w-10 h-10 bg-gradient-to-br from-blue-400/25 to-blue-600/20 rounded-full animate-float flex items-center justify-center text-lg z-50" style={{ animationDelay: '1.5s' }}>
-        🎓
-      </div>
-      <div className="absolute left-1/3 w-8 h-8 bg-gradient-to-br from-green-300/30 to-green-500/25 transform rotate-45 animate-pulse z-50" style={{ bottom: '35rem',animationDelay: '4.5s' }}></div>
-      
-      {/* Subtle Learning Pattern */}
-      <div className="absolute inset-0 opacity-5 z-40">
-        <div className="absolute top-1/4 left-1/4 w-32 h-32 border border-blue-300 rounded-full"></div>
-        <div className="absolute top-3/4 right-1/4 w-24 h-24 border border-green-300 rounded-full"></div>
-        <div className="absolute top-1/2 left-1/2 w-16 h-16 border border-amber-300 rounded-full"></div>
-      </div>
       
       <div className="w-full pt-6 pb-16 relative z-10">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">

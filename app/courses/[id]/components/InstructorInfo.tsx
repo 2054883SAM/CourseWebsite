@@ -63,7 +63,7 @@ export function InstructorInfo({ creator }: InstructorInfoProps) {
           href={`/courses?creator=${creator.id}`}
           className="w-full text-xs sm:text-sm bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-1.5 px-3 sm:py-2 sm:px-4 rounded-full transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 flex items-center justify-center"
         >
-          📚 <span className="sm:py-2 hidden sm:inline ml-2">Voir tous les cours</span><span className="sm:hidden ml-2">Cours</span>
+          📚 <span className="sm:py-2 ml-2">Voir tous les cours</span>
         </Link>
       </div>
       
