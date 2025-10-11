@@ -2,20 +2,19 @@
 
 import { useState, useRef, ChangeEvent } from 'react';
 import { useAuth } from '@/lib/auth/hooks';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import Image from 'next/image';
 import { useToast, ToastContainer } from '@/components/ui/Toast';
+import { supabase } from '@/lib/supabase/client';
 
 export default function UserProfile() {
   const { user, dbUser, loading } = useAuth();
-  const [name, setName] = useState(dbUser?.name || '');
+  const [name, setName] = useState(dbUser?.name || user?.user_metadata?.full_name || '');
   const [bio, setBio] = useState(dbUser?.bio || '');
   const [isUpdating, setIsUpdating] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [isDeletingPhoto, setIsDeletingPhoto] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const supabase = createClientComponentClient();
   const { toasts, success, error, removeToast } = useToast();
 
   if (loading) {
@@ -183,71 +182,88 @@ export default function UserProfile() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
-      {/* Header */}
-      <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-          Paramètres du profil
-        </h1>
-        <p className="text-lg text-gray-600 dark:text-gray-300">
-          Gérez vos informations personnelles et votre photo de profil
-        </p>
-      </div>
+    <div className="max-w-4xl mx-auto py-8 px-4">
+        {/* Header */}
+        <div className="text-center mb-8 sm:mb-12">
+          <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-orange-500 to-amber-500 rounded-full mb-4 sm:mb-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+            <svg className="w-8 h-8 sm:w-10 sm:h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4">
+            Mon Profil
+          </h1>
+          <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300 px-4">
+            Personnalisez votre expérience et gérez vos informations
+          </p>
+        </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8">
+        <div className="rounded-2xl bg-white/90 backdrop-blur-sm border border-white/20 shadow-2xl p-4 sm:p-6 lg:p-8 dark:bg-gray-800/90 dark:border-gray-700/20">
         {/* Photo de profil */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
-            <span className="mr-3">📸</span>
-            Photo de profil
-          </h2>
+        <div className="mb-8 sm:mb-12">
+          <div className="flex items-center mb-4 sm:mb-6">
+            <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-orange-500 to-amber-500 rounded-xl mr-4 shadow-lg">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+              Photo de profil
+            </h2>
+          </div>
           
-          <div className="flex items-center space-x-6">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-6 sm:space-y-0 sm:space-x-6 lg:space-x-8">
             <div className="relative">
               {dbUser.photo_url ? (
-                <div className="relative w-32 h-32 group">
+                <div className="relative w-32 h-32 sm:w-40 sm:h-40 group">
                   <Image
                     src={dbUser.photo_url}
                     alt={`Photo de profil de ${dbUser.name}`}
-                    width={128}
-                    height={128}
-                    className="rounded-full object-cover border-4 border-gray-200 dark:border-gray-600"
+                    width={160}
+                    height={160}
+                    className="w-full h-full rounded-2xl object-cover border-4 border-white/50 shadow-2xl"
                   />
                   
                   {/* Overlay avec bouton de suppression */}
-                  <div className="absolute inset-0 rounded-full bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center">
+                  <div className="absolute inset-0 rounded-2xl bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
                     <button
                       type="button"
                       onClick={() => setShowDeleteConfirm(true)}
                       disabled={isDeletingPhoto}
-                      className="absolute top-2 right-2 h-8 w-8 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="absolute top-2 right-2 sm:top-3 sm:right-3 h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
                       aria-label="Supprimer la photo de profil"
                     >
-                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                       </svg>
                     </button>
                     
-                    <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-sm font-medium">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isUploadingPhoto}
+                      className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-xs sm:text-sm font-medium bg-black/50 px-2 py-1 sm:px-3 sm:py-1 rounded-full hover:bg-black/70 focus:outline-none focus:ring-2 focus:ring-white/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
                       Modifier
-                    </span>
+                    </button>
                   </div>
                 </div>
               ) : (
-                <div className="w-32 h-32 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900 dark:to-purple-900 rounded-full flex items-center justify-center border-4 border-gray-200 dark:border-gray-600">
-                  <span className="text-4xl text-gray-500 dark:text-gray-400 font-bold">
-                    {dbUser.name?.[0]?.toUpperCase() || '?'}
+                <div className="w-32 h-32 sm:w-40 sm:h-40 bg-gradient-to-br from-orange-100 to-amber-100 dark:from-orange-900/30 dark:to-amber-900/30 rounded-2xl flex items-center justify-center border-4 border-white/50 shadow-2xl">
+                  <span className="text-4xl sm:text-5xl text-orange-600 dark:text-orange-400 font-bold">
+                    {(dbUser.name || user?.user_metadata?.full_name)?.[0]?.toUpperCase() || '?'}
                   </span>
                 </div>
               )}
             </div>
             
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                {dbUser.name || 'Utilisateur'}
+            <div className="flex-1 text-center sm:text-left">
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                {dbUser.name || user?.user_metadata?.full_name || 'Utilisateur'}
               </h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-4">
-                {dbUser.photo_url ? 'Cliquez sur "Modifier la photo" pour changer votre image de profil, ou survolez la photo pour la supprimer.' : 'Ajoutez une photo de profil pour personnaliser votre compte.'}
+              <p className="text-gray-600 dark:text-gray-400 mb-4 sm:mb-6 text-base sm:text-lg">
+                {dbUser.photo_url ? 'Survolez votre photo pour la modifier ou la supprimer.' : 'Ajoutez une photo de profil pour personnaliser votre compte.'}
               </p>
               
               <input
@@ -261,7 +277,7 @@ export default function UserProfile() {
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isUploadingPhoto}
-                className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-full shadow-lg hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105"
+                className="inline-flex items-center px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-semibold rounded-2xl shadow-lg hover:from-orange-600 hover:to-amber-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105"
               >
                 {isUploadingPhoto ? (
                   <>
@@ -273,13 +289,17 @@ export default function UserProfile() {
                   </>
                 ) : (
                   <>
-                    📷 {dbUser.photo_url ? 'Modifier la photo' : 'Ajouter une photo'}
+                    <svg className="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    {dbUser.photo_url ? 'Modifier la photo' : 'Ajouter une photo'}
                   </>
                 )}
               </button>
               
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                Formats acceptés: JPG, PNG, GIF. Taille max: 5MB
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-3">
+                Formats acceptés: JPG, PNG, GIF • Taille max: 5MB
               </p>
             </div>
           </div>
@@ -287,13 +307,19 @@ export default function UserProfile() {
 
         {/* Informations du profil */}
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
-            <span className="mr-3">👤</span>
-            Informations personnelles
-          </h2>
+          <div className="flex items-center mb-6 sm:mb-8">
+            <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl mr-4 shadow-lg">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            </div>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+              Informations personnelles
+            </h2>
+          </div>
           
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Nom complet *
@@ -302,7 +328,7 @@ export default function UserProfile() {
                   type="text"
                   value={name}
                   onChange={handleNameChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all duration-200"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all duration-300 shadow-sm hover:shadow-lg hover:border-orange-300 dark:hover:border-orange-500 focus:scale-[1.02] transform"
                   disabled={isUpdating}
                   required
                   minLength={2}
@@ -319,7 +345,7 @@ export default function UserProfile() {
                   type="email"
                   value={dbUser.email || ''}
                   disabled
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-400 cursor-not-allowed"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-400 cursor-not-allowed transition-all duration-300 shadow-sm hover:shadow-md"
                   placeholder="email@exemple.com"
                 />
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -331,7 +357,7 @@ export default function UserProfile() {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Rôle
                 </label>
-                <div className="w-full px-4 py-3 border border-gray-300 rounded-xl bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-400">
+                <div className="w-full px-4 py-3 border border-gray-300 rounded-xl bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-400 transition-all duration-300 shadow-sm hover:shadow-md">
                   <span className="capitalize">{dbUser.role}</span>
                 </div>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -343,7 +369,7 @@ export default function UserProfile() {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Date d&apos;inscription
                 </label>
-                <div className="w-full px-4 py-3 border border-gray-300 rounded-xl bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-400">
+                <div className="w-full px-4 py-3 border border-gray-300 rounded-xl bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-400 transition-all duration-300 shadow-sm hover:shadow-md">
                   {dbUser.created_at ? new Date(dbUser.created_at).toLocaleDateString('fr-FR') : 'N/A'}
                 </div>
               </div>
@@ -357,7 +383,7 @@ export default function UserProfile() {
               <textarea
                 value={bio}
                 onChange={handleBioChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all duration-200 resize-none"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all duration-300 resize-none shadow-sm hover:shadow-lg hover:border-orange-300 dark:hover:border-orange-500 focus:scale-[1.01] transform"
                 disabled={isUpdating}
                 rows={4}
                 maxLength={500}
@@ -373,11 +399,11 @@ export default function UserProfile() {
               </div>
             </div>
 
-            <div className="flex justify-end pt-6">
+            <div className="flex justify-center pt-6 sm:pt-8">
               <button
                 type="submit"
                 disabled={isUpdating}
-                className="inline-flex items-center px-8 py-3 bg-gradient-to-r from-green-600 to-blue-600 text-white font-semibold rounded-full shadow-lg hover:from-green-700 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105"
+                className="inline-flex items-center px-8 sm:px-10 py-3 sm:py-4 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-semibold rounded-2xl shadow-lg hover:from-orange-600 hover:to-amber-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105"
               >
                 {isUpdating ? (
                   <>
@@ -388,7 +414,12 @@ export default function UserProfile() {
                     Sauvegarde...
                   </>
                 ) : (
-                  '💾 Sauvegarder les modifications'
+                  <>
+                    <svg className="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Sauvegarder les modifications
+                  </>
                 )}
               </button>
             </div>
@@ -398,8 +429,8 @@ export default function UserProfile() {
 
       {/* Modal de confirmation de suppression */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white/95 backdrop-blur-sm dark:bg-gray-800/95 rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl border border-white/20 dark:border-gray-700/20">
             <div className="text-center">
               <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20 mb-4">
                 <svg className="h-8 w-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -429,7 +460,7 @@ export default function UserProfile() {
                   type="button"
                   onClick={handleDeletePhoto}
                   disabled={isDeletingPhoto}
-                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105"
                 >
                   {isDeletingPhoto ? (
                     <>

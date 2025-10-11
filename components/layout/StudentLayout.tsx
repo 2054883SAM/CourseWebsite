@@ -13,7 +13,7 @@ export function StudentLayout({ children }: StudentLayoutProps) {
       <div className="flex-shrink-0">
         <StudentSidebar />
       </div>
-      <main className="flex-1 overflow-x-hidden">{children}</main>
+      <main className="flex-1 overflow-x-hidden lg:mt-0 mt-20">{children}</main>
     </div>
   );
 }

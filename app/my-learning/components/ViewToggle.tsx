@@ -9,13 +9,13 @@ interface ViewToggleProps {
 
 export default function ViewToggle({ currentView, onViewChange }: ViewToggleProps) {
   return (
-    <div className="inline-flex items-center rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-sm">
+    <div className="inline-flex items-center rounded-lg bg-white/80 backdrop-blur-sm border border-white/20 shadow-lg overflow-hidden">
       <button
         type="button"
-        className={`p-2 ${
+        className={`relative p-3 transition-all duration-200 ${
           currentView === 'grid'
-            ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
-            : 'text-gray-500 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'
+            ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
+            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
         }`}
         onClick={() => onViewChange('grid')}
         aria-label="Vue en grille"
@@ -25,10 +25,10 @@ export default function ViewToggle({ currentView, onViewChange }: ViewToggleProp
       </button>
       <button
         type="button"
-        className={`p-2 ${
+        className={`relative p-3 transition-all duration-200 ${
           currentView === 'list'
-            ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
-            : 'text-gray-500 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'
+            ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
+            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
         }`}
         onClick={() => onViewChange('list')}
         aria-label="Vue en liste"

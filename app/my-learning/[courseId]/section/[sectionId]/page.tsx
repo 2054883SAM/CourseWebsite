@@ -240,10 +240,12 @@ export default function SectionPlayerPage() {
 
   if (loading || authLoading) {
     return (
-      <div className="flex h-screen items-center justify-center">
+      <div className="background-beige min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <LoadingSpinner />
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading section content...</p>
+          <div className="rounded-xl bg-white/90 backdrop-blur-sm border border-white/20 shadow-lg p-8">
+            <LoadingSpinner />
+            <p className="mt-4 text-gray-600 dark:text-gray-400 font-medium">Chargement du contenu de la section...</p>
+          </div>
         </div>
       </div>
     );
@@ -251,16 +253,23 @@ export default function SectionPlayerPage() {
 
   if (error) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="max-w-md rounded-lg bg-red-50 p-6 text-center dark:bg-red-900/20">
-          <h2 className="mb-4 text-xl font-semibold text-red-800 dark:text-red-400">Error</h2>
-          <p className="mb-4 text-red-700 dark:text-red-300">{error}</p>
-          <button
-            onClick={() => router.back()}
-            className="rounded-lg bg-red-600 px-4 py-2 text-white transition-colors hover:bg-red-700"
-          >
-            Go Back
-          </button>
+      <div className="background-beige min-h-screen flex items-center justify-center">
+        <div className="max-w-md mx-4">
+          <div className="rounded-xl bg-white/90 backdrop-blur-sm border border-white/20 shadow-lg p-6 text-center">
+            <div className="mb-4">
+              <svg className="mx-auto h-12 w-12 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <h2 className="mb-4 text-xl font-bold text-red-800 dark:text-red-400">Erreur</h2>
+            <p className="mb-6 text-red-700 dark:text-red-300">{error}</p>
+            <button
+              onClick={() => router.back()}
+              className="rounded-lg bg-gradient-to-r from-red-500 to-red-600 px-6 py-3 text-white font-medium transition-all duration-300 hover:from-red-600 hover:to-red-700 hover:shadow-lg transform hover:scale-105"
+            >
+              Retour
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -274,18 +283,26 @@ export default function SectionPlayerPage() {
 
   // Render the VdoCipher video player for the specific section
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="background-beige min-h-screen relative overflow-hidden">
+      {/* Animated gradient background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-amber-300/40 via-amber-200/30 to-orange-400/40 animate-gradient-shift"></div>
+        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-amber-400/35 to-orange-400/35 rounded-full blur-3xl animate-float-slow"></div>
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-gradient-to-tr from-amber-400/35 to-orange-400/35 rounded-full blur-3xl animate-float-slow" style={{ animationDelay: '2s' }}></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-r from-amber-300/30 to-orange-300/30 rounded-full blur-2xl animate-pulse-slow"></div>
+      </div>
       {/* Section Header */}
-      <div className="border-b border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
-        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+      <div className="border-b border-white/20 bg-white/90 backdrop-blur-sm dark:border-gray-700/20 dark:bg-gray-800/90 relative z-10">
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+          <div className="flex flex-col gap-4">
+            {/* Top row: Back button and Duration */}
+            <div className="flex items-center justify-between">
               {/* Back Button */}
               <button
                 onClick={() => router.push(`/my-learning/${courseId}`)}
-                className="flex items-center text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                className="group flex items-center text-gray-600 transition-all duration-300 hover:text-orange-600 dark:text-gray-400 dark:hover:text-orange-400"
               >
-                <svg className="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="mr-2 h-5 w-5 transition-transform duration-300 group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -293,35 +310,37 @@ export default function SectionPlayerPage() {
                     d="M15 19l-7-7 7-7"
                   />
                 </svg>
-                Back to Course
+                <span className="font-medium">Retour au cours</span>
               </button>
 
-              <div className="text-gray-300 dark:text-gray-600">|</div>
-
-              {/* Course and Section Info */}
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">{courseData.title}</p>
-                <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-                  Section {sectionData.section_number}: {sectionData.title}
-                </h1>
+              {/* Section Duration */}
+              <div className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
+                <svg className="h-4 w-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="font-medium">{Math.round(sectionData.duration || 0)} minutes</span>
               </div>
             </div>
 
-            {/* Section Duration */}
-            <div className="text-sm text-gray-500 dark:text-gray-400">
-              {Math.round(sectionData.duration || 0)} minutes
+            {/* Bottom row: Course and Section Info - Centered on mobile */}
+            <div className="text-center sm:text-left">
+              <p className="text-sm text-gray-500 dark:text-gray-400">{courseData.title}</p>
+              <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white leading-tight">
+                <span className="block sm:inline">Section {sectionData.section_number}:</span>
+                <span className="block sm:inline sm:ml-1 break-words">{sectionData.title}</span>
+              </h1>
             </div>
           </div>
         </div>
       </div>
 
       {/* Video Player */}
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 relative z-10">
         <VdoCipherPlayer
           videoId={sectionData.playback_id || ''}
           watermark={user?.email}
           chapters={normalizedChapters}
-          className="w-full"
+          className="w-full rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.15)] border-2 border-white/80 bg-gradient-to-br from-white/90 to-gray-50/90 backdrop-blur-md hover:shadow-[0_25px_80px_rgba(0,0,0,0.2)] hover:border-blue-600/60 transition-all duration-500 transform hover:-translate-y-1 dark:from-gray-800/90 dark:to-gray-900/90 dark:border-gray-600/80 dark:hover:border-orange-400/60 overflow-hidden"
           userId={user?.id}
           courseId={courseId}
           duration={sectionData.duration}
@@ -568,10 +587,10 @@ export default function SectionPlayerPage() {
       {showChapterFlashcard && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div
-            className="absolute inset-0 bg-black/50"
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={() => setShowChapterFlashcard(false)}
           />
-          <div className="relative z-10 w-full max-w-xl rounded-lg bg-white p-6 shadow-xl dark:bg-zinc-900">
+          <div className="relative z-10 w-full max-w-xl mx-4 rounded-xl bg-white/95 backdrop-blur-sm border border-white/20 p-6 shadow-2xl dark:bg-zinc-900/95 dark:border-gray-700/20">
             {isGeneratingChapterFlashcard || !chapterFlashcard ? (
               <div className="flex flex-col items-center">
                 <LoadingSpinner />
@@ -581,8 +600,13 @@ export default function SectionPlayerPage() {
               </div>
             ) : (
               <>
-                <div className="mb-4 text-sm text-gray-500">Révision rapide</div>
-                <h3 className="mb-4 text-lg font-semibold">{chapterFlashcard.question}</h3>
+                <div className="mb-4 flex items-center space-x-2 text-sm text-orange-600 dark:text-orange-400">
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  </svg>
+                  <span className="font-medium">Révision rapide</span>
+                </div>
+                <h3 className="mb-6 text-xl font-bold text-gray-900 dark:text-white">{chapterFlashcard.question}</h3>
                 <div className="grid grid-cols-1 gap-3">
                   {chapterFlashcard.choices.map((choice, idx) => {
                     const isSelected = selectedChoice === choice;
@@ -592,13 +616,13 @@ export default function SectionPlayerPage() {
                       answerState === 'incorrect' &&
                       isSelected &&
                       choice !== chapterFlashcard.correctAnswer;
-                    const base = 'w-full rounded border px-4 py-3 text-left transition-colors';
+                    const base = 'w-full rounded-lg border-2 px-4 py-3 text-left transition-all duration-300 transform';
                     const idle =
-                      'border-gray-300 hover:bg-gray-50 dark:border-zinc-700 dark:hover:bg-zinc-800';
+                      'border-gray-200 hover:bg-gradient-to-r hover:from-orange-50 hover:to-amber-50 hover:border-orange-300 hover:scale-105 dark:border-zinc-700 dark:hover:bg-gradient-to-r dark:hover:from-orange-900/20 dark:hover:to-amber-900/20 dark:hover:border-orange-600';
                     const correct =
-                      'border-emerald-600 bg-emerald-50 text-emerald-800 dark:border-emerald-500 dark:bg-emerald-900/30 dark:text-emerald-300';
+                      'border-emerald-500 bg-gradient-to-r from-emerald-50 to-green-50 text-emerald-800 scale-105 shadow-lg dark:border-emerald-400 dark:bg-gradient-to-r dark:from-emerald-900/30 dark:to-green-900/30 dark:text-emerald-300';
                     const incorrect =
-                      'border-red-600 bg-red-50 text-red-800 dark:border-red-500 dark:bg-red-900/30 dark:text-red-300';
+                      'border-red-500 bg-gradient-to-r from-red-50 to-pink-50 text-red-800 dark:border-red-400 dark:bg-gradient-to-r dark:from-red-900/30 dark:to-pink-900/30 dark:text-red-300';
                     let cls = base + ' ' + idle;
                     if (isCorrect) cls = base + ' ' + correct;
                     if (isIncorrect) cls = base + ' ' + incorrect;
@@ -627,18 +651,18 @@ export default function SectionPlayerPage() {
                         }}
                         disabled={answerState !== 'idle'}
                       >
-                        <span className="mr-2 inline-block h-2 w-2 rounded-full bg-current opacity-50" />
-                        {choice}
+                        <span className="mr-3 inline-block h-3 w-3 rounded-full bg-current opacity-60" />
+                        <span className="font-medium">{choice}</span>
                       </button>
                     );
                   })}
                 </div>
                 <div className="mt-6 flex items-center justify-end">
                   <button
-                    className="rounded px-4 py-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-zinc-800"
+                    className="rounded-lg px-6 py-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-zinc-800 transition-all duration-300 hover:scale-105"
                     onClick={() => setShowChapterFlashcard(false)}
                   >
-                    Skip
+                    Passer
                   </button>
                 </div>
               </>
@@ -713,8 +737,8 @@ export default function SectionPlayerPage() {
       {/* Final Flashcards Dialog */}
       {showFlashcards && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setShowFlashcards(false)} />
-          <div className="relative z-10 w-full max-w-xl rounded-lg bg-white p-6 shadow-xl dark:bg-zinc-900">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowFlashcards(false)} />
+          <div className="relative z-10 w-full max-w-xl mx-4 rounded-xl bg-white/95 backdrop-blur-sm border border-white/20 p-6 shadow-2xl dark:bg-zinc-900/95 dark:border-gray-700/20">
             {isGeneratingFinalFlashcards || !flashcards || flashcards.length === 0 ? (
               <div className="flex flex-col items-center">
                 <LoadingSpinner />
@@ -724,22 +748,27 @@ export default function SectionPlayerPage() {
               </div>
             ) : currentIndex >= flashcards.length ? (
               <div className="text-center">
-                <h3 className="mb-4 text-xl font-semibold">Bravo! 🎉</h3>
-                <p className="mb-6 text-gray-600 dark:text-gray-300">
+                <div className="mb-6">
+                  <div className="mx-auto h-16 w-16 rounded-full bg-gradient-to-r from-emerald-500 to-green-500 flex items-center justify-center mb-4">
+                    <span className="text-2xl">🎉</span>
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Bravo!</h3>
+                </div>
+                <p className="mb-8 text-gray-600 dark:text-gray-300 text-lg">
                   Tu as terminé toutes les questions flash.
                 </p>
-                <div className="flex justify-center space-x-4">
+                <div className="flex flex-col sm:flex-row justify-center gap-4">
                   <button
-                    className="rounded bg-emerald-600 px-4 py-2 text-white hover:bg-emerald-700"
+                    className="rounded-lg bg-gradient-to-r from-emerald-500 to-emerald-600 px-6 py-3 text-white font-medium transition-all duration-300 hover:from-emerald-600 hover:to-emerald-700 hover:shadow-lg transform hover:scale-105"
                     onClick={() => setShowFlashcards(false)}
                   >
-                    Close
+                    Fermer
                   </button>
                   <button
-                    className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+                    className="rounded-lg bg-gradient-to-r from-orange-500 to-amber-500 px-6 py-3 text-white font-medium transition-all duration-300 hover:from-orange-600 hover:to-amber-600 hover:shadow-lg transform hover:scale-105"
                     onClick={() => router.push(`/my-learning/${courseId}`)}
                   >
-                    Back to Course
+                    Retour au cours
                   </button>
                 </div>
               </div>
@@ -748,10 +777,18 @@ export default function SectionPlayerPage() {
                 const card = flashcards[currentIndex];
                 return (
                   <div>
-                    <div className="mb-4 text-sm text-gray-500">
-                      Question {currentIndex + 1} of {flashcards.length}
+                    <div className="mb-4 flex items-center justify-between">
+                      <div className="flex items-center space-x-2 text-sm text-orange-600 dark:text-orange-400">
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                        </svg>
+                        <span className="font-medium">Questions Flash</span>
+                      </div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">
+                        {currentIndex + 1} / {flashcards.length}
+                      </div>
                     </div>
-                    <h3 className="mb-4 text-lg font-semibold">{card.question}</h3>
+                    <h3 className="mb-6 text-xl font-bold text-gray-900 dark:text-white">{card.question}</h3>
                     <div className="grid grid-cols-1 gap-3">
                       {card.choices.map((choice, idx) => {
                         const isSelected = selectedChoice === choice;
@@ -760,13 +797,13 @@ export default function SectionPlayerPage() {
                           answerState === 'incorrect' &&
                           isSelected &&
                           choice !== card.correctAnswer;
-                        const base = 'w-full rounded border px-4 py-3 text-left transition-colors';
+                        const base = 'w-full rounded-lg border-2 px-4 py-3 text-left transition-all duration-300 transform';
                         const idle =
-                          'border-gray-300 hover:bg-gray-50 dark:border-zinc-700 dark:hover:bg-zinc-800';
+                          'border-gray-200 hover:bg-gradient-to-r hover:from-orange-50 hover:to-amber-50 hover:border-orange-300 hover:scale-105 dark:border-zinc-700 dark:hover:bg-gradient-to-r dark:hover:from-orange-900/20 dark:hover:to-amber-900/20 dark:hover:border-orange-600';
                         const correct =
-                          'border-emerald-600 bg-emerald-50 text-emerald-800 dark:border-emerald-500 dark:bg-emerald-900/30 dark:text-emerald-300';
+                          'border-emerald-500 bg-gradient-to-r from-emerald-50 to-green-50 text-emerald-800 scale-105 shadow-lg dark:border-emerald-400 dark:bg-gradient-to-r dark:from-emerald-900/30 dark:to-green-900/30 dark:text-emerald-300';
                         const incorrect =
-                          'border-red-600 bg-red-50 text-red-800 dark:border-red-500 dark:bg-red-900/30 dark:text-red-300';
+                          'border-red-500 bg-gradient-to-r from-red-50 to-pink-50 text-red-800 dark:border-red-400 dark:bg-gradient-to-r dark:from-red-900/30 dark:to-pink-900/30 dark:text-red-300';
                         let cls = base + ' ' + idle;
                         if (isCorrect) cls = base + ' ' + correct;
                         if (isIncorrect) cls = base + ' ' + incorrect;
@@ -803,18 +840,18 @@ export default function SectionPlayerPage() {
                             }}
                             disabled={answerState !== 'idle'}
                           >
-                            <span className="mr-2 inline-block h-2 w-2 rounded-full bg-current opacity-50" />
-                            {choice}
+                            <span className="mr-3 inline-block h-3 w-3 rounded-full bg-current opacity-60" />
+                            <span className="font-medium">{choice}</span>
                           </button>
                         );
                       })}
                     </div>
                     <div className="mt-6 flex items-center justify-end">
                       <button
-                        className="rounded px-4 py-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-zinc-800"
+                        className="rounded-lg px-6 py-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-zinc-800 transition-all duration-300 hover:scale-105"
                         onClick={() => setShowFlashcards(false)}
                       >
-                        Exit
+                        Quitter
                       </button>
                     </div>
                   </div>

@@ -1012,3 +1012,65 @@ body {
     padding-top: 25rem !important;
   }
 }
+
+/* Animation de gradient en arrière-plan */
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+    opacity: 0.3;
+  }
+  25% {
+    background-position: 50% 0%;
+    opacity: 0.5;
+  }
+  50% {
+    background-position: 100% 50%;
+    opacity: 0.4;
+  }
+  75% {
+    background-position: 50% 100%;
+    opacity: 0.6;
+  }
+  100% {
+    background-position: 0% 50%;
+    opacity: 0.3;
+  }
+}
+
+.animate-gradient-shift {
+  background-size: 200% 200%;
+  animation: gradient-shift 10s ease-in-out infinite;
+}
+
+/* Animation de flottement lente pour les orbes */
+@keyframes float-slow {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px);
+  }
+  33% {
+    transform: translateY(-30px) translateX(20px);
+  }
+  66% {
+    transform: translateY(-15px) translateX(-10px);
+  }
+}
+
+.animate-float-slow {
+  animation: float-slow 12s ease-in-out infinite;
+}
+
+/* Animation de pulsation lente */
+@keyframes pulse-slow {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.05);
+  }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 6s ease-in-out infinite;
+}

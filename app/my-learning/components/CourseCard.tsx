@@ -47,7 +47,7 @@ export default function CourseCard({
 
   return viewMode === 'grid' ? (
     // Grid view
-    <div className="group flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
+    <div className="group flex flex-col overflow-hidden rounded-xl bg-white/90 backdrop-blur-sm border border-white/20 shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.02] hover:bg-white">
       <Link href={courseLink} className="relative aspect-video overflow-hidden">
         <Image
           src={thumbnail}
@@ -58,9 +58,9 @@ export default function CourseCard({
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
         {/* Play button overlay */}
         <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-          <div className="rounded-full bg-white/80 p-3 shadow-lg backdrop-blur-sm transition-transform duration-300 group-hover:scale-110 dark:bg-black/50">
+          <div className="rounded-full bg-white/90 backdrop-blur-sm p-4 shadow-xl transition-transform duration-300 group-hover:scale-110 border border-white/20">
             <svg
-              className="h-8 w-8 text-blue-600 dark:text-blue-400"
+              className="h-8 w-8 text-blue-600"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -81,20 +81,20 @@ export default function CourseCard({
           </div>
         </div>
       </Link>
-      <div className="flex flex-1 flex-col p-4">
+      <div className="flex flex-1 flex-col p-6">
         <Link href={courseLink}>
-          <h3 className="line-clamp-2 font-semibold text-gray-900 transition-colors duration-300 group-hover:text-blue-600 dark:text-white dark:group-hover:text-blue-400">
+          <h3 className="line-clamp-2 font-bold text-gray-900 transition-colors duration-300 group-hover:text-blue-600 text-lg">
             {course.title}
           </h3>
         </Link>
-        <p className="mt-2 line-clamp-2 text-sm text-gray-500 dark:text-gray-400">
+        <p className="mt-3 line-clamp-2 text-sm text-gray-600 leading-relaxed">
           {course.description}
         </p>
-        <div className="mt-3">
+        <div className="mt-4">
           <ProgressBar value={progress} />
         </div>
         {lastAccessedDate && (
-          <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
+          <p className="mt-3 text-xs text-gray-500 font-medium">
             Dernier accès le {lastAccessedDate}
           </p>
         )}
@@ -102,7 +102,7 @@ export default function CourseCard({
     </div>
   ) : (
     // List view
-    <div className="group flex overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
+    <div className="group flex overflow-hidden rounded-xl bg-white/90 backdrop-blur-sm border border-white/20 shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.01] hover:bg-white">
       <Link href={courseLink} className="relative h-auto w-48 overflow-hidden">
         <Image
           src={thumbnail}
@@ -112,9 +112,9 @@ export default function CourseCard({
         />
         {/* Play button overlay */}
         <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-          <div className="rounded-full bg-white/80 p-2 shadow-lg backdrop-blur-sm transition-transform duration-300 group-hover:scale-110 dark:bg-black/50">
+          <div className="rounded-full bg-white/90 backdrop-blur-sm p-3 shadow-xl transition-transform duration-300 group-hover:scale-110 border border-white/20">
             <svg
-              className="h-6 w-6 text-blue-600 dark:text-blue-400"
+              className="h-6 w-6 text-blue-600"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -135,19 +135,19 @@ export default function CourseCard({
           </div>
         </div>
       </Link>
-      <div className="flex flex-1 flex-col justify-between p-4">
+      <div className="flex flex-1 flex-col justify-between p-6">
         <div>
           <Link href={courseLink}>
-            <h3 className="font-semibold text-gray-900 transition-colors duration-300 group-hover:text-blue-600 dark:text-white dark:group-hover:text-blue-400">
+            <h3 className="font-bold text-gray-900 transition-colors duration-300 group-hover:text-blue-600 text-lg">
               {course.title}
             </h3>
           </Link>
-          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">{course.description}</p>
+          <p className="mt-3 text-sm text-gray-600 leading-relaxed">{course.description}</p>
         </div>
         <div className="mt-4">
           <ProgressBar value={progress} />
           {lastAccessedDate && (
-            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+            <p className="mt-3 text-xs text-gray-500 font-medium">
               Dernier accès le {lastAccessedDate}
             </p>
           )}

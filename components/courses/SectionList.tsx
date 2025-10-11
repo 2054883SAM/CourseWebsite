@@ -124,13 +124,13 @@ const SectionList: React.FC<SectionListProps> = ({
 
   return (
     <div
-      className={`rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800 ${className}`}
+      className={`rounded-xl bg-white/90 backdrop-blur-sm border border-white/20 shadow-lg dark:bg-gray-800/90 dark:border-gray-700/20 ${className}`}
     >
       {/* Header */}
-      <div className="border-b border-gray-200 p-6 dark:border-gray-700">
+      <div className="border-b border-white/20 p-6 dark:border-gray-700/20">
         <h3 className="flex items-center text-xl font-semibold text-gray-900 dark:text-white">
           <svg
-            className="mr-3 h-6 w-6 text-blue-600"
+            className="mr-3 h-6 w-6 text-blue-500"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -142,7 +142,7 @@ const SectionList: React.FC<SectionListProps> = ({
               d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
             />
           </svg>
-          Course Content
+          Contenu du cours
         </h3>
         <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
           {sections.length} section{sections.length !== 1 ? 's' : ''}
@@ -162,9 +162,9 @@ const SectionList: React.FC<SectionListProps> = ({
                 {Math.round((progress.filter((p) => p.completed).length / sections.length) * 100)}%
               </span>
             </div>
-            <div className="h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+            <div className="h-3 w-full rounded-full bg-gray-200/50 dark:bg-gray-700/50 shadow-inner">
               <div
-                className="h-2 rounded-full bg-green-500 transition-all duration-300"
+                className="h-3 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 transition-all duration-500 shadow-lg"
                 style={{
                   width: `${(progress.filter((p) => p.completed).length / sections.length) * 100}%`,
                 }}
@@ -189,10 +189,11 @@ const SectionList: React.FC<SectionListProps> = ({
               key={section.id}
               data-testid={`section-${section.id}`}
               className={`
-                transition-colors duration-200
-                ${isAccessible ? 'hover:bg-gray-50 dark:hover:bg-gray-700/50' : 'opacity-50'}
-                ${isCompleted ? 'bg-green-50 dark:bg-green-900/10' : ''}
+                group relative transition-all duration-300 ease-in-out
+                ${isAccessible ? 'hover:bg-gradient-to-r hover:from-orange-50/50 hover:to-amber-50/50 dark:hover:from-orange-900/10 dark:hover:to-amber-900/10 hover:shadow-lg hover:scale-[1.02] hover:border-orange-200 dark:hover:border-orange-800' : 'opacity-50'}
+                ${isCompleted ? 'bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/10 dark:to-emerald-900/10' : ''}
                 ${!isAccessible ? 'bg-gray-100 dark:bg-gray-800' : ''}
+                border-l-4 ${isCompleted ? 'border-l-green-500' : isAccessible ? 'border-l-orange-400 group-hover:border-l-orange-500' : 'border-l-gray-300'}
               `}
             >
               <button
@@ -209,12 +210,12 @@ const SectionList: React.FC<SectionListProps> = ({
                     {/* Section number and title */}
                     <div className="mb-2 flex items-center">
                       <span
-                        className={`mr-4 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-sm font-medium ${
+                        className={`mr-4 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold transition-all duration-300 ease-in-out transform ${
                           !isAccessible
                             ? 'bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400'
                             : isCompleted
-                              ? 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-300'
-                              : 'bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300'
+                              ? 'bg-gradient-to-br from-green-100 to-emerald-100 text-green-700 dark:from-green-900/20 dark:to-emerald-900/20 dark:text-green-300 group-hover:scale-110 group-hover:shadow-lg'
+                              : 'bg-gradient-to-br from-orange-100 to-amber-100 text-orange-700 dark:from-orange-900/20 dark:to-amber-900/20 dark:text-orange-300 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-orange-200/50'
                         }`}
                       >
                         {!isAccessible ? (
@@ -239,10 +240,10 @@ const SectionList: React.FC<SectionListProps> = ({
                       </span>
                       <div className="min-w-0 flex-1">
                         <h4
-                          className={`truncate text-lg font-medium ${
+                          className={`truncate text-lg font-semibold transition-colors duration-300 ${
                             isCompleted
-                              ? 'text-green-700 dark:text-green-300'
-                              : 'text-gray-900 dark:text-white'
+                              ? 'text-green-700 dark:text-green-300 group-hover:text-green-800 dark:group-hover:text-green-200'
+                              : 'text-gray-900 dark:text-white group-hover:text-orange-700 dark:group-hover:text-orange-300'
                           }`}
                         >
                           {section.title}
@@ -271,11 +272,13 @@ const SectionList: React.FC<SectionListProps> = ({
                             </span>
                           )}
                         </div>
-                        <div className="h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                        <div className="h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700 group-hover:bg-gray-300 dark:group-hover:bg-gray-600 transition-colors duration-300">
                           <div
-                            className={`h-1.5 rounded-full transition-all duration-300 ${
-                              isCompleted ? 'bg-green-500' : 'bg-blue-500'
-                            }`}
+                            className={`h-2 rounded-full transition-all duration-500 ease-out ${
+                              isCompleted 
+                                ? 'bg-gradient-to-r from-green-500 to-emerald-500 group-hover:from-green-600 group-hover:to-emerald-600' 
+                                : 'bg-gradient-to-r from-orange-500 to-amber-500 group-hover:from-orange-600 group-hover:to-amber-600'
+                            } group-hover:shadow-lg`}
                             style={{ width: `${progressPercentage}%` }}
                           ></div>
                         </div>
@@ -298,14 +301,14 @@ const SectionList: React.FC<SectionListProps> = ({
 
                     {/* Play button */}
                     <div
-                      className={`inline-flex h-10 w-10 items-center justify-center rounded-full transition-colors ${
+                      className={`inline-flex h-12 w-12 items-center justify-center rounded-full transition-all duration-300 ease-in-out transform ${
                         isCompleted
-                          ? 'bg-green-100 text-green-600 dark:bg-green-900/20 dark:text-green-400'
-                          : 'bg-blue-100 text-blue-600 hover:bg-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/40'
+                          ? 'bg-gradient-to-br from-green-100 to-emerald-100 text-green-600 dark:from-green-900/20 dark:to-emerald-900/20 dark:text-green-400 group-hover:scale-110 group-hover:shadow-lg'
+                          : 'bg-gradient-to-br from-orange-100 to-amber-100 text-orange-600 hover:from-orange-200 hover:to-amber-200 dark:from-orange-900/20 dark:to-amber-900/20 dark:text-orange-400 dark:hover:from-orange-900/40 dark:hover:to-amber-900/40 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-orange-200/50'
                       }`}
                     >
                       {isCompleted ? (
-                        <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                        <svg className="h-6 w-6 transition-transform duration-300 group-hover:scale-110" fill="currentColor" viewBox="0 0 20 20">
                           <path
                             fillRule="evenodd"
                             d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
@@ -313,7 +316,7 @@ const SectionList: React.FC<SectionListProps> = ({
                           />
                         </svg>
                       ) : (
-                        <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                        <svg className="h-6 w-6 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12" fill="currentColor" viewBox="0 0 20 20">
                           <path
                             fillRule="evenodd"
                             d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
