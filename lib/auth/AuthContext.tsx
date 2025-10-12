@@ -180,7 +180,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     try {
       await supabase.auth.signOut();
-      console.log('Sign out completed. Session cleared.');
     } catch (error) {
       console.error('Error signing out:', error);
     }

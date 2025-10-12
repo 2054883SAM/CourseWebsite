@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useNavigation } from '@/lib/navigation/NavigationContext';
 import { Role } from '@/lib/auth/types';
@@ -21,9 +22,13 @@ const DefaultLoading = () => (
 );
 
 const DefaultUnauthorized = () => {
-  if (typeof window !== 'undefined') {
-    window.location.href = '/unauthorized';
-  }
+  const { user } = useAuth();
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    // If no user (e.g., after sign out on a protected page), go home
+    // If user exists but lacks permissions, show the unauthorized page
+    window.location.href = user ? '/unauthorized' : '/';
+  }, [user]);
   return null;
 };
 
@@ -54,4 +59,4 @@ export function withAuth<P extends object>(
 
     return <WrappedComponent {...props} />;
   };
-} 
+}

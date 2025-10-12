@@ -16,7 +16,6 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         <AdminSidebar />
         <div className="flex-1">{children}</div>
       </div>
-      <Footer />
     </div>
   );
 }
