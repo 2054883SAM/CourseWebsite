@@ -11,7 +11,6 @@ import { Logo } from './Logo';
 import { DropdownMenu } from './DropdownMenu';
 import { DropdownMenuItem } from './DropdownMenuItem';
 import { useAuth } from '@/lib/auth/AuthContext';
-import CreateVideoButton from '@/app/video-player/CreateVideoButton';
 import { useRouter } from 'next/navigation';
 
 const navigation = [
@@ -141,8 +140,6 @@ export function Header() {
                   </NavigationLink>
                 );
               })}
-              {/* Ajout du bouton Créer une vidéo pour admin/creator */}
-              <CreateVideoButton />
             </div>
 
             <div className="flex items-center space-x-4">
@@ -219,7 +216,7 @@ export function Header() {
                   <DropdownMenuItem
                     onClick={() => {
                       signOut().then(() => {
-                        router.push('/signin');
+                        router.replace('/');
                       });
                     }}
                   >
@@ -423,7 +420,7 @@ export function Header() {
                 onClick={() => {
                   signOut().then(() => {
                     setMobileMenuOpen(false);
-                    router.push('/signin');
+                    router.replace('/');
                   });
                 }}
                 className="flex h-12 w-full items-center justify-center rounded-full border-2 border-red-300 px-4 text-sm font-semibold text-red-600 transition-all duration-300 hover:border-red-500 hover:bg-red-50 dark:border-red-600 dark:text-red-400 dark:hover:border-red-500 dark:hover:bg-red-900/20"

@@ -19,12 +19,20 @@ export default function CreateVideoPage() {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
+    teacher_name: '',
     isFeatured: false,
     aiGenerated: false,
     thumbnailUrl: '',
     thumbnailDescription: '',
     primary_language: 'fr' as 'fr' | 'en' | 'es',
     // Nouveaux champs
+    categorie: '' as
+      | ''
+      | 'Français'
+      | 'Mathématiques'
+      | 'Science et technologie'
+      | 'Géographie et histoire'
+      | 'Culture et citoyenneté québécoise',
     ceQueVousAllezApprendre: '',
     dureeEstimee: '',
   });
@@ -598,6 +606,14 @@ export default function CreateVideoPage() {
     if (!user) return;
 
     // Validate sections
+    if (!formData.teacher_name || !formData.teacher_name.trim()) {
+      error("Veuillez renseigner le nom de l'enseignant");
+      return;
+    }
+    if (!formData.categorie) {
+      error('Veuillez sélectionner une catégorie');
+      return;
+    }
     const validSections = sections.filter((section) => section.title.trim() && section.videoFile);
 
     if (validSections.length === 0) {
@@ -665,9 +681,11 @@ export default function CreateVideoPage() {
       const courseInsertPayload: Record<string, any> = {
         title: formData.title,
         description: formData.description,
+        teacher_name: formData.teacher_name || null,
         thumbnail_url: thumbnailUrl || null,
         creator_id: user.id,
         is_featured: formData.isFeatured,
+        categorie: formData.categorie || null,
         ce_que_vous_allez_apprendre: formData.ceQueVousAllezApprendre || null,
       };
 
@@ -806,11 +824,13 @@ export default function CreateVideoPage() {
       setFormData({
         title: '',
         description: '',
+        teacher_name: '',
         isFeatured: false,
         aiGenerated: false,
         thumbnailUrl: '',
         thumbnailDescription: '',
         primary_language: 'fr',
+        categorie: '',
         ceQueVousAllezApprendre: '',
         dureeEstimee: '',
       });
@@ -942,7 +962,7 @@ export default function CreateVideoPage() {
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                   <div className="md:col-span-2">
                     <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Titre du cours *
+                      Titre du cours
                     </label>
                     <input
                       type="text"
@@ -951,13 +971,13 @@ export default function CreateVideoPage() {
                       onChange={handleInputChange}
                       required
                       className="w-full rounded-xl border border-gray-300 px-4 py-3 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                      placeholder="Ex: Introduction à React"
+                      placeholder="Ex: Mathématique"
                     />
                   </div>
 
                   <div className="md:col-span-2">
                     <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Description *
+                      Description
                     </label>
                     <textarea
                       name="description"
@@ -970,11 +990,26 @@ export default function CreateVideoPage() {
                     />
                   </div>
 
+                  <div className="md:col-span-2">
+                    <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Nom de l&apos;enseignant
+                    </label>
+                    <input
+                      type="text"
+                      name="teacher_name"
+                      value={formData.teacher_name}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full rounded-xl border border-gray-300 px-4 py-3 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                      placeholder="Ex: Mme Dupont"
+                    />
+                  </div>
+
                   {/* Price field removed from schema */}
 
                   <div>
                     <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Langue principale du cours *
+                      Langue principale du cours
                     </label>
                     <select
                       name="primary_language"
@@ -985,6 +1020,28 @@ export default function CreateVideoPage() {
                       <option value="fr">Français</option>
                       <option value="en">Anglais</option>
                       <option value="es">Espagnol</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Catégorie
+                    </label>
+                    <select
+                      name="categorie"
+                      value={formData.categorie}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full rounded-xl border border-gray-300 px-4 py-3 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    >
+                      <option value="">Sélectionnez une catégorie</option>
+                      <option value="Français">Français</option>
+                      <option value="Mathématiques">Mathématiques</option>
+                      <option value="Science et technologie">Science et technologie</option>
+                      <option value="Géographie et histoire">Géographie et histoire</option>
+                      <option value="Culture et citoyenneté québécoise">
+                        Culture et citoyenneté québécoise
+                      </option>
                     </select>
                   </div>
 

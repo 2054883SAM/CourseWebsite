@@ -23,7 +23,6 @@ function EditCoursePage({ params }: PageProps) {
   // Form state
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [currency, setCurrency] = useState<string>('USD');
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
 
   useEffect(() => {
@@ -67,8 +66,7 @@ function EditCoursePage({ params }: PageProps) {
       if (idx !== -1) {
         const relativePath = url.pathname.substring(idx + publicPrefix.length);
         if (relativePath) {
-          const { error: removeErr } = await supabase
-            .storage
+          const { error: removeErr } = await supabase.storage
             .from('course-thumbnails')
             .remove([relativePath]);
           if (removeErr) throw removeErr;
@@ -95,9 +93,7 @@ function EditCoursePage({ params }: PageProps) {
       .from('course-thumbnails')
       .upload(filePath, thumbnailFile);
     if (uploadError) throw new Error(`Erreur upload thumbnail: ${uploadError.message}`);
-    const { data: publicData } = supabase.storage
-      .from('course-thumbnails')
-      .getPublicUrl(filePath);
+    const { data: publicData } = supabase.storage.from('course-thumbnails').getPublicUrl(filePath);
     return publicData.publicUrl || null;
   };
 
@@ -143,11 +139,11 @@ function EditCoursePage({ params }: PageProps) {
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-10">
-        <div className="animate-pulse h-8 w-1/3 bg-gray-200 rounded mb-6" />
+        <div className="mb-6 h-8 w-1/3 animate-pulse rounded bg-gray-200" />
         <div className="space-y-4">
-          <div className="h-10 bg-gray-200 rounded" />
-          <div className="h-24 bg-gray-200 rounded" />
-          <div className="h-10 bg-gray-200 rounded" />
+          <div className="h-10 rounded bg-gray-200" />
+          <div className="h-24 rounded bg-gray-200" />
+          <div className="h-10 rounded bg-gray-200" />
         </div>
       </div>
     );
@@ -164,55 +160,51 @@ function EditCoursePage({ params }: PageProps) {
   if (!course) return null;
 
   return (
-    <div className="container mx-auto px-4 py-10 max-w-3xl">
-      <h1 className="text-2xl font-bold mb-6">Modifier le cours</h1>
+    <div className="container mx-auto max-w-3xl px-4 py-10">
+      <h1 className="mb-6 text-2xl font-bold">Modifier le cours</h1>
       {successMsg && (
-        <div className="mb-4 rounded border border-green-300 bg-green-50 p-3 text-green-700">{successMsg}</div>
+        <div className="mb-4 rounded border border-green-300 bg-green-50 p-3 text-green-700">
+          {successMsg}
+        </div>
       )}
       <form onSubmit={handleSave} className="space-y-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Titre</label>
+          <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">
+            Titre
+          </label>
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2"
+            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 dark:border-gray-600 dark:bg-gray-800"
             required
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Description</label>
+          <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">
+            Description
+          </label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={5}
-            className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2"
+            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 dark:border-gray-600 dark:bg-gray-800"
             required
           />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Devise</label>
-            <select
-              value={currency}
-              onChange={(e) => setCurrency(e.target.value)}
-              className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2"
-            >
-              <option value="USD">USD</option>
-              <option value="EUR">EUR</option>
-              <option value="GBP">GBP</option>
-            </select>
-          </div>
-        </div>
-
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Miniature (thumbnail)</label>
+          <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">
+            Miniature (thumbnail)
+          </label>
           <input type="file" accept="image/*" onChange={handleThumbnailChange} />
           {course.thumbnail_url && (
             <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              Miniature actuelle: <a href={course.thumbnail_url} className="text-blue-600 underline" target="_blank">voir</a>
+              Miniature actuelle:{' '}
+              <a href={course.thumbnail_url} className="text-blue-600 underline" target="_blank">
+                voir
+              </a>
             </div>
           )}
         </div>
@@ -221,14 +213,14 @@ function EditCoursePage({ params }: PageProps) {
           <button
             type="submit"
             disabled={saving}
-            className="inline-flex items-center px-5 py-2 rounded-md bg-gradient-to-r from-gray-600 to-gray-800 text-white shadow hover:from-gray-700 hover:to-gray-900 disabled:opacity-60"
+            className="inline-flex items-center rounded-md bg-gradient-to-r from-gray-600 to-gray-800 px-5 py-2 text-white shadow hover:from-gray-700 hover:to-gray-900 disabled:opacity-60"
           >
             {saving ? 'Enregistrement…' : 'Enregistrer'}
           </button>
           <button
             type="button"
             onClick={() => router.push(`/courses/${course.id}`)}
-            className="inline-flex items-center px-5 py-2 rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800"
+            className="inline-flex items-center rounded-md border border-gray-300 px-5 py-2 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800"
           >
             Annuler
           </button>
@@ -239,5 +231,3 @@ function EditCoursePage({ params }: PageProps) {
 }
 
 export default withAuth(EditCoursePage, { requiredRole: 'admin' });
-
-

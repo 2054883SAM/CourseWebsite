@@ -44,7 +44,7 @@ export function AdminSidebar() {
         </svg>
       ),
     },
-    {
+    /* {
       name: 'Utilisateurs',
       href: '/dashboard?page=users',
       icon: (
@@ -64,8 +64,8 @@ export function AdminSidebar() {
           <path d="M16 3.13a4 4 0 0 1 0 7.75" />
         </svg>
       ),
-    },
-    {
+    }, */
+    /* {
       name: 'Formations',
       href: '/dashboard?page=courses',
       icon: (
@@ -84,8 +84,8 @@ export function AdminSidebar() {
           <path d="M8 11h8" />
         </svg>
       ),
-    },
-    {
+    }, */
+    /* {
       name: 'Rapports',
       href: '/dashboard?page=reports',
       icon: (
@@ -103,7 +103,7 @@ export function AdminSidebar() {
           <path d="M22 12A10 10 0 0 0 12 2v10z" />
         </svg>
       ),
-    },
+    }, */
   ];
 
   return (

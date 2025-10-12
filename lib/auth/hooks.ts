@@ -111,8 +111,20 @@ export const useAuthActions = (supabaseClient: SupabaseClient) => {
    */
   const signOut = async () => {
     try {
-      await supabaseClient.auth.signOut();
-      router.push('/');
+      const waitForSignedOut = new Promise<void>((resolve) => {
+        const {
+          data: { subscription },
+        } = supabaseClient.auth.onAuthStateChange((event) => {
+          if (event === 'SIGNED_OUT') {
+            subscription.unsubscribe();
+            resolve();
+          }
+        });
+      });
+
+      await supabaseClient.auth.signOut({ scope: 'global' });
+      await waitForSignedOut;
+      router.replace('/');
     } catch (err) {
       console.error('Signout error:', err);
     }

@@ -97,6 +97,16 @@ function normalizeForMatch(s: string): string[] {
     .filter((w) => w.length >= 4);
 }
 
+function shuffleArrayInPlace<T>(arr: T[]): T[] {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const tmp = arr[i];
+    arr[i] = arr[j];
+    arr[j] = tmp;
+  }
+  return arr;
+}
+
 function attachTimestampsToQuestions(cues: VttCue[], questions: AnyQuestion[]): AnyQuestion[] {
   if (!Array.isArray(cues) || cues.length === 0) return questions;
 
@@ -247,7 +257,8 @@ export async function POST(req: Request) {
         const correctAnswer = String(item?.correctAnswer || '').trim();
         if (!question || choices.length < 3 || !correctAnswer || !choices.includes(correctAnswer))
           return null;
-        return { id, type: 'flashcard', question, choices, correctAnswer };
+        const shuffledChoices = shuffleArrayInPlace([...choices]);
+        return { id, type: 'flashcard', question, choices: shuffledChoices, correctAnswer };
       }
 
       if (type === 'fillBlank') {
@@ -275,13 +286,14 @@ export async function POST(req: Request) {
           !choices.includes(correctAnswer)
         )
           return null;
+        const shuffledChoices = shuffleArrayInPlace([...choices]);
         return {
           id,
           type: 'fillBlank',
           title,
           instructions,
           sentence,
-          choices,
+          choices: shuffledChoices,
           correctAnswer,
           feedback,
         };
@@ -307,7 +319,8 @@ export async function POST(req: Request) {
               }
             : undefined;
         if (pairs.length < 3) return null;
-        return { id, type: 'matchingGame', title, instructions, pairs, feedback };
+        const shuffledPairs = shuffleArrayInPlace([...pairs]);
+        return { id, type: 'matchingGame', title, instructions, pairs: shuffledPairs, feedback };
       }
 
       return null;
@@ -321,6 +334,9 @@ export async function POST(req: Request) {
     if (cleaned.length === 0) {
       return NextResponse.json({ error: 'No valid questions parsed', raw }, { status: 502 });
     }
+
+    // Randomize overall order of questions to avoid predictable positions
+    cleaned = shuffleArrayInPlace([...cleaned]);
 
     // Attach timestamps from cues for better alignment with the video
     cleaned = attachTimestampsToQuestions(cues, cleaned);
