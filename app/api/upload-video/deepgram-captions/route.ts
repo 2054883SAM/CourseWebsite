@@ -21,65 +21,93 @@ export async function POST(req: Request) {
 
     let format: 'vtt' | 'srt' = 'vtt';
     let language: string | undefined;
+    let courseId: string | undefined;
+    let sectionId: string | undefined;
+    let videoId: string | undefined;
     let dgResult: any | undefined;
 
-    if (!contentType.includes('multipart/form-data')) {
-      console.warn(
-        '[Deepgram Captions] Unsupported content-type. Expected multipart/form-data with file.'
+    if (contentType.includes('application/json')) {
+      // URL mode: accept a URL pointing to the media file to avoid large uploads
+      const body = await req.json();
+      const url = String(body.url || '').trim();
+      const formatField = (body.format as string) || 'vtt';
+      const langField = (body.language as string) || undefined;
+      courseId = (body.courseId as string) || undefined;
+      sectionId = (body.sectionId as string) || undefined;
+      videoId = (body.videoId as string) || undefined;
+      format = formatField === 'srt' ? 'srt' : 'vtt';
+      language = langField;
+      if (!url) {
+        return NextResponse.json({ error: 'Missing url' }, { status: 400 });
+      }
+      const options: Record<string, any> = { smart_format: true, utterances: true };
+      if (language && typeof language === 'string') options.language = language;
+      console.log('[Deepgram Captions] TranscribeUrl options:', { ...options, url });
+      const { result, error } = await deepgram.listen.prerecorded.transcribeUrl(url, options);
+      if (error) {
+        console.error('[Deepgram Captions] transcribeUrl error:', error);
+        return NextResponse.json({ error: String(error) }, { status: 500 });
+      }
+      dgResult = result;
+      const uCount = (dgResult as any)?.results?.utterances?.length || 0;
+      console.log('[Deepgram Captions] transcribeUrl success. utterances:', uCount);
+    } else if (contentType.includes('multipart/form-data')) {
+      console.log('[Deepgram Captions] Using multipart/form-data (file) mode');
+      // File upload path
+      const form = await req.formData();
+      const file = form.get('file') as File | null;
+      const formatField = (form.get('format') as string) || 'vtt';
+      const langField = (form.get('language') as string) || undefined;
+      courseId = (form.get('courseId') as string) || undefined;
+      sectionId = (form.get('sectionId') as string) || undefined; // New parameter for section-specific storage
+      videoId = (form.get('videoId') as string) || undefined;
+      format = formatField === 'srt' ? 'srt' : 'vtt';
+      language = langField;
+      console.log('[Deepgram Captions] multipart inputs:', {
+        hasFile: !!file,
+        fileType: file?.type,
+        fileSize: file ? `${file.size} bytes` : 'n/a',
+        format,
+        language,
+        courseId,
+        sectionId,
+        videoId,
+      });
+      if (!file) {
+        return NextResponse.json({ error: 'Missing file' }, { status: 400 });
+      }
+      // Accept common audio/video formats directly (Deepgram supports mp4 and others)
+      const arrayBuffer = await file.arrayBuffer();
+      const inputBuffer = Buffer.from(arrayBuffer);
+      console.log(
+        '[Deepgram Captions] Input buffer size:',
+        inputBuffer.length,
+        'type:',
+        file.type,
+        'name:',
+        (file as any).name
       );
-      return NextResponse.json({ error: 'Use multipart/form-data with file' }, { status: 400 });
-    }
 
-    console.log('[Deepgram Captions] Using multipart/form-data (file) mode');
-    // File upload path
-    const form = await req.formData();
-    const file = form.get('file') as File | null;
-    const formatField = (form.get('format') as string) || 'vtt';
-    const langField = (form.get('language') as string) || undefined;
-    const courseId = (form.get('courseId') as string) || undefined;
-    const sectionId = (form.get('sectionId') as string) || undefined; // New parameter for section-specific storage
-    const videoId = (form.get('videoId') as string) || undefined;
-    format = formatField === 'srt' ? 'srt' : 'vtt';
-    language = langField;
-    console.log('[Deepgram Captions] multipart inputs:', {
-      hasFile: !!file,
-      fileType: file?.type,
-      fileSize: file ? `${file.size} bytes` : 'n/a',
-      format,
-      language,
-      courseId,
-      sectionId,
-      videoId,
-    });
-    if (!file) {
-      return NextResponse.json({ error: 'Missing file' }, { status: 400 });
+      const options: Record<string, any> = { smart_format: true, utterances: true };
+      if (language && typeof language === 'string') options.language = language;
+      console.log('[Deepgram Captions] TranscribeFile options:', options);
+      const { result, error } = await deepgram.listen.prerecorded.transcribeFile(
+        inputBuffer,
+        options
+      );
+      if (error) {
+        console.error('[Deepgram Captions] transcribeFile error:', error);
+        return NextResponse.json({ error: String(error) }, { status: 500 });
+      }
+      dgResult = result;
+      const uCount = (dgResult as any)?.results?.utterances?.length || 0;
+      console.log('[Deepgram Captions] transcribeFile success. utterances:', uCount);
+    } else {
+      console.warn(
+        '[Deepgram Captions] Unsupported content-type. Expected application/json (url) or multipart/form-data (file).'
+      );
+      return NextResponse.json({ error: 'Unsupported content-type' }, { status: 400 });
     }
-    // Accept common audio/video formats directly (Deepgram supports mp4 and others)
-    const arrayBuffer = await file.arrayBuffer();
-    const inputBuffer = Buffer.from(arrayBuffer);
-    console.log(
-      '[Deepgram Captions] Input buffer size:',
-      inputBuffer.length,
-      'type:',
-      file.type,
-      'name:',
-      (file as any).name
-    );
-
-    const options: Record<string, any> = { smart_format: true, utterances: true };
-    if (language && typeof language === 'string') options.language = language;
-    console.log('[Deepgram Captions] TranscribeFile options:', options);
-    const { result, error } = await deepgram.listen.prerecorded.transcribeFile(
-      inputBuffer,
-      options
-    );
-    if (error) {
-      console.error('[Deepgram Captions] transcribeFile error:', error);
-      return NextResponse.json({ error: String(error) }, { status: 500 });
-    }
-    dgResult = result;
-    const uCount = (dgResult as any)?.results?.utterances?.length || 0;
-    console.log('[Deepgram Captions] transcribeFile success. utterances:', uCount);
 
     // dgResult is set above; if not, something went wrong in branches
 

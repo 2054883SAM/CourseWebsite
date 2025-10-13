@@ -452,7 +452,7 @@ export default function CreateVideoPage() {
         uploadProgress: 45,
       });
 
-      // Step 2: Generate captions via Deepgram
+      // Step 2: Generate captions via Deepgram (avoid server 413 by using URL mode)
       updateSectionStatus(sectionIndex, {
         status: 'transcribing',
         currentStep: 'Génération des sous-titres...',
@@ -463,17 +463,42 @@ export default function CreateVideoPage() {
       const tempCourseId = 'temp_' + crypto.randomUUID();
       const tempSectionId = section.id;
 
-      const form = new FormData();
-      form.append('file', section.videoFile);
-      form.append('format', 'vtt');
-      form.append('language', formData.primary_language);
-      form.append('courseId', tempCourseId);
-      form.append('sectionId', tempSectionId);
-      form.append('videoId', videoPlaybackId);
+      // Upload the source media temporarily to Supabase Storage and generate a signed URL
+      let signedMediaUrl: string | undefined;
+      let tempMediaPath: string | undefined;
+      try {
+        const fileExt = (section.videoFile.name || 'video').split('.').pop();
+        tempMediaPath = `${tempSectionId}/source.${fileExt || 'mp4'}`;
+        const { error: upErr } = await supabase.storage
+          .from('translations')
+          .upload(tempMediaPath, section.videoFile, {
+            upsert: true,
+            contentType: section.videoFile.type || 'video/mp4',
+          });
+        if (upErr) throw new Error(upErr.message);
+        const { data: signed } = await supabase.storage
+          .from('translations')
+          .createSignedUrl(tempMediaPath, 60 * 60 * 2); // 2 hours
+        signedMediaUrl = signed?.signedUrl;
+      } catch (uErr) {
+        console.warn('CAPTIONS: Failed to upload temp media for Deepgram URL mode', uErr);
+      }
+
+      if (!signedMediaUrl) {
+        throw new Error("Impossible d'obtenir une URL signée pour le fichier source");
+      }
 
       const capRes = await fetch('/api/upload-video/deepgram-captions', {
         method: 'POST',
-        body: form,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          url: signedMediaUrl,
+          format: 'vtt',
+          language: formData.primary_language,
+          courseId: tempCourseId,
+          sectionId: tempSectionId,
+          videoId: videoPlaybackId,
+        }),
       });
 
       if (!capRes.ok) {
@@ -482,6 +507,14 @@ export default function CreateVideoPage() {
       }
 
       const captionData = await capRes.json();
+      // Best-effort cleanup of temporary media
+      if (tempMediaPath) {
+        try {
+          await supabase.storage.from('translations').remove([tempMediaPath]);
+        } catch (cleanupErr) {
+          console.warn('CAPTIONS: Failed to cleanup temp media', cleanupErr);
+        }
+      }
       console.log('CAPTIONS: Generated for section', tempSectionId);
 
       updateSectionStatus(sectionIndex, {
