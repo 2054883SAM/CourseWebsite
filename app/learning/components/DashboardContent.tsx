@@ -259,7 +259,7 @@ export default function DashboardContent() {
           Statistiques d&apos;apprentissage
         </h2>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <div className="flex items-center justify-between rounded-lg border border-orange-200/30 bg-gradient-to-r from-orange-50/50 to-amber-50/50 p-3 dark:border-orange-800/30 dark:from-orange-900/10 dark:to-amber-900/10">
+          {/* <div className="flex items-center justify-between rounded-lg border border-orange-200/30 bg-gradient-to-r from-orange-50/50 to-amber-50/50 p-3 dark:border-orange-800/30 dark:from-orange-900/10 dark:to-amber-900/10">
             <div className="flex items-center">
               <svg
                 className="mr-2 h-4 w-4 text-orange-500"
@@ -281,7 +281,7 @@ export default function DashboardContent() {
             <span className="font-semibold text-orange-600 dark:text-orange-400">
               {formatDuration(weeklyWatchSeconds)}
             </span>
-          </div>
+          </div> */}
           <div className="flex items-center justify-between rounded-lg border border-green-200/30 bg-gradient-to-r from-green-50/50 to-emerald-50/50 p-3 dark:border-green-800/30 dark:from-green-900/10 dark:to-emerald-900/10">
             <div className="flex items-center">
               <svg

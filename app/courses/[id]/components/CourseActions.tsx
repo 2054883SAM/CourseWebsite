@@ -316,7 +316,9 @@ export function CourseActions({
           {/* Titre de la section */}
           <div className="mb-6 flex items-center gap-3">
             <span className="text-3xl">🚀</span>
-              <h3 className="text-3xl xl:text-3xl lg:text-xl font-bold text-orange-700">Commencer l'aventure</h3>
+            <h3 className="text-3xl font-bold text-orange-700 lg:text-xl xl:text-3xl">
+              Commencer l'aventure
+            </h3>
           </div>
 
           <div className="space-y-4 text-sm">
@@ -326,9 +328,9 @@ export function CourseActions({
                 <div className="flex items-center justify-center xl:justify-between">
                   <div className="flex items-center gap-2">
                     <span className="text-xl">⏰</span>
-                    <span className="font-medium text-gray-700 hidden xl:inline">Durée totale</span>
+                    <span className="hidden font-medium text-gray-700 xl:inline">Durée totale</span>
                   </div>
-                  <span className="font-bold text-gray-800 xl:ml-0 ml-2">{totalDuration} min</span>
+                  <span className="ml-2 font-bold text-gray-800 xl:ml-0">{totalDuration} min</span>
                 </div>
               </div>
 
@@ -336,10 +338,12 @@ export function CourseActions({
                 <div className="flex items-center justify-center xl:justify-between">
                   <div className="flex items-center gap-2">
                     <span className="text-xl">👨‍🏫</span>
-                    <span className="font-medium text-gray-700 hidden xl:inline">Enseignant</span>
+                    <span className="hidden font-medium text-gray-700 xl:inline">
+                      Professeur(e)
+                    </span>
                   </div>
-                  <span className="font-bold text-gray-800 xl:ml-0 ml-2">
-                    {course.creator?.name || 'Inconnu'}
+                  <span className="ml-2 font-bold text-gray-800 xl:ml-0">
+                    {course.teacher_name || 'Non spécifié'}
                   </span>
                 </div>
               </div>
@@ -367,7 +371,7 @@ export function CourseActions({
             )}
 
             <div className="mb-6 w-full">
-              <div className="text-center group relative">
+              <div className="group relative text-center">
                 <EnrollButton
                   status={enrollmentStatus}
                   onClick={handleEnrollClick}

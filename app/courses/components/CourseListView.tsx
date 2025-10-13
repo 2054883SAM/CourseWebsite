@@ -14,30 +14,49 @@ interface CourseListViewProps {
   onDeleteError?: (status: number, message: string) => void;
 }
 
-export function CourseListView({ courses, searchQuery = '', onCourseDeleted, onDeleteStart, onDeleteEnd, onDeleteError }: CourseListViewProps) {
+export function CourseListView({
+  courses,
+  searchQuery = '',
+  onCourseDeleted,
+  onDeleteStart,
+  onDeleteEnd,
+  onDeleteError,
+}: CourseListViewProps) {
   if (courses.length === 0) {
     return (
-      <div className="py-16 text-center relative">
+      <div className="relative py-16 text-center">
         {/* Formes géométriques autour du message - Formes sélectionnées */}
-        <div className="absolute bottom-1/4 left-1/4 w-5 h-5 bg-gradient-to-br from-yellow-400/50 to-orange-500/35 rounded-full animate-bounce shadow-lg" style={{
-          animationDuration: '3.2s', 
-          animationDelay: '2.1s',
-          boxShadow: '0 0 18px rgba(251, 191, 36, 0.4)'
-        }}></div>
-        
-        <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-amber-100 shadow-2xl" style={{
-          boxShadow: '0 0 30px rgba(245, 158, 11, 0.3), 0 0 60px rgba(245, 158, 11, 0.15)'
-        }}>
-          <span className="text-3xl animate-bounce">🔍</span>
+        <div
+          className="absolute bottom-1/4 left-1/4 h-5 w-5 animate-bounce rounded-full bg-gradient-to-br from-yellow-400/50 to-orange-500/35 shadow-lg"
+          style={{
+            animationDuration: '3.2s',
+            animationDelay: '2.1s',
+            boxShadow: '0 0 18px rgba(251, 191, 36, 0.4)',
+          }}
+        ></div>
+
+        <div
+          className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-amber-100 shadow-2xl"
+          style={{
+            boxShadow: '0 0 30px rgba(245, 158, 11, 0.3), 0 0 60px rgba(245, 158, 11, 0.15)',
+          }}
+        >
+          <span className="animate-bounce text-3xl">🔍</span>
         </div>
-        <h3 className="mb-4 text-2xl font-bold text-amber-800" style={{
-          textShadow: '0 0 15px rgba(245, 158, 11, 0.3)'
-        }}>
+        <h3
+          className="mb-4 text-2xl font-bold text-amber-800"
+          style={{
+            textShadow: '0 0 15px rgba(245, 158, 11, 0.3)',
+          }}
+        >
           Aucun cours trouvé
         </h3>
-        <p className="mx-auto max-w-md text-gray-700 font-medium" style={{
-          textShadow: '0 0 10px rgba(245, 158, 11, 0.2)'
-        }}>
+        <p
+          className="mx-auto max-w-md font-medium text-gray-700"
+          style={{
+            textShadow: '0 0 10px rgba(245, 158, 11, 0.2)',
+          }}
+        >
           {searchQuery
             ? `Aucun résultat ne correspond à votre recherche "${searchQuery}". Essayez d'autres mots-clés.`
             : "Essayez d'ajuster vos critères de recherche ou de filtres."}
@@ -49,16 +68,16 @@ export function CourseListView({ courses, searchQuery = '', onCourseDeleted, onD
               params.delete('query');
               window.location.search = params.toString();
             }}
-            className="mt-6 group relative inline-flex items-center rounded-full bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-3 font-semibold text-white shadow-xl hover:shadow-amber-500/25 transition-all duration-300 hover:scale-105 overflow-hidden"
+            className="group relative mt-6 inline-flex items-center overflow-hidden rounded-full bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-3 font-semibold text-white shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-amber-500/25"
             style={{
-              boxShadow: '0 0 20px rgba(245, 158, 11, 0.4)'
+              boxShadow: '0 0 20px rgba(245, 158, 11, 0.4)',
             }}
           >
             <span className="relative z-10 flex items-center gap-2">
               <span>✨</span>
               <span>Voir tous les cours</span>
             </span>
-            <div className="absolute inset-0 bg-gradient-to-r from-amber-600 to-amber-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-amber-600 to-amber-700 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
           </button>
         )}
       </div>
@@ -68,10 +87,10 @@ export function CourseListView({ courses, searchQuery = '', onCourseDeleted, onD
   return (
     <div className="space-y-4">
       {courses.map((course) => (
-        <CourseListItem 
-          key={course.id} 
-          course={course} 
-          searchQuery={searchQuery} 
+        <CourseListItem
+          key={course.id}
+          course={course}
+          searchQuery={searchQuery}
           onDeleted={onCourseDeleted}
           onDeleteStart={onDeleteStart}
           onDeleteEnd={onDeleteEnd}
@@ -91,7 +110,14 @@ interface CourseListItemProps {
   onDeleteError?: (status: number, message: string) => void;
 }
 
-function CourseListItem({ course, searchQuery = '', onDeleted, onDeleteStart, onDeleteEnd, onDeleteError }: CourseListItemProps) {
+function CourseListItem({
+  course,
+  searchQuery = '',
+  onDeleted,
+  onDeleteStart,
+  onDeleteEnd,
+  onDeleteError,
+}: CourseListItemProps) {
   const { dbUser } = useAuth();
 
   const handleDelete = async () => {
@@ -118,23 +144,18 @@ function CourseListItem({ course, searchQuery = '', onDeleted, onDeleteStart, on
   };
 
   return (
-    <div className="group bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md hover:shadow-blue-900/50 transition-shadow">
+    <div className="group overflow-hidden rounded-lg border border-gray-200 bg-white transition-shadow hover:shadow-md hover:shadow-blue-900/50">
       <div className="flex flex-col sm:flex-row">
-        <div className="relative w-full sm:w-64 h-48 sm:h-auto flex-shrink-0">
+        <div className="relative h-48 w-full flex-shrink-0 sm:h-auto sm:w-64">
           {course.thumbnail_url ? (
-            <Image
-              src={course.thumbnail_url}
-              alt={course.title}
-              fill
-              className="object-cover"
-            />
+            <Image src={course.thumbnail_url} alt={course.title} fill className="object-cover" />
           ) : (
-            <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+            <div className="flex h-full w-full items-center justify-center bg-gray-200">
               <span className="text-gray-400">Aucune image</span>
             </div>
           )}
           {!dbUser && (
-            <div className="absolute bottom-0 right-0 bg-green-600 text-white px-2 py-1 text-sm font-semibold">
+            <div className="absolute bottom-0 right-0 bg-green-600 px-2 py-1 text-sm font-semibold text-white">
               Connectez-vous pour vous inscrire
             </div>
           )}
@@ -142,16 +163,15 @@ function CourseListItem({ course, searchQuery = '', onDeleted, onDeleteStart, on
 
         <div className="p-6">
           <NavigationLink href={`/courses/${course.id}`} className="block">
-            
-                <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-amber-600 line-clamp-2">
-                {searchQuery ? (
-                  <SearchHighlight text={course.title} query={searchQuery} />
-                ) : (
-                  course.title
-                )}
-              </h3>
+            <h3 className="mb-3 line-clamp-2 text-xl font-bold text-gray-900 group-hover:text-amber-600">
+              {searchQuery ? (
+                <SearchHighlight text={course.title} query={searchQuery} />
+              ) : (
+                course.title
+              )}
+            </h3>
 
-            <p className="text-gray-600 mb-4">
+            <p className="mb-4 text-gray-600">
               {searchQuery ? (
                 <SearchHighlight text={course.description} query={searchQuery} />
               ) : (
@@ -160,29 +180,21 @@ function CourseListItem({ course, searchQuery = '', onDeleted, onDeleteStart, on
             </p>
           </NavigationLink>
 
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+          <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
             <div className="flex items-center">
-              {course.creator?.photo_url ? (
-                <Image 
-                  src={course.creator.photo_url} 
-                  alt={course.creator.name}
-                  width={24}
-                  height={24}
-                  className="rounded-full mr-2"
-                />
-              ) : (
-                <div className="w-6 h-6 bg-gradient-to-br from-gray-100 to-gray-200 text-gray-600 rounded-full flex items-center justify-center mr-2">
-                  {course.creator?.name.charAt(0) || 'U'}
-                </div>
-              )}
-              <span className="text-sm text-gray-700">{course.creator?.name || 'Créateur inconnu'}</span>
+              <div className="mr-2 flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-amber-100 to-amber-200 text-amber-600">
+                👨‍🏫
+              </div>
+              <span className="text-sm text-gray-700">
+                Professeur(e) {course.teacher_name || 'Non spécifié'}
+              </span>
             </div>
 
             {dbUser && (
               <div className="flex items-center text-gray-600">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 mr-1"
+                  className="mr-1 h-5 w-5"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -201,9 +213,9 @@ function CourseListItem({ course, searchQuery = '', onDeleted, onDeleteStart, on
             )}
 
             {!dbUser && (
-              <button 
-                onClick={() => window.location.href = '/signin'} 
-                className="text-sm text-gold-600 hover:text-gold-800 font-medium"
+              <button
+                onClick={() => (window.location.href = '/signin')}
+                className="text-sm font-medium text-gold-600 hover:text-gold-800"
               >
                 Connectez-vous pour voir tous les détails
               </button>
@@ -214,10 +226,20 @@ function CourseListItem({ course, searchQuery = '', onDeleted, onDeleteStart, on
                 <button
                   onClick={handleDelete}
                   title="Supprimer"
-                  className="inline-flex items-center justify-center px-3 py-2 rounded-md bg-red-600 text-white shadow hover:bg-red-700 transition"
+                  className="inline-flex items-center justify-center rounded-md bg-red-600 px-3 py-2 text-white shadow transition hover:bg-red-700"
                 >
-                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6m-7 0V5a 2 2 0 012-2h2a2 2 0 012 2v2m-7 0h8" />
+                  <svg
+                    className="mr-1 h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6m-7 0V5a 2 2 0 012-2h2a2 2 0 012 2v2m-7 0h8"
+                    />
                   </svg>
                   Supprimer
                 </button>
@@ -227,13 +249,18 @@ function CourseListItem({ course, searchQuery = '', onDeleted, onDeleteStart, on
         </div>
       </div>
       {dbUser?.role === 'admin' && (
-        <div className="p-4 border-t border-gray-100">
+        <div className="border-t border-gray-100 p-4">
           <Link
             href={`/courses/${course.id}/edit`}
-            className="w-full inline-flex items-center justify-center px-4 py-2 rounded-lg bg-gold-600 text-white font-semibold shadow hover:bg-gold-700 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:ring-offset-2"
+            className="inline-flex w-full items-center justify-center rounded-lg bg-gold-600 px-4 py-2 font-semibold text-white shadow hover:bg-gold-700 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:ring-offset-2"
           >
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536M4 13.5V19h5.5l9.621-9.621a1.5 1.5 0 000-2.121l-3.379-3.379a1.5 1.5 0 00-2.121 0L4 13.5z" />
+            <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15.232 5.232l3.536 3.536M4 13.5V19h5.5l9.621-9.621a1.5 1.5 0 000-2.121l-3.379-3.379a1.5 1.5 0 00-2.121 0L4 13.5z"
+              />
             </svg>
             Modifier
           </Link>
@@ -241,4 +268,4 @@ function CourseListItem({ course, searchQuery = '', onDeleted, onDeleteStart, on
       )}
     </div>
   );
-} 
+}

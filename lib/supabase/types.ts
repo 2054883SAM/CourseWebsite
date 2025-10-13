@@ -36,6 +36,8 @@ export interface Course {
   niveau_difficulte?: 'debutant' | 'intermediaire' | 'avance';
   // Champ pour le playbackId de Mux
   playback_id?: string;
+  // Teacher name for display
+  teacher_name?: string;
   // Computed fields (not in DB)
   creator?: User;
   section_count?: number;
