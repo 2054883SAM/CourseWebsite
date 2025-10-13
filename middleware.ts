@@ -4,12 +4,6 @@ import { createServerClient } from '@supabase/ssr';
 
 export async function middleware(request: NextRequest) {
   try {
-    // Log existing cookies for debugging
-    console.log(
-      'Middleware: Cookie names available:',
-      Array.from(request.cookies.getAll().map((c) => c.name))
-    );
-
     // Create a response and supabase client
     const response = NextResponse.next();
 

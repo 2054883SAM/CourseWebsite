@@ -5,6 +5,7 @@ let stripeSingleton: Stripe | null = null;
 
 export function getStripeServerClient(): Stripe {
   const isProduction = process.env.NODE_ENV === 'production';
+  console.log(isProduction);
   const secretKey = isProduction
     ? process.env.STRIPE_SECRET_KEY
     : process.env.STRIPE_SECRET_KEY_TEST;

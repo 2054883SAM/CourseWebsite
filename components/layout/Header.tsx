@@ -189,10 +189,6 @@ export function Header() {
                     <span className="mr-2">👤</span>
                     Mon Profil
                   </DropdownMenuItem>
-                  <DropdownMenuItem href="/settings">
-                    <span className="mr-2">⚙️</span>
-                    Paramètres
-                  </DropdownMenuItem>
                   {dbUser?.role === 'student' && dbUser?.membership === 'subscribed' && (
                     <DropdownMenuItem
                       onClick={async () => {
