@@ -533,7 +533,7 @@ function Home() {
           ></div>
         </div>
 
-        {/* Section Enseignants */}
+       {/* Section Enseignants */}
         <section className="relative overflow-hidden py-12 sm:py-16 lg:py-20">
           <Container maxWidth="7xl" className="relative z-10">
             <div className="mb-12 px-4 text-center sm:mb-14 lg:mb-16">
@@ -552,7 +552,7 @@ function Home() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 items-center gap-8 px-4 sm:gap-10 lg:grid-cols-2 lg:gap-12">
+            <div className="flex justify-center px-4">
               <div className="space-y-4 sm:space-y-6">
                 <div className="relative overflow-hidden rounded-xl border border-blue-500/30 bg-white/60 p-4 shadow-xl backdrop-blur-sm sm:rounded-2xl sm:p-6">
                   <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-blue-500/5 via-blue-400/5 to-blue-600/5 sm:rounded-2xl"></div>
@@ -673,7 +673,7 @@ function Home() {
                   </div>
                 </div>
               </div> */}
-            </div>
+              </div>
           </Container>
         </section>
 

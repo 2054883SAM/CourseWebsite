@@ -860,34 +860,45 @@ export default function CreateVideoPage() {
   };
 
   return (
-    <PageLayout>
-      <Section className="bg-gradient-to-br from-blue-50 via-white to-purple-50 py-8 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-        <Container>
-          <div className="mx-auto max-w-4xl">
-            {/* Header */}
-            <div className="mb-12 text-center">
-              <h1 className="mb-4 text-4xl font-bold text-gray-900 dark:text-white">
-                Créer un nouveau cours
-              </h1>
-              <p className="text-lg text-gray-600 dark:text-gray-300">
-                Partagez vos connaissances avec le monde en créant un cours vidéo interactif
-              </p>
-            </div>
+    <div className="background-beige min-h-screen relative">
+      {/* Animated gradient background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-[1]">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-bl from-amber-300/40 via-amber-200/30 to-orange-400/40 rounded-full blur-3xl animate-float-slow"></div>
+        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-amber-400/35 to-orange-400/35 rounded-full blur-3xl animate-float-slow"></div>
+        <div className="absolute bottom-1/3 left-0 w-80 h-80 bg-gradient-to-tr from-amber-400/35 to-orange-400/35 rounded-full blur-3xl animate-float-slow" style={{ animationDelay: '2s' }}></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-r from-amber-300/30 to-orange-300/30 rounded-full blur-2xl animate-pulse-slow"></div>
+      </div>
+
+      <PageLayout>
+        <Section className="py-8 relative z-[10]">
+          <Container>
+            <div className="mx-auto max-w-4xl">
+              {/* Header */}
+              <div className="mb-8">
+                <div className="rounded-xl border border-white/20 bg-white/90 p-6 shadow-lg backdrop-blur-sm dark:border-gray-700/20 dark:bg-gray-800/90 text-center">
+                  <h1 className="mb-4 text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">
+                    Créer un nouveau cours
+                  </h1>
+                  <p className="text-lg text-gray-600 dark:text-gray-300">
+                    Partagez vos connaissances avec le monde en créant un cours vidéo interactif
+                  </p>
+                </div>
+              </div>
 
             {/* Enhanced Progress Bar */}
             {isSubmitting && (
-              <div className="mb-8 rounded-2xl bg-white p-6 shadow-lg dark:bg-gray-800">
-                <div className="mb-2 flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              <div className="mb-8 rounded-xl border border-white/20 bg-white/90 p-6 shadow-lg backdrop-blur-sm dark:border-gray-700/20 dark:bg-gray-800/90">
+                <div className="mb-4 flex items-center justify-between">
+                  <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Création du cours en cours...
                   </span>
-                  <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                  <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">
                     {uploadProgress}%
                   </span>
                 </div>
-                <div className="h-3 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                <div className="h-4 w-full rounded-full bg-gray-200 dark:bg-gray-700 shadow-inner">
                   <div
-                    className="h-3 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300"
+                    className="h-4 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-500 shadow-lg"
                     style={{ width: `${uploadProgress}%` }}
                   ></div>
                 </div>
@@ -953,7 +964,7 @@ export default function CreateVideoPage() {
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-8">
               {/* Basic Information Section */}
-              <div className="rounded-2xl bg-white p-8 shadow-lg dark:bg-gray-800">
+              <div className="rounded-xl border border-white/20 bg-white/90 p-6 shadow-lg backdrop-blur-sm dark:border-gray-700/20 dark:bg-gray-800/90">
                 <h2 className="mb-6 flex items-center text-2xl font-bold text-gray-900 dark:text-white">
                   <span className="mr-3">📝</span>
                   Informations de base
@@ -1065,7 +1076,7 @@ export default function CreateVideoPage() {
               </div>
 
               {/* Detailed Information Section */}
-              <div className="rounded-2xl bg-white p-8 shadow-lg dark:bg-gray-800">
+              <div className="rounded-xl border border-white/20 bg-white/90 p-6 shadow-lg backdrop-blur-sm dark:border-gray-700/20 dark:bg-gray-800/90">
                 <h2 className="mb-6 flex items-center text-2xl font-bold text-gray-900 dark:text-white">
                   <span className="mr-3">📋</span>
                   Informations détaillées
@@ -1091,7 +1102,7 @@ export default function CreateVideoPage() {
               </div>
 
               {/* Thumbnail Section */}
-              <div className="rounded-2xl bg-white p-8 shadow-lg dark:bg-gray-800">
+              <div className="rounded-xl border border-white/20 bg-white/90 p-6 shadow-lg backdrop-blur-sm dark:border-gray-700/20 dark:bg-gray-800/90">
                 <h2 className="mb-6 flex items-center text-2xl font-bold text-gray-900 dark:text-white">
                   <span className="mr-3">🖼️</span>
                   Image de couverture
@@ -1145,8 +1156,8 @@ export default function CreateVideoPage() {
               </div>
 
               {/* Sections Management */}
-              <div className="rounded-2xl bg-white p-8 shadow-lg dark:bg-gray-800">
-                <div className="mb-6 flex items-center justify-between">
+              <div className="rounded-xl border border-white/20 bg-white/90 p-6 shadow-lg backdrop-blur-sm dark:border-gray-700/20 dark:bg-gray-800/90">
+                <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                   <h2 className="flex items-center text-2xl font-bold text-gray-900 dark:text-white">
                     <span className="mr-3">🎬</span>
                     Sections du cours
@@ -1154,9 +1165,12 @@ export default function CreateVideoPage() {
                   <button
                     type="button"
                     onClick={addSection}
-                    className="rounded-lg bg-green-600 px-4 py-2 font-medium text-white transition-colors duration-200 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                    className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 font-medium text-white transition-colors duration-200 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
                   >
-                    ➕ Ajouter une section
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Ajouter une section
                   </button>
                 </div>
 
@@ -1179,12 +1193,12 @@ export default function CreateVideoPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="inline-flex transform items-center rounded-full bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-4 font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex transform items-center gap-3 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-4 font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {isSubmitting ? (
                     <>
                       <svg
-                        className="-ml-1 mr-3 h-5 w-5 animate-spin text-white"
+                        className="h-5 w-5 animate-spin text-white"
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
                         viewBox="0 0 24 24"
@@ -1206,7 +1220,12 @@ export default function CreateVideoPage() {
                       Création en cours...
                     </>
                   ) : (
-                    'Créer le cours'
+                    <>
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                      Créer le cours
+                    </>
                   )}
                 </button>
               </div>
@@ -1214,9 +1233,7 @@ export default function CreateVideoPage() {
           </div>
         </Container>
       </Section>
-
-      {/* Toast Container */}
-      {/* <ToastContainer toasts={toasts} onRemove={removeToast} /> */}
-    </PageLayout>
+      </PageLayout>
+    </div>
   );
 }
