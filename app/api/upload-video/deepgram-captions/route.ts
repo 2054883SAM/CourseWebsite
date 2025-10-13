@@ -43,7 +43,7 @@ export async function POST(req: Request) {
       const options: Record<string, any> = { smart_format: true, utterances: true };
       if (language && typeof language === 'string') options.language = language;
       console.log('[Deepgram Captions] TranscribeUrl options:', { ...options, url });
-      const { result, error } = await deepgram.listen.prerecorded.transcribeUrl(url, options);
+      const { result, error } = await deepgram.listen.prerecorded.transcribeUrl({ url }, options);
       if (error) {
         console.error('[Deepgram Captions] transcribeUrl error:', error);
         return NextResponse.json({ error: String(error) }, { status: 500 });
