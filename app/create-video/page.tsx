@@ -204,27 +204,28 @@ export default function CreateVideoPage() {
       console.log('VDOCIPHER: Upload credentials received', { videoId });
       onProgress(25);
 
-      // STEP 2: Upload file to VdoCipher
-      console.log('VDOCIPHER: Uploading file to VdoCipher...');
-      const uploadFormData = new FormData();
-      uploadFormData.append('file', file);
-      uploadFormData.append('uploadCredentials', JSON.stringify(clientPayload));
+      // STEP 2: Upload file to VdoCipher (DIRECT from browser to avoid server 413)
+      console.log('VDOCIPHER: Uploading file directly to VdoCipher...');
+      const vdoFormData = new FormData();
+      vdoFormData.append('policy', clientPayload.policy);
+      vdoFormData.append('key', clientPayload.key);
+      vdoFormData.append('x-amz-signature', clientPayload['x-amz-signature']);
+      vdoFormData.append('x-amz-algorithm', clientPayload['x-amz-algorithm']);
+      vdoFormData.append('x-amz-date', clientPayload['x-amz-date']);
+      vdoFormData.append('x-amz-credential', clientPayload['x-amz-credential']);
+      // These mirror the server route behavior and are safe no-ops for S3 form uploads
+      vdoFormData.append('success_action_status', '201');
+      vdoFormData.append('success_action_redirect', '');
+      vdoFormData.append('file', file);
 
-      const uploadResponse = await fetch('/api/upload-video/vdocipher-upload', {
+      const directUploadResponse = await fetch(clientPayload.uploadLink, {
         method: 'POST',
-        body: uploadFormData,
+        body: vdoFormData,
       });
 
-      if (!uploadResponse.ok) {
-        const errorText = await uploadResponse.text();
-        throw new Error(`Upload failed: ${uploadResponse.status} - ${errorText}`);
-      }
-
-      // Even if the endpoint returns a body, we don't need it here; align with test page behavior
-      try {
-        await uploadResponse.json();
-      } catch (_) {
-        // Ignore non-JSON responses gracefully
+      if (!directUploadResponse.ok) {
+        const errorText = await directUploadResponse.text();
+        throw new Error(`Upload failed: ${directUploadResponse.status} - ${errorText}`);
       }
 
       console.log('VDOCIPHER: Upload completed');
@@ -860,23 +861,26 @@ export default function CreateVideoPage() {
   };
 
   return (
-    <div className="background-beige min-h-screen relative">
+    <div className="background-beige relative min-h-screen">
       {/* Animated gradient background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none z-[1]">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-bl from-amber-300/40 via-amber-200/30 to-orange-400/40 rounded-full blur-3xl animate-float-slow"></div>
-        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-amber-400/35 to-orange-400/35 rounded-full blur-3xl animate-float-slow"></div>
-        <div className="absolute bottom-1/3 left-0 w-80 h-80 bg-gradient-to-tr from-amber-400/35 to-orange-400/35 rounded-full blur-3xl animate-float-slow" style={{ animationDelay: '2s' }}></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-r from-amber-300/30 to-orange-300/30 rounded-full blur-2xl animate-pulse-slow"></div>
+      <div className="pointer-events-none absolute inset-0 z-[1] overflow-hidden">
+        <div className="animate-float-slow absolute left-1/4 top-1/4 h-96 w-96 rounded-full bg-gradient-to-bl from-amber-300/40 via-amber-200/30 to-orange-400/40 blur-3xl"></div>
+        <div className="animate-float-slow absolute right-0 top-0 h-96 w-96 rounded-full bg-gradient-to-bl from-amber-400/35 to-orange-400/35 blur-3xl"></div>
+        <div
+          className="animate-float-slow absolute bottom-1/3 left-0 h-80 w-80 rounded-full bg-gradient-to-tr from-amber-400/35 to-orange-400/35 blur-3xl"
+          style={{ animationDelay: '2s' }}
+        ></div>
+        <div className="animate-pulse-slow absolute left-1/2 top-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 transform rounded-full bg-gradient-to-r from-amber-300/30 to-orange-300/30 blur-2xl"></div>
       </div>
 
       <PageLayout>
-        <Section className="py-8 relative z-[10]">
+        <Section className="relative z-[10] py-8">
           <Container>
             <div className="mx-auto max-w-4xl">
               {/* Header */}
               <div className="mb-8">
-                <div className="rounded-xl border border-white/20 bg-white/90 p-6 shadow-lg backdrop-blur-sm dark:border-gray-700/20 dark:bg-gray-800/90 text-center">
-                  <h1 className="mb-4 text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">
+                <div className="rounded-xl border border-white/20 bg-white/90 p-6 text-center shadow-lg backdrop-blur-sm dark:border-gray-700/20 dark:bg-gray-800/90">
+                  <h1 className="mb-4 text-3xl font-bold text-gray-900 dark:text-white sm:text-4xl">
                     Créer un nouveau cours
                   </h1>
                   <p className="text-lg text-gray-600 dark:text-gray-300">
@@ -885,354 +889,376 @@ export default function CreateVideoPage() {
                 </div>
               </div>
 
-            {/* Enhanced Progress Bar */}
-            {isSubmitting && (
-              <div className="mb-8 rounded-xl border border-white/20 bg-white/90 p-6 shadow-lg backdrop-blur-sm dark:border-gray-700/20 dark:bg-gray-800/90">
-                <div className="mb-4 flex items-center justify-between">
-                  <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Création du cours en cours...
-                  </span>
-                  <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">
-                    {uploadProgress}%
-                  </span>
-                </div>
-                <div className="h-4 w-full rounded-full bg-gray-200 dark:bg-gray-700 shadow-inner">
-                  <div
-                    className="h-4 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-500 shadow-lg"
-                    style={{ width: `${uploadProgress}%` }}
-                  ></div>
-                </div>
+              {/* Enhanced Progress Bar */}
+              {isSubmitting && (
+                <div className="mb-8 rounded-xl border border-white/20 bg-white/90 p-6 shadow-lg backdrop-blur-sm dark:border-gray-700/20 dark:bg-gray-800/90">
+                  <div className="mb-4 flex items-center justify-between">
+                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                      Création du cours en cours...
+                    </span>
+                    <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">
+                      {uploadProgress}%
+                    </span>
+                  </div>
+                  <div className="h-4 w-full rounded-full bg-gray-200 shadow-inner dark:bg-gray-700">
+                    <div
+                      className="h-4 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 shadow-lg transition-all duration-500"
+                      style={{ width: `${uploadProgress}%` }}
+                    ></div>
+                  </div>
 
-                {/* Section Status Overview */}
-                <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                  {sections
-                    .filter((s) => s.title.trim() && s.videoFile)
-                    .map((section, index) => (
-                      <div
-                        key={section.id}
-                        className={`flex items-center rounded border p-2 text-xs ${
-                          section.status === 'completed'
-                            ? 'border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-900/20 dark:text-green-300'
-                            : section.status === 'error'
-                              ? 'border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300'
-                              : section.status === 'pending'
-                                ? 'border-gray-200 bg-gray-50 text-gray-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400'
-                                : 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-300'
-                        }`}
-                      >
-                        <div className="mr-2">
-                          {section.status === 'pending' && '⏳'}
-                          {section.status === 'uploading' && '📤'}
-                          {section.status === 'processing' && '⚙️'}
-                          {section.status === 'transcribing' && '🎤'}
-                          {section.status === 'translating' && '🌍'}
-                          {section.status === 'completed' && '✅'}
-                          {section.status === 'error' && '❌'}
+                  {/* Section Status Overview */}
+                  <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                    {sections
+                      .filter((s) => s.title.trim() && s.videoFile)
+                      .map((section, index) => (
+                        <div
+                          key={section.id}
+                          className={`flex items-center rounded border p-2 text-xs ${
+                            section.status === 'completed'
+                              ? 'border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-900/20 dark:text-green-300'
+                              : section.status === 'error'
+                                ? 'border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300'
+                                : section.status === 'pending'
+                                  ? 'border-gray-200 bg-gray-50 text-gray-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400'
+                                  : 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-300'
+                          }`}
+                        >
+                          <div className="mr-2">
+                            {section.status === 'pending' && '⏳'}
+                            {section.status === 'uploading' && '📤'}
+                            {section.status === 'processing' && '⚙️'}
+                            {section.status === 'transcribing' && '🎤'}
+                            {section.status === 'translating' && '🌍'}
+                            {section.status === 'completed' && '✅'}
+                            {section.status === 'error' && '❌'}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate font-medium">Section {index + 1}</div>
+                            <div className="truncate text-xs opacity-75">{section.currentStep}</div>
+                          </div>
+                          {section.status !== 'pending' && section.status !== 'completed' && (
+                            <div className="ml-2 text-xs font-medium">
+                              {section.uploadProgress}%
+                            </div>
+                          )}
                         </div>
-                        <div className="min-w-0 flex-1">
-                          <div className="truncate font-medium">Section {index + 1}</div>
-                          <div className="truncate text-xs opacity-75">{section.currentStep}</div>
-                        </div>
-                        {section.status !== 'pending' && section.status !== 'completed' && (
-                          <div className="ml-2 text-xs font-medium">{section.uploadProgress}%</div>
-                        )}
+                      ))}
+                  </div>
+
+                  {translationProgress > 0 && translationProgress < 100 && (
+                    <div className="mt-4">
+                      <div className="mb-1 flex items-center justify-between">
+                        <span className="text-xs text-gray-600 dark:text-gray-400">
+                          Traduction des sous-titres...
+                        </span>
+                        <span className="text-xs text-purple-600 dark:text-purple-400">
+                          {translationProgress}%
+                        </span>
                       </div>
-                    ))}
-                </div>
-
-                {translationProgress > 0 && translationProgress < 100 && (
-                  <div className="mt-4">
-                    <div className="mb-1 flex items-center justify-between">
-                      <span className="text-xs text-gray-600 dark:text-gray-400">
-                        Traduction des sous-titres...
-                      </span>
-                      <span className="text-xs text-purple-600 dark:text-purple-400">
-                        {translationProgress}%
-                      </span>
+                      <div className="h-1 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                        <div
+                          className="h-1 rounded-full bg-purple-500 transition-all duration-300"
+                          style={{ width: `${translationProgress}%` }}
+                        ></div>
+                      </div>
                     </div>
-                    <div className="h-1 w-full rounded-full bg-gray-200 dark:bg-gray-700">
-                      <div
-                        className="h-1 rounded-full bg-purple-500 transition-all duration-300"
-                        style={{ width: `${translationProgress}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Form */}
-            <form onSubmit={handleSubmit} className="space-y-8">
-              {/* Basic Information Section */}
-              <div className="rounded-xl border border-white/20 bg-white/90 p-6 shadow-lg backdrop-blur-sm dark:border-gray-700/20 dark:bg-gray-800/90">
-                <h2 className="mb-6 flex items-center text-2xl font-bold text-gray-900 dark:text-white">
-                  <span className="mr-3">📝</span>
-                  Informations de base
-                </h2>
-
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                  <div className="md:col-span-2">
-                    <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Titre du cours
-                    </label>
-                    <input
-                      type="text"
-                      name="title"
-                      value={formData.title}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full rounded-xl border border-gray-300 px-4 py-3 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                      placeholder="Ex: Mathématique"
-                    />
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Description
-                    </label>
-                    <textarea
-                      name="description"
-                      value={formData.description}
-                      onChange={handleInputChange}
-                      required
-                      rows={4}
-                      className="w-full rounded-xl border border-gray-300 px-4 py-3 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                      placeholder="Décrivez votre cours..."
-                    />
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Nom de l&apos;enseignant
-                    </label>
-                    <input
-                      type="text"
-                      name="teacher_name"
-                      value={formData.teacher_name}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full rounded-xl border border-gray-300 px-4 py-3 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                      placeholder="Ex: Mme Dupont"
-                    />
-                  </div>
-
-                  {/* Price field removed from schema */}
-
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Langue principale du cours
-                    </label>
-                    <select
-                      name="primary_language"
-                      value={formData.primary_language}
-                      onChange={handleInputChange}
-                      className="w-full rounded-xl border border-gray-300 px-4 py-3 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                    >
-                      <option value="fr">Français</option>
-                      <option value="en">Anglais</option>
-                      <option value="es">Espagnol</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Catégorie
-                    </label>
-                    <select
-                      name="categorie"
-                      value={formData.categorie}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full rounded-xl border border-gray-300 px-4 py-3 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                    >
-                      <option value="">Sélectionnez une catégorie</option>
-                      <option value="Français">Français</option>
-                      <option value="Mathématiques">Mathématiques</option>
-                      <option value="Science et technologie">Science et technologie</option>
-                      <option value="Géographie et histoire">Géographie et histoire</option>
-                      <option value="Culture et citoyenneté québécoise">
-                        Culture et citoyenneté québécoise
-                      </option>
-                    </select>
-                  </div>
-
-                  {/* Niveau de difficulté removed */}
-
-                  <div className="md:col-span-2">
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        name="isFeatured"
-                        checked={formData.isFeatured}
-                        onChange={handleInputChange}
-                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600"
-                      />
-                      <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
-                        Mettre en vedette ce cours
-                      </span>
-                    </label>
-                  </div>
+                  )}
                 </div>
-              </div>
+              )}
 
-              {/* Detailed Information Section */}
-              <div className="rounded-xl border border-white/20 bg-white/90 p-6 shadow-lg backdrop-blur-sm dark:border-gray-700/20 dark:bg-gray-800/90">
-                <h2 className="mb-6 flex items-center text-2xl font-bold text-gray-900 dark:text-white">
-                  <span className="mr-3">📋</span>
-                  Informations détaillées
-                </h2>
+              {/* Form */}
+              <form onSubmit={handleSubmit} className="space-y-8">
+                {/* Basic Information Section */}
+                <div className="rounded-xl border border-white/20 bg-white/90 p-6 shadow-lg backdrop-blur-sm dark:border-gray-700/20 dark:bg-gray-800/90">
+                  <h2 className="mb-6 flex items-center text-2xl font-bold text-gray-900 dark:text-white">
+                    <span className="mr-3">📝</span>
+                    Informations de base
+                  </h2>
 
-                <div className="space-y-6">
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Ce que vous allez apprendre
-                    </label>
-                    <textarea
-                      name="ceQueVousAllezApprendre"
-                      value={formData.ceQueVousAllezApprendre}
-                      onChange={handleInputChange}
-                      rows={3}
-                      className="w-full rounded-xl border border-gray-300 px-4 py-3 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                      placeholder="Listez les compétences que les étudiants acquerront..."
-                    />
-                  </div>
-
-                  {/* Prérequis and Public cible removed */}
-                </div>
-              </div>
-
-              {/* Thumbnail Section */}
-              <div className="rounded-xl border border-white/20 bg-white/90 p-6 shadow-lg backdrop-blur-sm dark:border-gray-700/20 dark:bg-gray-800/90">
-                <h2 className="mb-6 flex items-center text-2xl font-bold text-gray-900 dark:text-white">
-                  <span className="mr-3">🖼️</span>
-                  Image de couverture
-                </h2>
-
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      URL de l&apos;image
-                    </label>
-                    <input
-                      type="url"
-                      name="thumbnailUrl"
-                      value={formData.thumbnailUrl}
-                      onChange={handleInputChange}
-                      className="w-full rounded-xl border border-gray-300 px-4 py-3 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                      placeholder="https://example.com/image.jpg"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Ou télécharger une image
-                    </label>
-                    <input
-                      type="file"
-                      ref={thumbnailInputRef}
-                      onChange={handleThumbnailChange}
-                      accept="image/*"
-                      className="w-full rounded-xl border border-gray-300 px-4 py-3 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                    />
-                  </div>
-
-                  {thumbnailPreview && (
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     <div className="md:col-span-2">
                       <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Aperçu
+                        Titre du cours
                       </label>
-                      <div className="relative w-full max-w-md">
-                        <Image
-                          src={thumbnailPreview}
-                          alt="Aperçu de la thumbnail"
-                          width={400}
-                          height={200}
-                          className="h-48 w-full rounded-xl border border-gray-300 object-cover dark:border-gray-600"
-                        />
-                      </div>
+                      <input
+                        type="text"
+                        name="title"
+                        value={formData.title}
+                        onChange={handleInputChange}
+                        required
+                        className="w-full rounded-xl border border-gray-300 px-4 py-3 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                        placeholder="Ex: Mathématique"
+                      />
                     </div>
-                  )}
-                </div>
-              </div>
 
-              {/* Sections Management */}
-              <div className="rounded-xl border border-white/20 bg-white/90 p-6 shadow-lg backdrop-blur-sm dark:border-gray-700/20 dark:bg-gray-800/90">
-                <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                  <h2 className="flex items-center text-2xl font-bold text-gray-900 dark:text-white">
-                    <span className="mr-3">🎬</span>
-                    Sections du cours
+                    <div className="md:col-span-2">
+                      <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Description
+                      </label>
+                      <textarea
+                        name="description"
+                        value={formData.description}
+                        onChange={handleInputChange}
+                        required
+                        rows={4}
+                        className="w-full rounded-xl border border-gray-300 px-4 py-3 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                        placeholder="Décrivez votre cours..."
+                      />
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Nom de l&apos;enseignant
+                      </label>
+                      <input
+                        type="text"
+                        name="teacher_name"
+                        value={formData.teacher_name}
+                        onChange={handleInputChange}
+                        required
+                        className="w-full rounded-xl border border-gray-300 px-4 py-3 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                        placeholder="Ex: Mme Dupont"
+                      />
+                    </div>
+
+                    {/* Price field removed from schema */}
+
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Langue principale du cours
+                      </label>
+                      <select
+                        name="primary_language"
+                        value={formData.primary_language}
+                        onChange={handleInputChange}
+                        className="w-full rounded-xl border border-gray-300 px-4 py-3 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                      >
+                        <option value="fr">Français</option>
+                        <option value="en">Anglais</option>
+                        <option value="es">Espagnol</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Catégorie
+                      </label>
+                      <select
+                        name="categorie"
+                        value={formData.categorie}
+                        onChange={handleInputChange}
+                        required
+                        className="w-full rounded-xl border border-gray-300 px-4 py-3 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                      >
+                        <option value="">Sélectionnez une catégorie</option>
+                        <option value="Français">Français</option>
+                        <option value="Mathématiques">Mathématiques</option>
+                        <option value="Science et technologie">Science et technologie</option>
+                        <option value="Géographie et histoire">Géographie et histoire</option>
+                        <option value="Culture et citoyenneté québécoise">
+                          Culture et citoyenneté québécoise
+                        </option>
+                      </select>
+                    </div>
+
+                    {/* Niveau de difficulté removed */}
+
+                    <div className="md:col-span-2">
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          name="isFeatured"
+                          checked={formData.isFeatured}
+                          onChange={handleInputChange}
+                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600"
+                        />
+                        <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                          Mettre en vedette ce cours
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Detailed Information Section */}
+                <div className="rounded-xl border border-white/20 bg-white/90 p-6 shadow-lg backdrop-blur-sm dark:border-gray-700/20 dark:bg-gray-800/90">
+                  <h2 className="mb-6 flex items-center text-2xl font-bold text-gray-900 dark:text-white">
+                    <span className="mr-3">📋</span>
+                    Informations détaillées
                   </h2>
-                  <button
-                    type="button"
-                    onClick={addSection}
-                    className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 font-medium text-white transition-colors duration-200 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
-                    Ajouter une section
-                  </button>
+
+                  <div className="space-y-6">
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Ce que vous allez apprendre
+                      </label>
+                      <textarea
+                        name="ceQueVousAllezApprendre"
+                        value={formData.ceQueVousAllezApprendre}
+                        onChange={handleInputChange}
+                        rows={3}
+                        className="w-full rounded-xl border border-gray-300 px-4 py-3 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                        placeholder="Listez les compétences que les étudiants acquerront..."
+                      />
+                    </div>
+
+                    {/* Prérequis and Public cible removed */}
+                  </div>
                 </div>
 
-                <div className="space-y-6">
-                  {sections.map((section, index) => (
-                    <SectionForm
-                      key={section.id}
-                      section={section}
-                      sectionIndex={index}
-                      onSectionChange={updateSection}
-                      onRemoveSection={removeSection}
-                      canRemove={sections.length > 1}
-                    />
-                  ))}
-                </div>
-              </div>
+                {/* Thumbnail Section */}
+                <div className="rounded-xl border border-white/20 bg-white/90 p-6 shadow-lg backdrop-blur-sm dark:border-gray-700/20 dark:bg-gray-800/90">
+                  <h2 className="mb-6 flex items-center text-2xl font-bold text-gray-900 dark:text-white">
+                    <span className="mr-3">🖼️</span>
+                    Image de couverture
+                  </h2>
 
-              {/* Submit Button */}
-              <div className="flex justify-center">
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="inline-flex transform items-center gap-3 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-4 font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {isSubmitting ? (
-                    <>
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        URL de l&apos;image
+                      </label>
+                      <input
+                        type="url"
+                        name="thumbnailUrl"
+                        value={formData.thumbnailUrl}
+                        onChange={handleInputChange}
+                        className="w-full rounded-xl border border-gray-300 px-4 py-3 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                        placeholder="https://example.com/image.jpg"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Ou télécharger une image
+                      </label>
+                      <input
+                        type="file"
+                        ref={thumbnailInputRef}
+                        onChange={handleThumbnailChange}
+                        accept="image/*"
+                        className="w-full rounded-xl border border-gray-300 px-4 py-3 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                      />
+                    </div>
+
+                    {thumbnailPreview && (
+                      <div className="md:col-span-2">
+                        <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Aperçu
+                        </label>
+                        <div className="relative w-full max-w-md">
+                          <Image
+                            src={thumbnailPreview}
+                            alt="Aperçu de la thumbnail"
+                            width={400}
+                            height={200}
+                            className="h-48 w-full rounded-xl border border-gray-300 object-cover dark:border-gray-600"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Sections Management */}
+                <div className="rounded-xl border border-white/20 bg-white/90 p-6 shadow-lg backdrop-blur-sm dark:border-gray-700/20 dark:bg-gray-800/90">
+                  <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <h2 className="flex items-center text-2xl font-bold text-gray-900 dark:text-white">
+                      <span className="mr-3">🎬</span>
+                      Sections du cours
+                    </h2>
+                    <button
+                      type="button"
+                      onClick={addSection}
+                      className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 font-medium text-white transition-colors duration-200 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                    >
                       <svg
-                        className="h-5 w-5 animate-spin text-white"
-                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4"
                         fill="none"
+                        stroke="currentColor"
                         viewBox="0 0 24 24"
                       >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
                         <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 4v16m8-8H4"
+                        />
                       </svg>
-                      Création en cours...
-                    </>
-                  ) : (
-                    <>
-                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                      </svg>
-                      Créer le cours
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        </Container>
-      </Section>
+                      Ajouter une section
+                    </button>
+                  </div>
+
+                  <div className="space-y-6">
+                    {sections.map((section, index) => (
+                      <SectionForm
+                        key={section.id}
+                        section={section}
+                        sectionIndex={index}
+                        onSectionChange={updateSection}
+                        onRemoveSection={removeSection}
+                        canRemove={sections.length > 1}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Submit Button */}
+                <div className="flex justify-center">
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="inline-flex transform items-center gap-3 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-4 font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <svg
+                          className="h-5 w-5 animate-spin text-white"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        Création en cours...
+                      </>
+                    ) : (
+                      <>
+                        <svg
+                          className="h-5 w-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 4v16m8-8H4"
+                          />
+                        </svg>
+                        Créer le cours
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </Container>
+        </Section>
       </PageLayout>
     </div>
   );
