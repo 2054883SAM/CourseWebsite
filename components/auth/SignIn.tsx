@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth/AuthContext';
@@ -16,11 +16,11 @@ export function SignIn() {
   const searchParams = useSearchParams();
   const [hasRedirected, setHasRedirected] = useState(false);
 
-  const getRoleBasedRedirect = () => {
+  const getRoleBasedRedirect = useCallback(() => {
     if (dbUser?.role === 'student') return '/learning?page=dashboard';
     if (dbUser?.role === 'admin') return '/dashboard?page=dashboard';
     return null;
-  };
+  }, [dbUser?.role]);
 
   // Helper function to check authentication status
   const verifyAuthStatus = async () => {
@@ -52,7 +52,7 @@ export function SignIn() {
         }
       });
     }
-  }, [user, dbUser, authLoading, router, searchParams, hasRedirected]);
+  }, [user, dbUser, authLoading, router, searchParams, hasRedirected, getRoleBasedRedirect]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -119,10 +119,7 @@ export function SignIn() {
 
         <div className="space-y-4">
           <div>
-            <label
-              htmlFor="email-address"
-              className="auth-label mb-2 block text-sm font-medium"
-            >
+            <label htmlFor="email-address" className="auth-label mb-2 block text-sm font-medium">
               Adresse email
             </label>
             <div className="relative">
@@ -155,10 +152,7 @@ export function SignIn() {
             </div>
           </div>
           <div>
-            <label
-              htmlFor="password"
-              className="auth-label mb-2 block text-sm font-medium"
-            >
+            <label htmlFor="password" className="auth-label mb-2 block text-sm font-medium">
               Mot de passe
             </label>
             <div className="relative">
@@ -205,7 +199,7 @@ export function SignIn() {
           <button
             type="submit"
             disabled={loading}
-            className="primary-button group flex w-full transform items-center justify-center rounded-lg border border-transparent px-4 py-3 text-sm font-semibold shadow-sm transition-all duration-200 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 relative overflow-hidden"
+            className="primary-button group relative flex w-full transform items-center justify-center overflow-hidden rounded-lg border border-transparent px-4 py-3 text-sm font-semibold shadow-sm transition-all duration-200 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
           >
             <span className="button-glow"></span>
             {loading ? (
@@ -240,9 +234,7 @@ export function SignIn() {
 
         <div className="relative py-2">
           <div className="relative flex justify-center text-base">
-            <span className="auth-text-gray-500 bg-transparent px-2">
-              ou continuer avec
-            </span>
+            <span className="auth-text-gray-500 bg-transparent px-2">ou continuer avec</span>
           </div>
         </div>
 
@@ -250,7 +242,7 @@ export function SignIn() {
           <button
             type="button"
             onClick={() => signInWithProvider('google')}
-            className="auth-button group inline-flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 relative overflow-hidden"
+            className="auth-button group relative inline-flex w-full items-center justify-center gap-2 overflow-hidden rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
           >
             <span className="button-glow"></span>
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" className="h-5 w-5">

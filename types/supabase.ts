@@ -20,6 +20,8 @@ export interface Database {
           photo_url: string | null;
           last_connected_at: string | null;
           bio: string | null;
+          customer_id: string | null;
+          customer_id_dev: string | null;
           created_at: string;
         };
         Insert: {
@@ -31,6 +33,8 @@ export interface Database {
           photo_url?: string | null;
           last_connected_at?: string | null;
           bio?: string | null;
+          customer_id?: string | null;
+          customer_id_dev?: string | null;
           created_at?: string;
         };
         Update: {
@@ -42,6 +46,8 @@ export interface Database {
           photo_url?: string | null;
           last_connected_at?: string | null;
           bio?: string | null;
+          customer_id?: string | null;
+          customer_id_dev?: string | null;
           created_at?: string;
         };
       };

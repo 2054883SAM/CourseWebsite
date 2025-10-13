@@ -11,6 +11,8 @@ export interface User {
   email: string;
   photo_url?: string;
   bio?: string;
+  customer_id?: string;
+  customer_id_dev?: string;
   created_at: string;
 }
 

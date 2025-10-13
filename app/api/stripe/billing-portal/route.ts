@@ -3,6 +3,7 @@ import { getStripeServerClient } from '@/lib/stripe/server';
 import { getBaseUrl } from '@/lib/utils/url';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { updateUserCustomerIdAdmin } from '@/lib/supabase/admin';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,31 +36,58 @@ export async function POST(req: NextRequest) {
 
     const stripe = getStripeServerClient();
 
+    // Use stored customer_id when available; otherwise, find or create and persist
     const customerEmail = user.email || undefined;
     let customerId: string | undefined;
 
-    // Prefer customer lookup by metadata userId if available (more reliable than email)
-    const search = await stripe.customers
-      .search({
-        // Escapes handled by Stripe; using metadata filter for exact match
-        query: `metadata['userId']:'${user.id}'`,
-        limit: 1,
-      })
-      .catch(() => null);
-    if (search && search.data[0]?.id) {
-      customerId = search.data[0].id;
+    // Fetch current user's stored customer id (env-aware)
+    const { data: userRow } = await supabase
+      .from('users')
+      .select('customer_id, customer_id_dev')
+      .eq('id', user.id)
+      .single();
+    const isProduction = process.env.NODE_ENV === 'production';
+    customerId = isProduction
+      ? (userRow as any)?.customer_id || undefined
+      : (userRow as any)?.customer_id_dev || undefined;
+
+    // If we have a stored customer_id, validate it exists in Stripe
+    if (customerId) {
+      try {
+        await stripe.customers.retrieve(customerId);
+      } catch {
+        // If invalid/missing on Stripe, reset to recreate
+        customerId = undefined;
+      }
     }
-    // Fallback to email search if no metadata match and email exists
-    if (!customerId && customerEmail) {
-      const existing = await stripe.customers.list({ email: customerEmail, limit: 1 });
-      customerId = existing.data[0]?.id;
+
+    // If not present, try to find by metadata userId first
+    if (!customerId) {
+      const search = await stripe.customers
+        .search({ query: `metadata['userId']:'${user.id}'`, limit: 1 })
+        .catch(() => null);
+      if (search && search.data[0]?.id) {
+        customerId = search.data[0].id;
+      }
     }
+
+    // If still not found, create a new customer, then persist customer_id
     if (!customerId) {
       const created = await stripe.customers.create({
         email: customerEmail,
         metadata: { userId: user.id, app: 'CourseWebsite' },
       });
       customerId = created.id;
+    }
+
+    // Ensure users.customer_id is synced
+    try {
+      if (customerId) {
+        await updateUserCustomerIdAdmin(user.id, customerId);
+      }
+    } catch (e) {
+      // Non-fatal: log and continue
+      console.error('Failed to sync customer_id to users:', e);
     }
 
     const origin = getBaseUrl();
