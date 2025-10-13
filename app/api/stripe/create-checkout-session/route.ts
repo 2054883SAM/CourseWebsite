@@ -11,7 +11,10 @@ export async function POST(req: NextRequest) {
     const { priceId, trialDays, courseId } = await req
       .json()
       .catch(() => ({ priceId: undefined, trialDays: undefined, courseId: undefined }));
-    const defaultPriceId = process.env.STRIPE_TEST_PRICE_ID;
+    const defaultPriceId =
+      process.env.NODE_ENV === 'production'
+        ? process.env.STRIPE_PRICE_ID || process.env.STRIPE_TEST_PRICE_ID
+        : process.env.STRIPE_TEST_PRICE_ID;
     const resolvedPriceId = priceId || defaultPriceId;
     if (!resolvedPriceId) {
       return NextResponse.json({ error: 'Missing Stripe price ID' }, { status: 400 });

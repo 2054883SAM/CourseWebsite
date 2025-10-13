@@ -4,13 +4,19 @@ import Stripe from 'stripe';
 let stripeSingleton: Stripe | null = null;
 
 export function getStripeServerClient(): Stripe {
-  if (!process.env.STRIPE_SECRET_KEY) {
-    throw new Error('STRIPE_SECRET_KEY is not set');
+  const isProduction = process.env.NODE_ENV === 'production';
+  const secretKey = isProduction
+    ? process.env.STRIPE_SECRET_KEY
+    : process.env.STRIPE_SECRET_KEY_TEST;
+  if (!secretKey) {
+    throw new Error(
+      isProduction ? 'STRIPE_SECRET_KEY is not set' : 'STRIPE_SECRET_KEY_TEST is not set'
+    );
   }
 
   if (!stripeSingleton) {
     // Use SDK default API version for compatibility
-    stripeSingleton = new Stripe(process.env.STRIPE_SECRET_KEY);
+    stripeSingleton = new Stripe(secretKey);
   }
 
   return stripeSingleton;
