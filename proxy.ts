@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Database } from '@/types/supabase';
 import { createServerClient } from '@supabase/ssr';
 
-export async function middleware(request: NextRequest) {
+// Next.js 16: Renamed from "middleware" to "proxy"
+export async function proxy(request: NextRequest) {
   try {
     // Create a response and supabase client
     const response = NextResponse.next({ request });
@@ -18,7 +19,7 @@ export async function middleware(request: NextRequest) {
           },
           setAll(cookiesToSet) {
             cookiesToSet.forEach(({ name, value, options }) => {
-              // Keep the request cookies in sync for the remainder of this middleware execution
+              // Keep the request cookies in sync for the remainder of this proxy execution
               // (recommended by @supabase/ssr docs).
               try {
                 request.cookies.set(name, value);
@@ -32,7 +33,7 @@ export async function middleware(request: NextRequest) {
       }
     );
 
-    // IMPORTANT: Use getSession() in middleware, not getUser()
+    // IMPORTANT: Use getSession() in proxy, not getUser()
     // getSession() reads from cookies without making API calls
     // This refreshes the session and updates cookies automatically
     const {
@@ -41,13 +42,13 @@ export async function middleware(request: NextRequest) {
 
     // Optional: Add logging for debugging
     if (process.env.NODE_ENV !== 'production' && session) {
-      console.log('[Middleware] Session active for:', session.user.email);
+      console.log('[Proxy] Session active for:', session.user.email);
     }
 
     // Return the modified response with updated cookies
     return response;
   } catch (error) {
-    console.error('Middleware error:', error);
+    console.error('Proxy error:', error);
     return NextResponse.next();
   }
 }

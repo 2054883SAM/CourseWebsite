@@ -90,8 +90,8 @@ export function DropdownMenu({ trigger, children, align = 'right' }: DropdownMen
     if (React.isValidElement(child) && 
         // Only pass isActive to components, not DOM elements
         typeof child.type !== 'string') {
-      return React.cloneElement(child, {
-        ...child.props,
+      return React.cloneElement(child as React.ReactElement<any>, {
+        ...(child.props as Record<string, any>),
         isActive: index === activeIndex,
         role: 'menuitem',
         tabIndex: -1,

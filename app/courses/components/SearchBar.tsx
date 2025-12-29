@@ -23,7 +23,7 @@ export function SearchBar({ initialQuery = '', className = '' }: SearchBarProps)
   ]);
   const [isFocused, setIsFocused] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const suggestionTimeout = useRef<NodeJS.Timeout>();
+  const suggestionTimeout = useRef<NodeJS.Timeout | undefined>(undefined);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
   
