@@ -1,7 +1,7 @@
 export async function updateUserMembershipAdmin(userId: string, membership: 'free' | 'subscribed') {
-  const baseUrl = process.env.SUPABASE_URL;
+  const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!baseUrl) throw new Error('Missing SUPABASE_URL');
+  if (!baseUrl) throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL');
   if (!serviceKey) throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY');
 
   const url = `${baseUrl}/rest/v1/users?id=eq.${userId}`;
@@ -27,9 +27,9 @@ export async function updateUserMembershipAdmin(userId: string, membership: 'fre
  * Update Stripe customer_id for a user using service role (webhook-safe)
  */
 export async function updateUserCustomerIdAdmin(userId: string, customerId: string) {
-  const baseUrl = process.env.SUPABASE_URL;
+  const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!baseUrl) throw new Error('Missing SUPABASE_URL');
+  if (!baseUrl) throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL');
   if (!serviceKey) throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY');
 
   const url = `${baseUrl}/rest/v1/users?id=eq.${userId}`;

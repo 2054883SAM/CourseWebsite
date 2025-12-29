@@ -5,34 +5,46 @@ import { createServerClient } from '@supabase/ssr';
 export async function middleware(request: NextRequest) {
   try {
     // Create a response and supabase client
-    const response = NextResponse.next();
+    const response = NextResponse.next({ request });
 
     // Create supabase server client
-    const supabase = createServerClient(process.env.SUPABASE_URL!, process.env.SUPABASE_ANON_KEY!, {
-      cookies: {
-        get(name) {
-          return request.cookies.get(name)?.value;
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll();
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              // Keep the request cookies in sync for the remainder of this middleware execution
+              // (recommended by @supabase/ssr docs).
+              try {
+                request.cookies.set(name, value);
+              } catch {
+                // ignore: request cookies might be read-only in some contexts
+              }
+              response.cookies.set({ name, value, ...options });
+            });
+          },
         },
-        set(name, value, options) {
-          response.cookies.set({
-            name,
-            value,
-            ...options,
-          });
-        },
-        remove(name, options) {
-          response.cookies.delete({
-            name,
-            ...options,
-          });
-        },
-      },
-    });
+      }
+    );
 
-    // Refresh session
-    await supabase.auth.getUser();
+    // IMPORTANT: Use getSession() in middleware, not getUser()
+    // getSession() reads from cookies without making API calls
+    // This refreshes the session and updates cookies automatically
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
 
-    // Return the modified response
+    // Optional: Add logging for debugging
+    if (process.env.NODE_ENV !== 'production' && session) {
+      console.log('[Middleware] Session active for:', session.user.email);
+    }
+
+    // Return the modified response with updated cookies
     return response;
   } catch (error) {
     console.error('Middleware error:', error);

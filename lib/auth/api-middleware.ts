@@ -1,7 +1,5 @@
 import { NextRequest } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
 import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
 import { Database } from '@/types/supabase';
 
 interface AuthResult {
@@ -21,20 +19,15 @@ export async function validateApiAuth(request: NextRequest): Promise<AuthResult>
   try {
     // Create a Supabase client using the cookies from the request
     const supabase = createServerClient<Database>(
-      process.env.SUPABASE_URL!,
-      process.env.SUPABASE_ANON_KEY!,
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
-          get(name) {
-            const cookie = request.cookies.get(name);
-            console.log(`API Auth: Getting cookie ${name}:`, cookie ? 'Found' : 'Not found');
-            return cookie?.value;
+          getAll() {
+            return request.cookies.getAll();
           },
-          set() {
-            // We don't need to set cookies in this context
-          },
-          remove() {
-            // We don't need to remove cookies in this context
+          setAll() {
+            // no-op: API auth middleware does not need to mutate cookies
           },
         },
       }
@@ -166,7 +159,7 @@ async function fetchUserRole(userId: string): Promise<string> {
 
   try {
     const response = await fetch(
-      `${process.env.SUPABASE_URL}/rest/v1/users?select=role&id=eq.${userId}`,
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/users?select=role&id=eq.${userId}`,
       {
         headers: {
           Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
@@ -242,7 +235,7 @@ async function validateToken(token: string): Promise<AuthResult> {
 
     // Fetch the user's role from the database
     const response = await fetch(
-      `${process.env.SUPABASE_URL}/rest/v1/users?select=role&id=eq.${userId}`,
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/users?select=role&id=eq.${userId}`,
       {
         headers: {
           Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,

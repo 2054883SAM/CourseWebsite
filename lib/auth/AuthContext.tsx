@@ -36,81 +36,72 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Extract project reference from URL for cookie debugging
-    const getProjectRef = () => {
-      const SUPABASE_URL = process.env.SUPABASE_URL;
-      if (!SUPABASE_URL) return 'default';
-      // Extract the project reference from the URL
-      const matches = SUPABASE_URL.match(/https:\/\/([a-z0-9-]+)\.supabase\.co/);
-      return matches ? matches[1] : 'default';
-    };
-
-    const projectRef = getProjectRef();
-    const expectedCookieName = `sb-${projectRef}-auth-token`;
-
-    // Debug current cookies at startup
-    console.log(
-      'Auth cookies at startup:',
-      document.cookie
-        .split(';')
-        .map((c) => c.trim())
-        .filter((c) => c.startsWith('sb-') || c.includes('supabase'))
-    );
-
-    console.log('Looking for cookie format:', expectedCookieName);
-
-    // Get initial session safely (does not throw when no session)
+    // Initialize session from storage
     supabase.auth
       .getSession()
       .then(({ data: { session }, error }) => {
         if (error) {
           console.error('Error getting initial session:', error);
+          setLoading(false);
+          return;
         }
 
         const initialUser = session?.user ?? null;
         console.log(
-          'Initial auth session:',
-          session ? 'Present' : 'None',
-          initialUser ? `(User: ${initialUser.email})` : ''
+          '[AuthContext] Initial session:',
+          session ? `User: ${initialUser?.email}` : 'No session'
         );
 
         setUser(initialUser);
-        if (initialUser) {
+
+        if (initialUser && session) {
+          // Sync server-side cookies on initial load (for SSR/middleware)
+          fetch('/api/auth/cookie', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              access_token: session.access_token,
+              refresh_token: session.refresh_token,
+            }),
+            credentials: 'include',
+          }).catch((e) => {
+            console.warn('Failed to sync cookies on init:', e);
+          });
+
           fetchDbUser(initialUser.id);
         } else {
           setLoading(false);
         }
       })
       .catch((e) => {
-        console.warn('Initial session fetch failed:', e);
+        console.error('Session initialization failed:', e);
         setLoading(false);
       });
 
-    // Listen for auth changes
+    // Listen for auth state changes (SIGNED_IN, SIGNED_OUT, TOKEN_REFRESHED, etc.)
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      console.log('Auth state change event:', _event);
-      console.log('Session after event:', session ? 'Present' : 'None');
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('[AuthContext] Auth event:', event);
 
       setUser(session?.user ?? null);
+
       if (session?.user) {
-        // Ensure server-side cookies are kept in sync when we sign in or refresh tokens
-        if (_event === 'SIGNED_IN' || _event === 'TOKEN_REFRESHED') {
-          try {
-            await fetch('/api/auth/cookie', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                access_token: session.access_token,
-                refresh_token: session.refresh_token,
-              }),
-              credentials: 'include',
-            });
-          } catch (e) {
-            console.warn('Failed to sync auth cookies on state change:', e);
-          }
+        // Sync cookies with server on sign in or token refresh
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          fetch('/api/auth/cookie', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              access_token: session.access_token,
+              refresh_token: session.refresh_token,
+            }),
+            credentials: 'include',
+          }).catch((e) => {
+            console.warn('Failed to sync cookies on auth event:', e);
+          });
         }
+
         fetchDbUser(session.user.id);
       } else {
         setDbUser(null);
@@ -141,21 +132,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log('Attempting sign in for:', email);
 
-      // Ensure we clear any partial auth state before starting
-      await supabase.auth.signOut();
-
-      // Sign in with credentials
+      // Sign in with credentials - @supabase/ssr handles session storage automatically
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
+      if (error) {
+        console.error('Sign in error:', error.message);
+        return { error };
+      }
+
       if (data.session) {
-        // Manually ensure the session is stored properly
-        // await supabase.auth.setSession({
-        //   access_token: data.session.access_token,
-        //   refresh_token: data.session.refresh_token,
-        // });
+        console.log('Sign in successful, session established');
+
+        // Sync cookies with server for SSR/middleware
         await fetch('/api/auth/cookie', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -164,13 +155,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             refresh_token: data.session.refresh_token,
           }),
           credentials: 'include',
+        }).catch((e) => {
+          console.warn('Failed to sync cookies with server:', e);
         });
 
         // Update last connected time (non-blocking)
-        updateLastConnectedAt();
+        updateLastConnectedAt().catch(() => {});
       }
 
-      return { error: error };
+      return { error: null };
     } catch (error) {
       console.error('Unexpected error during sign in:', error);
       return { error: error as Error };

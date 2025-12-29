@@ -13,7 +13,7 @@ import Image from 'next/image';
 export default function CreateVideoPage() {
   const { user, dbUser, loading } = useAuth();
   const router = useRouter();
-  const supabase = createBrowserClient(process.env.SUPABASE_URL!, process.env.SUPABASE_ANON_KEY!);
+  const supabase = createBrowserClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
   // Initialize all state hooks first (React hooks must be called in the same order)
   const [formData, setFormData] = useState({
@@ -672,8 +672,65 @@ export default function CreateVideoPage() {
         setUploadProgress(10);
       }
 
-      // Step 2: Process all sections sequentially
-      console.log(`Starting processing of ${validSections.length} sections...`);
+      // Step 2: Process all sections in parallel for faster upload
+      console.log(`Starting parallel processing of ${validSections.length} sections...`);
+
+      // Track overall progress based on individual section progress
+      let completedSections = 0;
+      const updateOverallProgress = () => {
+        // Calculate average progress across all sections
+        const totalProgress = sections
+          .filter((s) => s.title.trim() && s.videoFile)
+          .reduce((sum, s) => sum + s.uploadProgress, 0);
+        const avgSectionProgress = totalProgress / validSections.length;
+        // Map 0-100% section progress to 10-90% overall progress
+        const overallProgress = 10 + avgSectionProgress * 0.8;
+        setUploadProgress(Math.round(overallProgress));
+      };
+
+      // Set up a progress monitoring interval
+      const progressInterval = setInterval(updateOverallProgress, 500);
+
+      // Map each section to a promise that processes it
+      const sectionPromises = validSections.map((section, i) => {
+        const sectionIndex = sections.findIndex((s) => s.id === section.id);
+        console.log(
+          `Initiating processing for section ${i + 1}/${validSections.length}: ${section.title}`
+        );
+
+        return processSection(section, sectionIndex, validSections.length)
+          .then((result) => {
+            completedSections++;
+            console.log(
+              `Section completed (${completedSections}/${validSections.length}): ${section.title}`
+            );
+            return {
+              success: true,
+              originalSection: section,
+              ...result,
+            };
+          })
+          .catch((sectionError) => {
+            completedSections++;
+            console.error(
+              `Section failed (${completedSections}/${validSections.length}): ${section.title}`,
+              sectionError
+            );
+            return {
+              success: false,
+              originalSection: section,
+              error: sectionError instanceof Error ? sectionError.message : 'Erreur inconnue',
+            };
+          });
+      });
+
+      // Wait for all sections to complete (both successful and failed)
+      const results = await Promise.allSettled(sectionPromises);
+
+      // Clear the progress monitoring interval
+      clearInterval(progressInterval);
+
+      // Separate successful and failed sections
       const processedSections: Array<{
         originalSection: VideoSection;
         playbackId: string;
@@ -681,30 +738,44 @@ export default function CreateVideoPage() {
         duration?: number;
       }> = [];
 
-      const sectionProgressWeight = 80 / validSections.length; // 80% total for sections processing
+      const failedSections: Array<{ section: VideoSection; error: string }> = [];
 
-      for (let i = 0; i < validSections.length; i++) {
-        const section = validSections[i];
-        const sectionIndex = sections.findIndex((s) => s.id === section.id);
+      results.forEach((result, index) => {
+        if (result.status === 'fulfilled' && result.value.success) {
+          const { success, ...sectionData } = result.value;
+          processedSections.push(sectionData as any);
+        } else {
+          const section = validSections[index];
+          const errorMsg =
+            result.status === 'rejected'
+              ? String(result.reason)
+              : (result.value as any).error || 'Erreur inconnue';
+          failedSections.push({ section, error: errorMsg });
+        }
+      });
 
-        console.log(`Processing section ${i + 1}/${validSections.length}: ${section.title}`);
+      // Handle failures
+      if (failedSections.length > 0) {
+        const failedTitles = failedSections.map((f) => `"${f.section.title}"`).join(', ');
+        const errorDetails = failedSections.map((f) => `${f.section.title}: ${f.error}`).join('\n');
+        console.error('Failed sections:', errorDetails);
 
-        try {
-          const result = await processSection(section, sectionIndex, validSections.length);
-          processedSections.push({
-            originalSection: section,
-            ...result,
-          });
-
-          // Update overall progress
-          const currentProgress = 10 + (i + 1) * sectionProgressWeight;
-          setUploadProgress(Math.round(currentProgress));
-        } catch (sectionError) {
-          console.error(`Error processing section ${section.title}:`, sectionError);
-          error(
-            `Erreur lors du traitement de la section "${section.title}": ${sectionError instanceof Error ? sectionError.message : 'Erreur inconnue'}`
+        if (processedSections.length === 0) {
+          // All sections failed
+          error(`Toutes les sections ont échoué: ${failedTitles}`);
+          throw new Error('Échec du traitement de toutes les sections');
+        } else {
+          // Some sections succeeded
+          const continueConfirm = window.confirm(
+            `${failedSections.length} section(s) ont échoué (${failedTitles}).\n\n` +
+              `${processedSections.length} section(s) ont réussi.\n\n` +
+              `Voulez-vous créer le cours avec uniquement les sections réussies?`
           );
-          throw sectionError;
+
+          if (!continueConfirm) {
+            error('Création du cours annulée');
+            throw new Error("Création annulée par l'utilisateur");
+          }
         }
       }
 

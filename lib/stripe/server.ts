@@ -1,11 +1,11 @@
 import Stripe from 'stripe';
 
-// Server-side singleton Stripe client
+// Server-side singleton Stripe client (keyed by secret to avoid reusing the wrong instance)
 let stripeSingleton: Stripe | null = null;
+let stripeSingletonKey: string | null = null;
 
 export function getStripeServerClient(): Stripe {
   const isProduction = process.env.NODE_ENV === 'production';
-  console.log(isProduction);
   const secretKey = isProduction
     ? process.env.STRIPE_SECRET_KEY
     : process.env.STRIPE_SECRET_KEY_TEST;
@@ -15,9 +15,10 @@ export function getStripeServerClient(): Stripe {
     );
   }
 
-  if (!stripeSingleton) {
+  if (!stripeSingleton || stripeSingletonKey !== secretKey) {
     // Use SDK default API version for compatibility
     stripeSingleton = new Stripe(secretKey);
+    stripeSingletonKey = secretKey;
   }
 
   return stripeSingleton;
